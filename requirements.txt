@@ -1,7 +1,53 @@
+# ==============================================
+# EURO_GOALS v9.4.x – Dependencies
+# ==============================================
+
+# --- Core framework ---
 fastapi
 uvicorn
-jinja2
-python-dotenv
-requests
-gunicorn
+
+# --- Database & ORM ---
 SQLAlchemy
+alembic
+
+# --- Templates & static ---
+jinja2
+
+# --- Environment variables ---
+python-dotenv
+
+# --- HTTP / APIs ---
+requests
+httpx
+
+# --- Data handling ---
+pandas
+openpyxl
+
+# --- Audio / media (π.χ. για ειδοποιήσεις) ---
+playsound==1.2.2
+pydub
+
+# --- Backup & file management ---
+psycopg2-binary   # για PostgreSQL (Render DB)
+aiofiles          # async file handling
+
+# --- System monitoring / health checks ---
+psutil
+
+# --- Time & scheduling ---
+schedule
+pytz
+
+# --- Optional UI utilities (π.χ. notifications, web push στο μέλλον) ---
+python-multipart
+
+# --- Optional for future analytics ---
+numpy
+
+# --- Security / Auth (μελλοντικά αν χρειαστεί login) ---
+passlib[bcrypt]
+python-jose[cryptography]
+
+# --- Misc utilities ---
+beautifulsoup4
