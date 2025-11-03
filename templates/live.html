@@ -1,0 +1,63 @@
+<!-- ==========================================
+     EURO_GOALS v7.9f – Live Center
+     ========================================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Feed – EURO_GOALS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/static/icon_blue.png">
+  <link rel="stylesheet" href="/static/css/style_dark.css">
+</head>
+
+<body>
+  <header>📡 EURO_GOALS v7.9f – Live Center</header>
+
+  <main>
+    <div class="menu">
+      <button class="menu-btn" onclick="window.location.href='/'">🏠 Home</button>
+      <button class="menu-btn" onclick="window.location.href='/alert_history'">📋 Alert History</button>
+      <button class="menu-btn" onclick="refreshFeed()">🔄 Refresh</button>
+    </div>
+
+    <div id="liveFeed">Loading live data...</div>
+  </main>
+
+  <footer>
+    <p class="version">EURO_GOALS Platform – Build v7.9f</p>
+    <p>© 2025 Pierros Analytics</p>
+  </footer>
+
+  <script>
+    async function refreshFeed() {
+      const feed = document.getElementById("liveFeed");
+      feed.innerHTML = "🔄 Updating live feed...";
+      try {
+        const res = await fetch("/api/live_odds");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        if (!data || data.length === 0) {
+          feed.innerHTML = "ℹ️ No live data available.";
+        } else {
+          feed.innerHTML = "";
+          data.forEach(match => {
+            const line = document.createElement("div");
+            line.textContent = `${match.league} | ${match.home} vs ${match.away} → ${match.odds}`;
+            feed.appendChild(line);
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        feed.innerHTML = "❌ Error loading live feed.";
+      }
+    }
+
+    // Αυτόματη ανανέωση κάθε 20''
+    setInterval(refreshFeed, 20000);
+
+    // Αυτόματη φόρτωση με το άνοιγμα
+    refreshFeed();
+  </script>
+</body>
+</html>

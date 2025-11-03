@@ -1,0 +1,116 @@
+/* =========================================================
+   EURO_GOALS v7.9b – Alert History CSS
+   ========================================================= */
+:root {
+  --bg: #121212;
+  --surface: #1e1e1e;
+  --surface-2: #181818;
+  --text: #e0e0e0;
+  --muted: #aaa;
+  --green: #00ff91;
+  --green-2: #00c896;
+  --border: #333;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 40px 16px;
+}
+
+.alert-history-container {
+  margin: 0 auto;
+  max-width: 1100px;
+  background-color: var(--surface);
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 0 20px rgba(0,0,0,.4);
+}
+
+.title {
+  text-align: center;
+  margin: 0 0 18px 0;
+  color: var(--green);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+  justify-content: center;
+}
+
+.filters select,
+.filters input {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: #2b2b2b;
+  color: #fff;
+  min-width: 160px;
+}
+
+.btn,
+.btn-clear {
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  border: none;
+  transition: .2s;
+}
+
+.btn { background-color: var(--green-2); color: #000; }
+.btn:hover { background-color: var(--green); }
+
+.btn-clear { background-color: #444; color: #fff; }
+.btn-clear:hover { background-color: #666; }
+
+#alerts-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--surface-2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#alerts-table th, #alerts-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+#alerts-table th {
+  background-color: #222;
+  color: var(--green);
+  font-weight: 600;
+}
+
+#alerts-table tr:hover { background-color: #252525; }
+
+.note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  opacity: .85;
+}
+.btn-export {
+  background-color: #0084ff;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-export:hover {
+  background-color: #00aaff;
+}
