@@ -1,3 +1,4 @@
+
 async function updateSystemSummary() {
   try {
     const res = await fetch('/system_summary');
