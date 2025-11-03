@@ -1,10 +1,90 @@
-<div id="system-summary" class="eg-summary">
-  <div class="summary-item" id="summary-database">💾 DB: Checking...</div>
-  <div class="summary-item" id="summary-health">❤️ Health: Checking...</div>
-  <div class="summary-item" id="summary-auto">🔁 Refresh: Checking...</div>
-  <div class="summary-item" id="summary-smartmoney">💰 SmartMoney: Checking...</div>
-  <div class="summary-item" id="summary-render">🌐 Render: Checking...</div>
-  <button class="summary-item summary-btn" id="summary-notif" title="Toggle notifications">
-    🔔 Notif: —
-  </button>
+<div id="system-summary-bar" class="status-bar">
+  <div class="status-item" id="summary-database">💾 DB: --</div>
+  <div class="status-item" id="summary-health">❤️ Health: --</div>
+  <div class="status-item" id="summary-refresh">🔁 Refresh: 60s</div>
+  <div class="status-item" id="summary-smartmoney">💰 SmartMoney: --</div>
+  <div class="status-item" id="summary-render">🌐 Render: --</div>
+  <div class="status-item" id="summary-clock">🕓 --:--:--</div>
 </div>
+
+<style>
+  .status-bar {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    align-items: center;
+    text-align: center;
+    font-size: 14px;
+    background: linear-gradient(to right, #111827, #1f2937);
+    color: #e6edf3;
+    border-bottom: 2px solid #30363d;
+    padding: 6px 10px;
+    font-family: "Segoe UI", Roboto, sans-serif;
+    box-shadow: inset 0 -2px 0 #30363d;
+  }
+  .status-item {
+    transition: color 0.3s, transform 0.3s;
+  }
+  .status-item.ok {
+    color: #10b981;
+  }
+  .status-item.fail {
+    color: #ef4444;
+  }
+  .status-item.warn {
+    color: #facc15;
+  }
+  .status-item.flash {
+    transform: scale(1.1);
+  }
+  @media (max-width: 800px) {
+    .status-bar {
+      grid-template-columns: repeat(3, 1fr);
+      font-size: 12px;
+      padding: 8px;
+    }
+  }
+</style>
+
+<script>
+  // ======================================================
+  // EURO_GOALS v9.4.3 PRO+ – Live System Status Bar
+  // ======================================================
+  const elDB = document.getElementById("summary-database");
+  const elHealth = document.getElementById("summary-health");
+  const elSmart = document.getElementById("summary-smartmoney");
+  const elRender = document.getElementById("summary-render");
+  const elClock = document.getElementById("summary-clock");
+
+  async function updateSystemStatus() {
+    try {
+      const res = await fetch("/health");
+      const data = await res.json();
+
+      elDB.textContent = "💾 DB: " + (data.database === "connected" ? "OK" : "Fail");
+      elHealth.textContent = "❤️ Health: " + (data.status === "ok" ? "OK" : "Error");
+
+      elDB.className = "status-item " + (data.database === "connected" ? "ok" : "fail");
+      elHealth.className = "status-item " + (data.status === "ok" ? "ok" : "fail");
+    } catch (e) {
+      elDB.textContent = "💾 DB: --";
+      elHealth.textContent = "❤️ Health: --";
+      elDB.className = "status-item fail";
+      elHealth.className = "status-item fail";
+    }
+
+    // Mock SmartMoney and Render status (in production, update via backend)
+    const smartStatus = localStorage.getItem("smartmoneyPaused") === "true" ? "Paused" : "Live";
+    elSmart.textContent = "💰 SmartMoney: " + smartStatus;
+    elSmart.className = "status-item " + (smartStatus === "Live" ? "ok" : "warn");
+
+    elRender.textContent = "🌐 Render: Active";
+    elRender.className = "status-item ok";
+
+    const now = new Date().toLocaleTimeString("el-GR", { hour12: false });
+    elClock.textContent = "🕓 " + now;
+  }
+
+  // Update every 10 seconds
+  updateSystemStatus();
+  setInterval(updateSystemStatus, 10000);
+</script>

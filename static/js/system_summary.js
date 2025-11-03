@@ -1,35 +1,54 @@
-// ==============================================
-// EURO_GOALS v9.4.1 – System Summary JS
-// Δείχνει κατάσταση ειδοποιήσεων (🔔/🔕) και κάνει toggle
-// ==============================================
-(function(){
-  async function fetchSettings(){
-    try{ const r = await fetch('/api/settings/get'); const j = await r.json(); return j.settings || {}; }
-    catch(e){ return {}; }
-  }
-  async function setSettings(payload){
-    try{ await fetch('/api/settings/update', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)}); }
-    catch(e){}
-  }
+// =====================================================
+// EURO_GOALS v9.4.2 PRO+ – System Summary & Notifications
+// =====================================================
 
-  async function init(){
-    const el = document.getElementById('summary-notif');
-    if(!el) return;
-    const s = await fetchSettings();
-    const apply = (on)=>{ el.textContent = (on ? '🔔 Notif: ON' : '🔕 Notif: OFF'); el.dataset.on = on ? '1':'0'; };
-    apply(!!s.notifications_enabled);
+let smartmoneyRunning = true;
+let alertCounter = 0;
 
-    el.addEventListener('click', async ()=>{
-      const on = el.dataset.on !== '1';
-      apply(on);
-      await setSettings({notifications_enabled:on});
-      if (window.EUROGOALS && EUROGOALS.Alerts){
-        EUROGOALS.Alerts.setNotificationsEnabled(on);
-        if (on) EUROGOALS.Alerts.requestPermission();
-      }
-    });
+const statusEl = document.getElementById("smartmoney-status");
+const counterEl = document.getElementById("alert-counter");
+const btn = document.getElementById("toggle-smartmoney");
+const soundEl = document.getElementById("alert-sound");
+
+// Ζητάει άδεια για ειδοποιήσεις
+if ("Notification" in window && Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+
+btn.addEventListener("click", () => {
+  smartmoneyRunning = !smartmoneyRunning;
+  statusEl.textContent = smartmoneyRunning ? "LIVE" : "PAUSED";
+  btn.textContent = smartmoneyRunning ? "⏸️ Pause SmartMoney" : "▶️ Resume SmartMoney";
+  btn.classList.toggle("bg-blue-600");
+  btn.classList.toggle("bg-green-600");
+  console.log("SmartMoney:", smartmoneyRunning);
+});
+
+// Health check
+async function updateHealth() {
+  try {
+    const res = await fetch("/health");
+    const d = await res.json();
+    document.getElementById("summary-database").textContent =
+      "💾 DB: " + (d.database === "connected" ? "OK" : "Error");
+    document.getElementById("summary-health").textContent =
+      "❤️ Health: " + (d.status === "ok" ? "OK" : "Error");
+  } catch {
+    document.getElementById("summary-health").textContent = "❤️ Health: Fail";
   }
+}
 
-  window.EUROGOALS = window.EUROGOALS || {};
-  window.EUROGOALS.Summary = { init };
-})();
+setInterval(updateHealth, 60000);
+updateHealth();
+
+// Ειδοποίηση SmartMoney από localStorage
+window.addEventListener("storage", (e) => {
+  if (e.key === "newSmartMoneyAlert") {
+    alertCounter++;
+    counterEl.textContent = alertCounter;
+    if (soundEl) soundEl.play();
+    if (Notification.permission === "granted") {
+      new Notification("💰 SmartMoney Alert", { body: e.newValue });
+    }
+  }
+});

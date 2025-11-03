@@ -3,50 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alert History – EURO_GOALS v9.3.2</title>
+  <title>Alert History – EURO_GOALS v9.4.3 PRO+</title>
   <link rel="icon" href="/static/icons/ball.png">
   <link rel="stylesheet" href="/static/style.css">
   <style>
-    /* ===========================
-       EURO_GOALS v9.3.2 – Alert History
-       =========================== */
+    :root {
+      --bg-dark: #0d1117;
+      --bg-light: #f5f5f5;
+      --text-dark: #e6edf3;
+      --text-light: #222;
+      --accent: #58a6ff;
+    }
+
     body {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
       font-family: "Segoe UI", Roboto, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #0d1117;
-      color: #e6edf3;
+      transition: background 0.3s, color 0.3s;
     }
 
     header {
       background-color: #161b22;
       border-bottom: 2px solid #30363d;
       text-align: center;
-      padding: 25px 10px;
+      padding: 20px 10px;
     }
 
-    header h1 {
-      color: #58a6ff;
-      margin-bottom: 8px;
+    header h1 { color: var(--accent); margin-bottom: 5px; }
+    header p { color: #8b949e; margin: 0; font-size: 14px; }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 15px auto;
     }
 
-    header p {
-      color: #8b949e;
-      margin: 0;
+    .controls button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
       font-size: 14px;
+      transition: background 0.2s;
     }
+    .controls button:hover { background: #1e40af; }
 
     main {
       padding: 25px;
-      max-width: 1000px;
+      max-width: 1100px;
       margin: auto;
-    }
-
-    h2 {
-      color: #58a6ff;
-      border-bottom: 1px solid #30363d;
-      padding-bottom: 5px;
-      margin-top: 25px;
     }
 
     .filter-bar {
@@ -54,9 +64,10 @@
       flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 20px;
+      justify-content: center;
     }
 
-    select, input[type="text"] {
+    select, input[type="text"], button.refresh-btn {
       padding: 8px;
       border-radius: 6px;
       border: 1px solid #30363d;
@@ -78,15 +89,16 @@
 
     .alert-table th {
       background-color: #21262d;
-      color: #58a6ff;
+      color: var(--accent);
     }
 
-    .alert-table tr:nth-child(even) {
-      background-color: #161b22;
-    }
+    .alert-table tr:nth-child(even) { background-color: #161b22; }
+    .alert-table tr:hover { background-color: #30363d; }
 
-    .alert-table tr:hover {
-      background-color: #30363d;
+    .flash { animation: highlight 1.5s ease; }
+    @keyframes highlight {
+      from { background-color: #1f6feb; }
+      to { background-color: transparent; }
     }
 
     footer {
@@ -98,33 +110,30 @@
       font-size: 14px;
     }
 
-    @media (max-width: 600px) {
-      header h1 { font-size: 20px; }
-      .filter-bar { flex-direction: column; }
-      .alert-table th, .alert-table td { font-size: 12px; }
-    }
-
-    @media (prefers-color-scheme: light) {
-      body { background-color: #f5f5f5; color: #222; }
-      header { background-color: #f0f0f0; border-color: #ddd; }
-      .alert-table th { background-color: #fff; color: #0059b3; }
-      .alert-table td { border-color: #ccc; }
-      footer { border-color: #ccc; color: #555; }
+    body.light {
+      background-color: var(--bg-light);
+      color: var(--text-light);
     }
   </style>
 </head>
 
 <body>
 
-  {% include "partials/system_summary_bar.html" %}
+  {% include "system_summary_bar.html" %}
 
   <header>
-    <h1>📜 EURO_GOALS v9.3.2 – Alert History</h1>
-    <p>Προβολή όλων των πρόσφατων ειδοποιήσεων (SmartMoney, Goals, Render Status)</p>
+    <h1>📜 EURO_GOALS v9.4.3 PRO+ – Alert History</h1>
+    <p>Προβολή SmartMoney / Goals / System Alerts σε πραγματικό χρόνο</p>
   </header>
 
+  <div class="controls">
+    <button onclick="location.href='/'">🏠 Dashboard</button>
+    <button id="muteBtn">🔊 Mute</button>
+    <button id="modeBtn">🌙 Dark</button>
+    <button id="refreshBtn">🔁 Refresh</button>
+  </div>
+
   <main>
-    <h2>Φίλτρα Αναζήτησης</h2>
     <div class="filter-bar">
       <input type="text" id="searchBox" placeholder="Αναζήτηση...">
       <select id="typeFilter">
@@ -135,7 +144,6 @@
       </select>
     </div>
 
-    <h2>Ιστορικό Ειδοποιήσεων</h2>
     <table class="alert-table" id="alertTable">
       <thead>
         <tr>
@@ -145,45 +153,97 @@
         </tr>
       </thead>
       <tbody id="alertRows">
-        <!-- Εισαγωγή δεδομένων δυναμικά -->
+        <!-- Εισαγωγή δεδομένων -->
       </tbody>
     </table>
+
+    <p style="text-align:right; font-size:13px; color:#8b949e; margin-top:10px;">
+      🕓 Τελευταία ενημέρωση: <span id="last-update">—</span>
+    </p>
   </main>
 
   <footer>
-    <p>EURO_GOALS v9.3.2 | Alert History – Build: 02/11/2025</p>
+    EURO_GOALS v9.4.3 PRO+ | Alert History | Build: 04/11/2025
   </footer>
 
   <script>
-    const alerts = [
-      { time: "18:41", type: "smart", detail: "SmartMoney: Chelsea vs Arsenal (1.92 → 1.78)" },
-      { time: "18:35", type: "goal", detail: "Goal: Bayern 2–1 Dortmund (Sane 67’)" },
-      { time: "18:20", type: "system", detail: "Render: Service Health OK" },
-    ];
+    // =============================================================
+    // ALERT HISTORY – Ultimate UI Edition (Mute / Mode / Auto)
+    // =============================================================
 
     const rows = document.getElementById("alertRows");
     const typeFilter = document.getElementById("typeFilter");
     const searchBox = document.getElementById("searchBox");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const lastUpdateEl = document.getElementById("last-update");
+    const muteBtn = document.getElementById("muteBtn");
+    const modeBtn = document.getElementById("modeBtn");
 
-    function renderAlerts() {
+    let muted = localStorage.getItem("smartmoneyMuted") === "true";
+    let darkMode = localStorage.getItem("smartmoneyDark") !== "false";
+    document.body.classList.toggle("light", !darkMode);
+    modeBtn.textContent = darkMode ? "🌙 Dark" : "☀️ Light";
+    muteBtn.textContent = muted ? "🔇 Unmute" : "🔊 Mute";
+
+    async function fetchAlerts() {
+      try {
+        const r = await fetch("/smartmoney/history?limit=100");
+        const j = await r.json();
+        const items = j.items || [];
+        renderAlerts(items);
+        lastUpdateEl.textContent = new Date().toLocaleTimeString("el-GR", { hour12: false });
+        if (!muted) new Audio("/static/sounds/alert.mp3").play();
+      } catch (e) {
+        console.error("Fetch error:", e);
+      }
+    }
+
+    function renderAlerts(alerts) {
       const query = searchBox.value.toLowerCase();
       const filter = typeFilter.value;
       rows.innerHTML = "";
 
       alerts
-        .filter(a => (filter === "all" || a.type === filter))
-        .filter(a => a.detail.toLowerCase().includes(query))
+        .filter(a => (filter === "all" || (filter === "smart" && a.source) || (filter === "goal" && a.detail?.includes("Goal")) || (filter === "system" && a.detail?.includes("Render"))))
+        .filter(a => a.detail?.toLowerCase().includes(query))
         .forEach(a => {
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${a.time}</td><td>${a.type}</td><td>${a.detail}</td>`;
+          const dt = new Date(a.ts_utc).toLocaleTimeString("el-GR", { hour12: false });
+          const type = a.source ? "💰 SmartMoney" : "⚙️ System";
+          const detail = a.detail || `${a.home} vs ${a.away} (${a.bookmaker})`;
+          tr.innerHTML = `<td>${dt}</td><td>${type}</td><td>${detail}</td>`;
           rows.appendChild(tr);
         });
     }
 
-    typeFilter.onchange = renderAlerts;
-    searchBox.oninput = renderAlerts;
+    // ========== CONTROLS ==========
+    muteBtn.onclick = () => {
+      muted = !muted;
+      localStorage.setItem("smartmoneyMuted", muted);
+      muteBtn.textContent = muted ? "🔇 Unmute" : "🔊 Mute";
+    };
 
-    renderAlerts();
+    modeBtn.onclick = () => {
+      darkMode = !darkMode;
+      localStorage.setItem("smartmoneyDark", darkMode);
+      document.body.classList.toggle("light", !darkMode);
+      modeBtn.textContent = darkMode ? "🌙 Dark" : "☀️ Light";
+    };
+
+    refreshBtn.onclick = fetchAlerts;
+    typeFilter.onchange = fetchAlerts;
+    searchBox.oninput = fetchAlerts;
+
+    document.addEventListener("keydown", e => {
+      if (e.key.toLowerCase() === "r") fetchAlerts();
+      if (e.key.toLowerCase() === "m") muteBtn.click();
+      if (e.key.toLowerCase() === "l") modeBtn.click();
+    });
+
+    // ========== AUTO REFRESH ==========
+    fetchAlerts();
+    setInterval(fetchAlerts, 60000);
   </script>
+
 </body>
 </html>
