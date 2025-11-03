@@ -1,9 +1,51 @@
-<div id="system-summary-bar" class="w-full bg-white/70 backdrop-blur-md rounded-xl shadow p-3 mb-4 grid grid-cols-6 gap-2 text-center text-sm">
-  <div class="summary-item" id="summary-database">💾 DB: Checking...</div>
-  <div class="summary-item" id="summary-health">❤️ Health: Checking...</div>
-  <div class="summary-item" id="summary-auto">🔁 Refresh: Checking...</div>
-  <div class="summary-item" id="summary-smartmoney">💰 SmartMoney: Checking...</div>
-  <div class="summary-item" id="summary-render">🌐 Render: Checking...</div>
-  <div class="summary-item" id="summary-version">🧠 Version: {{ version }}</div>
+<!-- ============================================================
+     EURO_GOALS v9.3.3 – System Summary Bar (Full Enhanced)
+     ============================================================ -->
+<style>
+  .summary-item {
+    transition: all 0.3s ease-in-out;
+  }
+  .pulse {
+    animation: pulse 1.5s infinite;
+    color: #fbbf24 !important;
+  }
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+  }
+  #summary-footer {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    grid-column: span 6 / span 6;
+    font-size: 12px;
+    color: #888;
+  }
+  #summary-footer.visible {
+    opacity: 1;
+  }
+</style>
+
+<div id="system-summary-bar"
+     class="w-full bg-white/70 backdrop-blur-md rounded-xl shadow p-3 mb-4 grid grid-cols-6 gap-2 text-center text-sm transition-all duration-300 ease-in-out">
+
+  <div class="summary-item pulse" id="summary-database">💾 DB: Checking...</div>
+  <div class="summary-item pulse" id="summary-health">❤️ Health: Checking...</div>
+  <div class="summary-item pulse" id="summary-auto">🔁 Refresh: Checking...</div>
+  <div class="summary-item pulse" id="summary-smartmoney">💰 SmartMoney: Checking...</div>
+  <div class="summary-item pulse" id="summary-render">🌐 Render: Checking...</div>
+  <div class="summary-item pulse" id="summary-version">🧩 Version: Checking...</div>
+
+  <!-- Footer με ώρα τελευταίου ελέγχου -->
+  <div id="summary-footer" class="col-span-6 mt-1">
+    🕓 Τελευταίος έλεγχος: —
+  </div>
 </div>
-<script src="/static/js/system_summary.js"></script>
+
+<script>
+// Fade-in στο footer
+setTimeout(() => {
+  const footer = document.getElementById("summary-footer");
+  if (footer) footer.classList.add("visible");
+}, 1500);
+</script>
