@@ -1,10 +1,8 @@
 # ==========================================================
-# EURO_GOALS v9.3 – Health Check Module
+# EURO_GOALS v9.3.5 – Health Check Module with System Logs
 # ==========================================================
-# Ελέγχει:
-# ✅ Σύνδεση με τη βάση δεδομένων
-# ✅ Κατάσταση Render API (αν υπάρχουν env vars)
-# ✅ Ενεργά modules SmartMoney & GoalMatrix (placeholder)
+# Καταγράφει κάθε έλεγχο στο system_logs (SQLite / PostgreSQL)
+# και επιστρέφει unified report για το dashboard.
 # ==========================================================
 
 import os
@@ -13,7 +11,50 @@ import requests
 from datetime import datetime
 
 # ==========================================================
-# 1️⃣  Έλεγχος Database
+# 1️⃣  Βοηθητικές συναρτήσεις
+# ==========================================================
+def ensure_logs_table():
+    """Δημιουργεί τον πίνακα system_logs αν δεν υπάρχει."""
+    try:
+        conn = sqlite3.connect("matches.db")
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS system_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                database_status TEXT,
+                render_status TEXT,
+                smartmoney_status TEXT,
+                goalmatrix_status TEXT,
+                overall_status TEXT
+            )
+        """)
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[LOGS] ⚠️ Error creating system_logs: {e}")
+
+def save_log(report: dict):
+    """Αποθήκευση νέας γραμμής στο system_logs."""
+    try:
+        conn = sqlite3.connect("matches.db")
+        conn.execute("""
+            INSERT INTO system_logs (timestamp, database_status, render_status, smartmoney_status, goalmatrix_status, overall_status)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            report.get("timestamp"),
+            report.get("database"),
+            report.get("render"),
+            report.get("smartmoney"),
+            report.get("goalmatrix"),
+            report.get("status")
+        ))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[LOGS] ⚠️ Error inserting log: {e}")
+
+# ==========================================================
+# 2️⃣  Έλεγχοι συστήματος
 # ==========================================================
 def check_database():
     db_url = os.getenv("DATABASE_URL", "sqlite:///matches.db")
@@ -24,62 +65,60 @@ def check_database():
             conn.close()
             return "OK"
         else:
-            return "PostgreSQL (Render) – Not Implemented Yet"
+            return "PostgreSQL (Render) – Not Implemented"
     except Exception as e:
         return f"FAIL ({str(e)})"
 
-
-# ==========================================================
-# 2️⃣  Έλεγχος Render API
-# ==========================================================
 def check_render_status():
     api_key = os.getenv("RENDER_API_KEY")
     service_id = os.getenv("RENDER_SERVICE_ID")
     if not api_key or not service_id:
-        return "Skipped (no API key/service id)"
-
+        return "Skipped"
     try:
         url = f"https://api.render.com/v1/services/{service_id}"
         headers = {"Authorization": f"Bearer {api_key}"}
         r = requests.get(url, headers=headers, timeout=10)
-        if r.status_code == 200:
-            return "OK"
-        else:
-            return f"FAIL ({r.status_code})"
+        return "Online" if r.status_code == 200 else f"FAIL ({r.status_code})"
     except Exception as e:
         return f"FAIL ({str(e)})"
 
-
-# ==========================================================
-# 3️⃣  Placeholder Modules
-# ==========================================================
 def check_smartmoney():
-    # Placeholder για μελλοντικό API
     return "Active"
 
 def check_goalmatrix():
-    # Placeholder για μελλοντικό API
     return "Active"
 
-
 # ==========================================================
-# 4️⃣  Συνδυαστικός έλεγχος – Δημιουργία αναφοράς
+# 3️⃣  Unified Health Check + Log save
 # ==========================================================
 def run_full_healthcheck():
-    return {
+    ensure_logs_table()
+
+    db_status = check_database()
+    render_status = check_render_status()
+    sm_status = check_smartmoney()
+    gm_status = check_goalmatrix()
+
+    overall = "OK"
+    if any(s.startswith("FAIL") for s in [db_status, render_status, sm_status, gm_status]):
+        overall = "FAIL"
+
+    report = {
         "timestamp": datetime.utcnow().isoformat(),
-        "database": check_database(),
-        "render": check_render_status(),
-        "smartmoney": check_smartmoney(),
-        "goalmatrix": check_goalmatrix(),
-        "status": "OK"
+        "database": db_status,
+        "render": render_status,
+        "smartmoney": sm_status,
+        "goalmatrix": gm_status,
+        "status": overall
     }
+
+    save_log(report)
+    return report
 
 
 # ==========================================================
-# 5️⃣  Αν τρέξει μόνο του (test mode)
+# 4️⃣  Test run (αν τρέξει μόνο του)
 # ==========================================================
 if __name__ == "__main__":
     from pprint import pprint
-    print("🔍 Running EURO_GOALS Health Check...\n")
     pprint(run_full_healthcheck())

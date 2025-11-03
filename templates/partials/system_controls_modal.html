@@ -1,42 +1,141 @@
 <!-- ============================================================
-     EURO_GOALS v9.3.4 – System Controls Modal (separate)
+     EURO_GOALS v9.3.5 – System Controls Modal (Full Edition)
      ============================================================ -->
 <style>
-  .eg-modal-overlay{
-    position: fixed; inset: 0; background: rgba(0,0,0,.55);
-    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  .eg-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
     z-index: 60;
   }
-  .eg-modal-overlay.active{ opacity: 1; pointer-events: auto; }
-  .eg-modal{
-    position: fixed; inset: 0; display: grid; place-items: center; z-index: 61;
-    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  .eg-modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
   }
-  .eg-modal.active{ opacity: 1; pointer-events: auto; }
-  .eg-card{
-    width: min(680px, 92vw); background: #161b22; color:#e6edf3; border:1px solid #30363d;
-    border-radius: 14px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.35);
+
+  .eg-modal {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    z-index: 61;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
   }
-  .eg-card h3{ margin: 0 0 10px; color:#58a6ff; }
-  .eg-actions{ display:flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
-  .eg-actions .btn{ padding: 10px 12px; border-radius:10px; border:1px solid #30363d; background:#21262d; color:#e6edf3; cursor:pointer; }
-  .eg-actions .btn:hover{ background:#2b3138; }
-  .tag{ display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; border:1px solid #30363d; margin-left:6px; }
-  .tag.ok{ color:#00e676; border-color:#1f513a; background:#0f2d20; }
-  .tag.warn{ color:#ffd54f; border-color:#5b4b1f; background:#2b250f; }
-  .tag.err{ color:#ff5252; border-color:#6b1f1f; background:#2b0f0f; }
-  .eg-list{ background:#0d1117; border:1px solid #30363d; border-radius:10px; padding:10px; max-height:220px; overflow:auto; font-size:13px; }
-  .eg-list-item{ display:flex; justify-content:space-between; padding:6px 4px; border-bottom:1px dashed #30363d; }
-  .eg-list-item:last-child{ border-bottom:none; }
-  .eg-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .eg-spacer{ height:8px; }
-  .eg-right{ text-align:right; }
-  .eg-modal-close{ float:right; cursor:pointer; opacity:.8; }
-  .eg-modal-close:hover{ opacity:1; }
+  .eg-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .eg-card {
+    width: min(680px, 92vw);
+    background: #161b22;
+    color: #e6edf3;
+    border: 1px solid #30363d;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+  .eg-card h3 {
+    margin: 0 0 10px;
+    color: #58a6ff;
+  }
+
+  .eg-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 12px 0 4px;
+  }
+  .eg-actions .btn {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #30363d;
+    background: #21262d;
+    color: #e6edf3;
+    cursor: pointer;
+  }
+  .eg-actions .btn:hover {
+    background: #2b3138;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid #30363d;
+    margin-left: 6px;
+  }
+  .tag.ok {
+    color: #00e676;
+    border-color: #1f513a;
+    background: #0f2d20;
+  }
+  .tag.warn {
+    color: #ffd54f;
+    border-color: #5b4b1f;
+    background: #2b250f;
+  }
+  .tag.err {
+    color: #ff5252;
+    border-color: #6b1f1f;
+    background: #2b0f0f;
+  }
+
+  .eg-list {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 10px;
+    max-height: 220px;
+    overflow: auto;
+    font-size: 13px;
+  }
+  .eg-list-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 4px;
+    border-bottom: 1px dashed #30363d;
+  }
+  .eg-list-item:last-child {
+    border-bottom: none;
+  }
+
+  .eg-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .eg-spacer {
+    height: 8px;
+  }
+  .eg-right {
+    text-align: right;
+  }
+  .eg-modal-close {
+    float: right;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  .eg-modal-close:hover {
+    opacity: 1;
+  }
 </style>
 
 <div id="eg-controls-overlay" class="eg-modal-overlay"></div>
-<div id="eg-controls-modal" class="eg-modal" role="dialog" aria-modal="true" aria-labelledby="eg-controls-title">
+<div
+  id="eg-controls-modal"
+  class="eg-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="eg-controls-title"
+>
   <div class="eg-card">
     <div>
       <span id="close-controls-modal" class="eg-modal-close">✖</span>
@@ -45,7 +144,9 @@
 
     <div class="eg-row">
       <button class="btn" id="btn-force-refresh">🔁 Force Refresh Now</button>
-      <button class="btn" id="btn-toggle-autorefresh">⏯ Auto-Refresh: <span id="autorefresh-state">ON</span></button>
+      <button class="btn" id="btn-toggle-autorefresh">
+        ⏯ Auto-Refresh: <span id="autorefresh-state">ON</span>
+      </button>
       <button class="btn" id="btn-check-modules">🧩 Check Modules</button>
       <button class="btn" id="btn-view-logs">📜 View System Logs</button>
     </div>
@@ -62,85 +163,115 @@
     <div class="eg-spacer"></div>
 
     <div class="eg-list" id="eg-logs">
-      <!-- γεμίζει δυναμικά με τα τελευταία checks -->
+      <!-- Γεμίζει δυναμικά με τα τελευταία checks -->
     </div>
   </div>
 </div>
 
 <script>
-  // Modal open/close
+  // ============================================================
+  // Modal open / close
+  // ============================================================
   const $open = document.getElementById("open-controls-modal");
   const $modal = document.getElementById("eg-controls-modal");
   const $overlay = document.getElementById("eg-controls-overlay");
   const $close = document.getElementById("close-controls-modal");
 
-  function openModal(){ $modal.classList.add("active"); $overlay.classList.add("active"); }
-  function closeModal(){ $modal.classList.remove("active"); $overlay.classList.remove("active"); }
+  function openModal() {
+    $modal.classList.add("active");
+    $overlay.classList.add("active");
+  }
+  function closeModal() {
+    $modal.classList.remove("active");
+    $overlay.classList.remove("active");
+  }
 
   $open?.addEventListener("click", openModal);
   $close?.addEventListener("click", closeModal);
   $overlay?.addEventListener("click", closeModal);
 
+  // ============================================================
   // Hooks με το global script (system_summary.js)
+  // ============================================================
   document.addEventListener("summary-updated", async () => {
-    // Ζήτα φρέσκα δεδομένα
-    const sys = await fetch("/system_status_data").then(r=>r.json()).catch(()=>null);
-    const sm  = await fetch("/smartmoney_data").then(r=>r.json()).catch(()=>null);
-    const gm  = await fetch("/goalmatrix_data").then(r=>r.json()).catch(()=>null);
+    const sys = await fetch("/system_status_data").then((r) => r.json()).catch(() => null);
+    const sm = await fetch("/smartmoney_data").then((r) => r.json()).catch(() => null);
+    const gm = await fetch("/goalmatrix_data").then((r) => r.json()).catch(() => null);
 
     const setTag = (el, val) => {
-      if(!el) return;
-      el.classList.remove("ok","warn","err");
-      const s = String(val||"").toLowerCase();
-      if (s.includes("ok") || s.includes("active") || s.includes("online")) { el.classList.add("ok"); el.textContent = "OK"; }
-      else if (s.includes("fail") || s.includes("error") || s.includes("offline")) { el.classList.add("err"); el.textContent = "FAIL"; }
-      else { el.classList.add("warn"); el.textContent = "—"; }
+      if (!el) return;
+      el.classList.remove("ok", "warn", "err");
+      const s = String(val || "").toLowerCase();
+      if (s.includes("ok") || s.includes("active") || s.includes("online")) {
+        el.classList.add("ok");
+        el.textContent = "OK";
+      } else if (s.includes("fail") || s.includes("error") || s.includes("offline")) {
+        el.classList.add("err");
+        el.textContent = "FAIL";
+      } else {
+        el.classList.add("warn");
+        el.textContent = "—";
+      }
     };
 
     setTag(document.getElementById("tag-sm"), sm?.status);
     setTag(document.getElementById("tag-gm"), gm?.status);
     setTag(document.getElementById("tag-rd"), sys?.render ?? sys?.status);
     setTag(document.getElementById("tag-db"), sys?.database);
-
-    // Προσθήκη πρόχειρων logs (έτοιμο για αντικατάσταση με /system_logs)
-    const box = document.getElementById("eg-logs");
-    if (box) {
-      const now = new Date().toLocaleTimeString("el-GR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-      const line = document.createElement("div");
-      line.className = "eg-list-item";
-      line.innerHTML = `<span>${now}</span><span>DB:${sys?.database} · RD:${sys?.render??sys?.status} · SM:${sm?.status} · GM:${gm?.status}</span>`;
-      box.prepend(line);
-      // κράτα μέχρι 20
-      while (box.children.length > 20) box.removeChild(box.lastChild);
-    }
   });
 
+  // ============================================================
   // Κουμπιά ενεργειών
+  // ============================================================
   const $btnForce = document.getElementById("btn-force-refresh");
   const $btnToggle = document.getElementById("btn-toggle-autorefresh");
   const $btnModules = document.getElementById("btn-check-modules");
   const $btnLogs = document.getElementById("btn-view-logs");
   const $state = document.getElementById("autorefresh-state");
 
-  // Τα παρακάτω hooks «μιλάνε» με system_summary.js (global)
   $btnForce?.addEventListener("click", () => {
     if (window.updateSystemSummary) window.updateSystemSummary();
   });
+
   $btnToggle?.addEventListener("click", () => {
     if (typeof window.toggleAutoRefresh === "function") {
       const on = window.toggleAutoRefresh();
       if ($state) $state.textContent = on ? "ON" : "OFF";
     }
   });
+
   $btnModules?.addEventListener("click", async () => {
-    // Απλή επαλήθευση endpoints
     try {
-      await Promise.all([fetch("/system_status_data"), fetch("/smartmoney_data"), fetch("/goalmatrix_data")]);
+      await Promise.all([
+        fetch("/system_status_data"),
+        fetch("/smartmoney_data"),
+        fetch("/goalmatrix_data"),
+      ]);
       alert("🧩 Modules reachable.");
-    } catch { alert("⚠️ Some module did not respond."); }
+    } catch {
+      alert("⚠️ Some module did not respond.");
+    }
   });
-  $btnLogs?.addEventListener("click", () => {
-    // Placeholder: στο επόμενο βήμα θα καλέσουμε /system_logs
-    alert("📜 System Logs placeholder – θα συνδεθεί στο /system_logs στο επόμενο build.");
+
+  // ============================================================
+  // 📜 View Logs – Ανάγνωση πραγματικών logs από /system_logs
+  // ============================================================
+  $btnLogs?.addEventListener("click", async () => {
+    try {
+      const logs = await fetch("/system_logs").then((r) => r.json());
+      if (!Array.isArray(logs)) return alert("⚠️ No logs available.");
+      const box = document.getElementById("eg-logs");
+      box.innerHTML = "";
+      logs.forEach((l) => {
+        const item = document.createElement("div");
+        item.className = "eg-list-item";
+        item.innerHTML = `<span>${l.timestamp.slice(11, 19)}</span>
+          <span>DB:${l.database_status} · RD:${l.render_status} · SM:${l.smartmoney_status} · GM:${l.goalmatrix_status} → ${l.overall_status}</span>`;
+        box.appendChild(item);
+      });
+    } catch (err) {
+      alert("⚠️ Error loading logs.");
+      console.error(err);
+    }
   });
 </script>
