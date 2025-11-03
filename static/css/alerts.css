@@ -1,0 +1,27 @@
+/* EURO_GOALS v9.4.0 – Toast styles */
+.eg-toast-box{
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+}
+.eg-toast{
+  min-width: 280px;
+  max-width: 420px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.eg-toast strong{display:block;margin-bottom:4px}
+.eg-toast.show{
+  opacity: 1;
+  transform: translateY(0);
+}

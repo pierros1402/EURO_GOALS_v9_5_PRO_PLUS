@@ -1,33 +1,185 @@
-<!DOCTYPE html>
-<html lang="el">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>EURO_GOALS Alert Center</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="utf-8" />
+  <title>Alert Center – EURO_GOALS v9.4.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/css/alerts.css" />
+  <script defer src="/static/js/alerts.js"></script>
   <style>
-    body { background:#0d1117; color:#e6edf3; font-family:Segoe UI, sans-serif; }
-    h2 { color:#00e676; }
-    .alert-item { border-left:5px solid #00e676; padding:8px 12px; margin-bottom:10px; background:#161b22; border-radius:6px; }
-    .critical { border-left-color:#ff5252; }
-    .warning { border-left-color:#ffb300; }
-    .info { border-left-color:#00e676; }
+    body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 20px}
+    .toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px}
+    .btn{padding:8px 12px;border:1px solid #ddd;border-radius:10px;cursor:pointer;background:#fff}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .pill{padding:6px 10px;border:1px solid #ddd;border-radius:999px;background:#fff}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}
+    th{font-weight:600}
+    .tag{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid #ddd}
+    .tag.SMART_MONEY_ALERT{border-color:#1e88e5}
+    .tag.GOAL_ALERT{border-color:#43a047}
+    .tag.HEALTH_ALERT{border-color:#e53935}
+    .tag.SYSTEM_EVENT{border-color:#8e24aa}
   </style>
 </head>
-<body class="container py-4">
-  <h2>🔔 Alert Center</h2>
-  <div id="alertList" class="mt-4">Φόρτωση...</div>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<body>
+  <h1>Alert Center</h1>
+  <div class="toolbar">
+    <select id="filter-type" class="pill">
+      <option value="">All types</option>
+      <option>SMART_MONEY_ALERT</option>
+      <option>GOAL_ALERT</option>
+      <option>HEALTH_ALERT</option>
+      <option>SYSTEM_EVENT</option>
+    </select>
+
+    <label class="pill">
+      <input type="checkbox" id="filter-unread" /> Only unread
+    </label>
+
+    <button class="btn" id="btn-refresh">Refresh</button>
+    <button class="btn" id="btn-mark-read" title="Mark selected as read">Mark as Read</button>
+    <button class="btn" id="btn-clear">Clear All</button>
+    <button class="btn" id="btn-export">Export CSV</button>
+
+    <label class="pill" style="margin-left:auto;">
+      <input type="checkbox" id="notif-toggle" /> Browser Notifications
+    </label>
+  </div>
+
+  <table id="alert-table">
+    <thead>
+      <tr>
+        <th style="width:32px"><input type="checkbox" id="check-all" /></th>
+        <th style="width:140px">Time (UTC)</th>
+        <th style="width:180px">Type</th>
+        <th>Message</th>
+        <th style="width:220px">Meta</th>
+        <th style="width:80px">Status</th>
+      </tr>
+    </thead>
+    <tbody id="alert-tbody">
+      <tr><td colspan="6">Loading…</td></tr>
+    </tbody>
+  </table>
+
   <script>
-    async function loadAlerts() {
-      const res = await axios.get('/alerts_demo');
-      const alerts = res.data.alerts || [];
-      document.getElementById("alertList").innerHTML = alerts.map(a =>
-        `<div class="alert-item ${a.level}">
-          <b>[${a.level.toUpperCase()}]</b> ${a.message}<br>
-          <small>${a.timestamp}</small>
-        </div>`).join('') || '<p>Κανένα alert.</p>';
+    const q = sel => document.querySelector(sel);
+    const tbody = q('#alert-tbody');
+    const filterType = q('#filter-type');
+    const filterUnread = q('#filter-unread');
+    const btnRefresh = q('#btn-refresh');
+    const btnMarkRead = q('#btn-mark-read');
+    const btnClear = q('#btn-clear');
+    const btnExport = q('#btn-export');
+    const checkAll = q('#check-all');
+
+    const notifToggle = q('#notif-toggle');
+    const notifKey = 'eu_notifications_enabled';
+    notifToggle.checked = localStorage.getItem(notifKey) === '1';
+    notifToggle.addEventListener('change', () => {
+      localStorage.setItem(notifKey, notifToggle.checked ? '1' : '0');
+      if (notifToggle.checked) window.EUROGOALS && EUROGOALS.Alerts.requestPermission();
+    });
+
+    checkAll.addEventListener('change', () => {
+      document.querySelectorAll('.row-check').forEach(cb => cb.checked = checkAll.checked);
+    });
+
+    async function fetchList() {
+      const params = new URLSearchParams();
+      if (filterType.value) params.set('types', filterType.value);
+      if (filterUnread.checked) params.set('unread', 'true');
+      params.set('limit', '500');
+      const res = await fetch(`/api/alerts/list?${params.toString()}`);
+      const data = await res.json();
+      renderRows(data.items || []);
     }
-    loadAlerts();
+
+    function renderRows(items) {
+      if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="6">No alerts</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = items.map(it => {
+        const created = it.created_at ? new Date(it.created_at).toISOString().replace('T',' ').slice(0,19) : '';
+        const meta = it.meta ? JSON.stringify(it.meta) : '';
+        return `
+          <tr data-id="${it.id}">
+            <td><input type="checkbox" class="row-check"/></td>
+            <td>${created}</td>
+            <td><span class="tag ${it.type}">${it.type}</span></td>
+            <td>${escapeHtml(it.message)}</td>
+            <td><pre style="white-space:pre-wrap;margin:0">${escapeHtml(meta)}</pre></td>
+            <td>${it.is_read ? 'Read' : 'Unread'}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    btnRefresh.addEventListener('click', fetchList);
+
+    btnClear.addEventListener('click', async () => {
+      if (!confirm('Delete ALL alerts?')) return;
+      await fetch('/api/alerts/clear', {method:'POST'});
+      fetchList();
+    });
+
+    btnMarkRead.addEventListener('click', async () => {
+      const ids = Array.from(document.querySelectorAll('tr[data-id]'))
+        .filter(tr => tr.querySelector('.row-check')?.checked)
+        .map(tr => parseInt(tr.getAttribute('data-id'),10));
+      const payload = ids.length ? {ids} : {all: true};
+      await fetch('/api/alerts/mark-read', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      fetchList();
+    });
+
+    btnExport.addEventListener('click', () => {
+      const rows = Array.from(document.querySelectorAll('#alert-tbody tr[data-id]')).map(tr => {
+        const tds = tr.querySelectorAll('td');
+        return [
+          tr.getAttribute('data-id'),
+          tds[1].textContent,
+          tds[2].innerText,
+          tds[3].textContent,
+          tds[4].innerText,
+          tds[5].textContent
+        ];
+      });
+      const header = ['id','created_at','type','message','meta','status'];
+      const csv = [header].concat(rows).map(r => r.map(csvEscape).join(',')).join('\n');
+      downloadFile(csv, 'alerts_export.csv', 'text/csv;charset=utf-8;');
+    });
+
+    function csvEscape(v){
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+    }
+    function downloadFile(content, filename, type){
+      const blob = new Blob([content], {type});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+    function escapeHtml(s){
+      return String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+
+    // Filters trigger refresh
+    filterType.addEventListener('change', fetchList);
+    filterUnread.addEventListener('change', fetchList);
+
+    // Initial
+    fetchList();
+
+    // Live poll (uses alerts.js singleton to avoid duplicate intervals)
+    window.addEventListener('DOMContentLoaded', () => {
+      window.EUROGOALS && EUROGOALS.Alerts.startPolling();
+    });
   </script>
 </body>
 </html>
