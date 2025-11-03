@@ -3,22 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EURO_GOALS v9.3.2 – Unified Dashboard</title>
-
-  <!-- ✅ Favicon & Manifest (Render + Browser + Mobile) -->
-  <link rel="icon" href="/static/icons/eurogoals_192.png" type="image/png">
-  <link rel="shortcut icon" href="/static/icons/eurogoals_192.png" type="image/png">
-  <link rel="apple-touch-icon" href="/static/icons/eurogoals_192.png">
-  <link rel="manifest" href="/static/manifest.json">
-  <meta name="theme-color" content="#0d1117">
-
-  <!-- ✅ Main stylesheet -->
+  <title>EURO_GOALS v9.4.2 – SmartMoney Auto-Notifier PRO</title>
+  <link rel="icon" href="/static/icons/ball.png">
   <link rel="stylesheet" href="/static/style.css">
 
   <style>
-    /* ===========================
-       EURO_GOALS v9.3.2 – Unified Dashboard
-       =========================== */
+    /* ================================
+       EURO_GOALS v9.4.2 – Main Dashboard
+       ================================ */
     body {
       font-family: "Segoe UI", Roboto, sans-serif;
       margin: 0;
@@ -26,96 +18,73 @@
       background-color: #0d1117;
       color: #e6edf3;
     }
-
     header {
       background-color: #161b22;
       border-bottom: 2px solid #30363d;
       text-align: center;
-      padding: 30px 10px;
+      padding: 25px 10px;
     }
-
     header h1 {
       color: #58a6ff;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
     }
-
     header p {
       color: #8b949e;
       margin: 0;
       font-size: 14px;
     }
-
     main {
       padding: 25px;
-      max-width: 1000px;
+      max-width: 1200px;
       margin: auto;
     }
-
-    h2 {
-      color: #58a6ff;
-      border-bottom: 1px solid #30363d;
-      padding-bottom: 5px;
-      margin-top: 30px;
-    }
-
-    .panel-links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .panel-links a {
-      background-color: #21262d;
-      color: #e6edf3;
-      padding: 10px 18px;
-      border-radius: 8px;
-      text-decoration: none;
-      border: 1px solid #30363d;
-      transition: background 0.3s, transform 0.2s;
-    }
-
-    .panel-links a:hover {
-      background-color: #30363d;
-      transform: scale(1.03);
-    }
-
-    .league-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .league-item {
+    .section {
       background-color: #161b22;
       border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 10px 15px;
-      color: #e6edf3;
-      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 25px;
     }
-
+    .section h2 {
+      color: #58a6ff;
+      margin-top: 0;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #30363d;
+      padding: 6px 8px;
+      text-align: left;
+      font-size: 13px;
+    }
+    th {
+      background-color: #21262d;
+      color: #58a6ff;
+    }
+    tr:nth-child(even) {
+      background-color: #161b22;
+    }
+    tr:hover {
+      background-color: #30363d;
+    }
     footer {
       text-align: center;
-      margin-top: 40px;
       padding: 20px;
       border-top: 1px solid #30363d;
       color: #8b949e;
-      font-size: 14px;
+      font-size: 13px;
+      margin-top: 30px;
     }
-
-    @media (max-width: 600px) {
-      header h1 { font-size: 20px; }
-      .panel-links { flex-direction: column; }
-    }
-
     @media (prefers-color-scheme: light) {
       body { background-color: #f5f5f5; color: #222; }
       header { background-color: #f0f0f0; border-color: #ddd; }
-      h2 { color: #0059b3; }
-      .panel-links a { background-color: #fff; border-color: #ccc; color: #222; }
-      .league-item { background-color: #fff; border-color: #ccc; color: #222; }
+      th { background-color: #fff; color: #0059b3; }
+      td { border-color: #ccc; }
       footer { border-color: #ccc; color: #555; }
     }
   </style>
@@ -123,45 +92,74 @@
 
 <body>
 
-  {% include "partials/system_summary_bar.html" %}
+  <!-- ========================= -->
+  <!-- SYSTEM STATUS SUMMARY BAR -->
+  <!-- ========================= -->
+  {% include "system_summary_bar.html" %}
 
   <header>
-    <h1>⚽ EURO_GOALS v9.3.2 – Unified Dashboard</h1>
-    <p>Dual Data Engine: SmartMoney + GoalMatrix</p>
+    <h1>⚽ EURO_GOALS v9.4.2 – SmartMoney Auto-Notifier PRO</h1>
+    <p>Live παρακολούθηση Smart Money, Goal Matrix & System Status</p>
   </header>
 
   <main>
-    <h2>System Panels</h2>
-    <div class="panel-links">
-      <a href="/system_status">📊 System Status</a>
-      <a href="/alert_history">📜 Alert History</a>
-      <a href="/smartmoney">💰 SmartMoney Monitor</a>
-      <a href="/goalmatrix">🎯 GoalMatrix</a>
-      <a href="/unified_monitor">🧭 Unified Monitor</a>
+
+    <!-- ========================= -->
+    <!-- SMARTMONEY LIVE HISTORY -->
+    <!-- ========================= -->
+    <div class="bg-white/70 backdrop-blur-md rounded-xl shadow p-3 mt-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-semibold">💰 SmartMoney – Alert History (live)</h3>
+        <span id="summary-smartmoney" class="text-xs opacity-70">LIVE</span>
+      </div>
+      <div class="overflow-x-auto mt-2">
+        <table class="min-w-full text-sm">
+          <thead class="text-left opacity-70">
+            <tr>
+              <th class="px-2 py-1">Time</th>
+              <th class="px-2 py-1">Match</th>
+              <th class="px-2 py-1">Bookmaker</th>
+              <th class="px-2 py-1">Market</th>
+              <th class="px-2 py-1">Pick</th>
+              <th class="px-2 py-1">Odds</th>
+              <th class="px-2 py-1">Δ%</th>
+              <th class="px-2 py-1">Src</th>
+            </tr>
+          </thead>
+          <tbody id="smartmoney-history-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <script src="/static/js/smartmoney_auto.js"></script>
+
+    <!-- ========================= -->
+    <!-- GOAL MATRIX SECTION -->
+    <!-- ========================= -->
+    <div class="section">
+      <h2>⚽ Goal Matrix – Live Scores</h2>
+      {% include "goal_matrix.html" %}
     </div>
 
-    <h2>Supported Leagues</h2>
-    <p>Οι λίγκες που καλύπτονται από την πλατφόρμα EURO_GOALS:</p>
-    <div class="league-grid">
-      <div class="league-item"><strong>Αγγλία</strong><br>Premier League, Championship, League 1, League 2, National</div>
-      <div class="league-item"><strong>Γερμανία</strong><br>Bundesliga 1, 2, 3. Liga</div>
-      <div class="league-item"><strong>Ελλάδα</strong><br>Super League 1, Super League 2</div>
-      <div class="league-item"><strong>Ισπανία</strong><br>La Liga, La Liga 2</div>
-      <div class="league-item"><strong>Ιταλία</strong><br>Serie A, Serie B</div>
-      <div class="league-item"><strong>Γαλλία</strong><br>Ligue 1, Ligue 2</div>
-      <div class="league-item"><strong>Ολλανδία</strong><br>Eredivisie, Eerste Divisie</div>
-      <div class="league-item"><strong>Βέλγιο</strong><br>Pro League, Challenger Pro League</div>
-      <div class="league-item"><strong>Αυστρία</strong><br>Bundesliga, 2. Liga</div>
-      <div class="league-item"><strong>Ελβετία</strong><br>Super League, Challenge League</div>
-      <div class="league-item"><strong>Πορτογαλία</strong><br>Primeira Liga, Liga 2</div>
-      <div class="league-item"><strong>Τσεχία</strong><br>Fortuna Liga, FNL</div>
-      <div class="league-item"><strong>Πολωνία</strong><br>Ekstraklasa, I Liga</div>
-      <div class="league-item"><strong>Σκανδιναβία</strong><br>Σουηδία, Νορβηγία, Δανία – όλες οι πρώτες κατηγορίες</div>
+    <!-- ========================= -->
+    <!-- ALERT CENTER -->
+    <!-- ========================= -->
+    <div class="section">
+      <h2>🔔 Alert Center</h2>
+      {% include "alert_center.html" %}
     </div>
+
+    <!-- ========================= -->
+    <!-- SYSTEM STATUS DETAILS -->
+    <!-- ========================= -->
+    <div class="section">
+      <h2>🩺 System Status</h2>
+      {% include "system_status.html" %}
+    </div>
+
   </main>
 
   <footer>
-    <p>EURO_GOALS v9.3.2 | Unified Engine – Build: 02/11/2025</p>
+    <p>EURO_GOALS v9.4.2 | SmartMoney Auto-Notifier PRO | Build 03/11/2025</p>
   </footer>
 </body>
 </html>
