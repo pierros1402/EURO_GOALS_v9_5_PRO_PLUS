@@ -1,25 +1,21 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8">
-  <title>EURO_GOALS v9.4.3 PRO+ Ultimate Dashboard</title>
-  <link rel="icon" href="/static/icons/ball.png">
-  <link rel="stylesheet" href="/static/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <title>EURO_GOALS v9.4.4 PRO+ Dashboard</title>
+  <link rel="icon" href="/static/icons/ball.png" />
+  <link rel="stylesheet" href="/static/style.css" />
   <style>
-    :root { --bg-dark:#0d1117; --bg-light:#f5f5f5; --text-dark:#e6edf3; --text-light:#222; --accent:#58a6ff; }
-    body{background:var(--bg-dark);color:var(--text-dark);font-family:"Segoe UI",Roboto,sans-serif;margin:0;transition:background .3s,color .3s;}
-    header{background:#161b22;border-bottom:2px solid #30363d;text-align:center;padding:25px 10px;}
-    header h1{color:var(--accent);margin:0 0 5px;}
-    header p{color:#8b949e;margin:0;font-size:14px;}
-    .controls{display:flex;justify-content:center;gap:10px;margin:15px auto;}
-    .controls button{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-size:14px;}
-    main{padding:30px;text-align:center;}
-    main .links button{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:12px 22px;margin:12px;cursor:pointer;font-size:16px;}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1100px;margin:20px auto;}
-    canvas{background:#111827;border-radius:12px;padding:5px;box-shadow:0 0 5px #000 inset;}
-    footer{text-align:center;margin-top:40px;padding:20px;color:#8b949e;border-top:1px solid #30363d;}
-    body.light{background:var(--bg-light);color:var(--text-light);}
+    :root{--bg:#0d1117;--fg:#e6edf3;--muted:#8b949e;--accent:#58a6ff;}
+    body{background:var(--bg);color:var(--fg);font-family:"Segoe UI",Roboto,sans-serif;margin:0}
+    header{background:#161b22;border-bottom:2px solid #30363d;text-align:center;padding:24px 10px}
+    header h1{color:var(--accent);margin:0 0 8px}
+    header p{color:var(--muted);margin:0;font-size:14px}
+    .controls,.links{display:flex;justify-content:center;gap:10px;margin:16px auto}
+    button{background:#2563eb;color:#fff;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
+    button:hover{background:#1e40af}
+    main{padding:24px;text-align:center}
+    footer{text-align:center;margin-top:40px;padding:20px;color:#8b949e;border-top:1px solid #30363d}
   </style>
 </head>
 <body>
@@ -27,89 +23,66 @@
   {% include "system_summary_bar.html" %}
 
   <header>
-    <h1>⚽ EURO_GOALS v9.4.3 PRO+ Ultimate Dashboard</h1>
-    <p>SmartMoney Auto-Notifier • Real APIs • AI Analyzer • Push</p>
+    <h1>⚽ EURO_GOALS v9.4.4 PRO+ Dashboard</h1>
+    <p>SmartMoney Heatmap • Browser Push Notifications</p>
   </header>
 
   <div class="controls">
-    <button id="muteBtn">🔊 Mute</button>
-    <button id="modeBtn">🌙 Dark</button>
+    <button id="enablePush">🔔 Enable Push</button>
+    <button id="testPush">🧪 Test Push</button>
     <button onclick="location.href='/health'">❤️ Health</button>
-    <button id="enablePushBtn">🔔 Enable Push</button>
-    <button id="testPushBtn">🧪 Test Push</button>
   </div>
 
   <main>
     <div class="links">
-      <button onclick="location.href='/alert_history'">📜 Alert History</button>
+      <button onclick="location.href='/smartmoney/heatmap'">🟩 Open SmartMoney Heatmap</button>
       <button onclick="location.href='/smartmoney/logs'">💰 SmartMoney Logs</button>
-    </div>
-
-    <!-- 📈 Mini Charts -->
-    <div class="grid">
-      <div>
-        <h3>📊 SmartMoney Activity (alerts/min)</h3>
-        <canvas id="miniVolChart" height="140"></canvas>
-      </div>
-      <div>
-        <h3>📉 Avg Odds Drop (%)</h3>
-        <canvas id="miniDropChart" height="140"></canvas>
-      </div>
-    </div>
-
-    <!-- 🧠 AI Analyzer -->
-    <div style="max-width:1100px;margin:20px auto;text-align:left;">
-      <h3>🧠 Top SmartMoney Signals (AI)</h3>
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-sm" style="width:100%;border-collapse:collapse;">
-          <thead style="background:#161b22;color:#58a6ff;">
-            <tr>
-              <th>Time</th><th>Match</th><th>Bookmaker</th><th>Market</th><th>Pick</th><th>Odds</th><th>Δ%</th><th>AI Tier (Score)</th>
-            </tr>
-          </thead>
-          <tbody id="ai-signals-body"></tbody>
-        </table>
-      </div>
+      <button onclick="location.href='/alert/history'">📜 Alert History</button>
     </div>
   </main>
 
-  <footer>EURO_GOALS v9.4.3 PRO+ Ultimate | Build: 04/11/2025</footer>
+  <footer>EURO_GOALS v9.4.4 PRO+ | Build: 04/11/2025</footer>
 
-  <script type="module">
-    import { enablePush, testPush } from "/static/js/push_client.js";
-    import { refreshDashboardCharts } from "/static/js/dashboard_charts.js";
-    import { refreshAISignals } from "/static/js/ai_signals.js";
+  <script>
+    // --- Service worker register ---
+    async function regSW(){
+      if(!('serviceWorker' in navigator)) return null;
+      try { return await navigator.serviceWorker.register('/service-worker.js'); }
+      catch(e){ console.error('SW register failed', e); return null; }
+    }
 
-    const muteBtn = document.getElementById("muteBtn");
-    const modeBtn = document.getElementById("modeBtn");
-    const enableBtn = document.getElementById("enablePushBtn");
-    const testBtn = document.getElementById("testPushBtn");
+    // --- Convert base64url to Uint8Array (for VAPID key) ---
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = atob(base64); const out = new Uint8Array(rawData.length);
+      for (let i=0;i<rawData.length;i++) out[i] = rawData.charCodeAt(i);
+      return out;
+    }
 
-    let muted = localStorage.getItem("smartmoneyMuted") === "true";
-    let darkMode = localStorage.getItem("smartmoneyDark") !== "false";
-    document.body.classList.toggle("light", !darkMode);
-    modeBtn.textContent = darkMode ? "🌙 Dark" : "☀️ Light";
-    muteBtn.textContent = muted ? "🔇 Unmute" : "🔊 Mute";
+    async function enablePush(){
+      try{
+        const reg = await regSW();
+        if(!reg || !('PushManager' in window)) { alert('Push not supported'); return; }
+        const { publicKey } = await (await fetch('/push/public_key')).json();
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+        await fetch('/push/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
+        alert('Push enabled ✅');
+      }catch(e){ console.error(e); alert('Enable Push failed'); }
+    }
 
-    muteBtn.onclick = () => {
-      muted = !muted;
-      localStorage.setItem("smartmoneyMuted", muted);
-      muteBtn.textContent = muted ? "🔇 Unmute" : "🔊 Mute";
-    };
-    modeBtn.onclick = () => {
-      darkMode = !darkMode;
-      localStorage.setItem("smartmoneyDark", darkMode);
-      document.body.classList.toggle("light", !darkMode);
-      modeBtn.textContent = darkMode ? "🌙 Dark" : "☀️ Light";
-    };
+    async function testPush(){
+      const r = await fetch('/push/test',{method:'POST'});
+      const j = await r.json();
+      if(j.ok) alert('Test push sent ('+(j.sent||0)+')');
+      else alert('Push not configured on server');
+    }
 
-    enableBtn.onclick = () => enablePush();
-    testBtn.onclick = () => testPush();
-
-    // Initial & periodic refresh
-    refreshDashboardCharts();
-    refreshAISignals();
-    setInterval(() => { refreshDashboardCharts(); refreshAISignals(); }, 60000);
+    document.getElementById('enablePush').onclick = enablePush;
+    document.getElementById('testPush').onclick = testPush;
   </script>
 </body>
 </html>
