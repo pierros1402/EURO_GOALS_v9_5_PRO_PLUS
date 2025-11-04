@@ -1,197 +1,132 @@
-# ================================================================
-# EURO_GOALS v9.5.0 PRO+ – Unified Responsive Edition
-# ================================================================
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
-from datetime import datetime
+# ============================================================
+# EURO_GOALS v9.5.0 PRO+ – Unified System + Render + SmartMoney + Backup
+# ============================================================
+
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import psutil
-import asyncio
-import requests
-import shutil
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
+from datetime import datetime
+from dotenv import load_dotenv
 
-# ================================================================
-# APP INIT
-# ================================================================
-app = FastAPI(title="EURO_GOALS v9.5.0 PRO+")
-templates = Jinja2Templates(directory="templates")
+# ------------------------------------------------------------
+# Load .env
+# ------------------------------------------------------------
+load_dotenv()
 
-# ================================================================
-# GLOBAL PATHS & LIMITS
-# ================================================================
-DB_PATH = os.path.join("db", "matches.db")
-BACKUP_DIR = "backups"
-CPU_LIMIT, DISK_LIMIT, RAM_LIMIT = 95, 85, 90
-DB_LIMIT_MB, CLEAN_INTERVAL = 200, 300
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///data/matches.db")
+RENDER_HEALTH_URL = os.getenv("RENDER_HEALTH_URL", "https://eurogoals-nextgen.onrender.com/health")
 
-# ================================================================
-# LOG BUFFER
-# ================================================================
-LOG_BUFFER, LOG_LIMIT = [], 50
-def log_event(msg, lvl="INFO"):
-    t = datetime.now().strftime("%H:%M:%S")
-    entry = {"time": t, "type": lvl, "message": msg}
-    LOG_BUFFER.append(entry)
-    if len(LOG_BUFFER) > LOG_LIMIT:
-        LOG_BUFFER.pop(0)
-    print(f"[LOG][{lvl}] {msg}")
+app = FastAPI(title="EURO_GOALS v9.5.0 PRO+", version="9.5.0 PRO+")
 
-# ================================================================
-# BACKUP MANAGEMENT
-# ================================================================
-def make_backup():
-    """Δημιουργεί νέο backup DB"""
-    try:
-        if not os.path.exists(BACKUP_DIR):
-            os.makedirs(BACKUP_DIR)
-        ts = datetime.now().strftime("%Y_%m_%d_%H_%M")
-        bfile = os.path.join(BACKUP_DIR, f"EURO_GOALS_BACKUP_{ts}.db")
-        shutil.copy(DB_PATH, bfile)
-        log_event(f"Backup created: {bfile}", "INFO")
-        return True
-    except Exception as e:
-        log_event(f"Backup failed: {e}", "ERROR")
-        return False
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-def cleanup_old_backups(max_keep=5):
-    try:
-        if not os.path.exists(BACKUP_DIR): return
-        files = sorted(
-            [os.path.join(BACKUP_DIR, f) for f in os.listdir(BACKUP_DIR)],
-            key=os.path.getmtime,
-            reverse=True)
-        for old in files[max_keep:]:
-            os.remove(old)
-            log_event(f"Removed old backup: {old}", "INFO")
-    except Exception as e:
-        log_event(f"Cleanup failed: {e}", "ERROR")
+# ------------------------------------------------------------
+# Helper: System health check
+# ------------------------------------------------------------
+def get_system_health():
+    cpu = psutil.cpu_percent(interval=1)
+    ram = psutil.virtual_memory().percent
+    disk = psutil.disk_usage("/").percent
+    return f"OK (CPU {cpu}%, RAM {ram}%, Disk {disk}%)"
 
-# ================================================================
-# AUTO-CLEANUP BACKGROUND TASK
-# ================================================================
-async def auto_cleanup_task():
-    await asyncio.sleep(10)
-    while True:
-        cpu = psutil.cpu_percent(interval=1)
-        mem = psutil.virtual_memory().percent
-        disk = psutil.disk_usage("/").percent
-        if cpu > CPU_LIMIT:
-            log_event(f"High CPU {cpu}%", "WARNING")
-            await asyncio.sleep(20)
-        if mem > RAM_LIMIT:
-            log_event(f"High RAM {mem}%", "WARNING")
-        if disk > DISK_LIMIT:
-            log_event(f"Disk {disk}% → cleanup backups", "WARNING")
-            cleanup_old_backups()
-        if os.path.exists(DB_PATH):
-            size = os.path.getsize(DB_PATH)/(1024*1024)
-            if size > DB_LIMIT_MB:
-                log_event(f"DB {size:.1f}MB → compacting", "WARNING")
-                os.system(f"sqlite3 {DB_PATH} 'VACUUM;'")
-        await asyncio.sleep(CLEAN_INTERVAL)
+# ------------------------------------------------------------
+# System Endpoints
+# ------------------------------------------------------------
 
-# ================================================================
-# STARTUP EVENT
-# ================================================================
-@app.on_event("startup")
-async def startup_event():
-    print("🚀 EURO_GOALS v9.5.0 PRO+ launched")
-    asyncio.create_task(auto_cleanup_task())
-    log_event("System initialized", "INFO")
-
-# ================================================================
-# HEALTH / DB / RENDER STATUS
-# ================================================================
-def get_health_info():
-    try:
-        cpu, mem, disk = psutil.cpu_percent(0.5), psutil.virtual_memory().percent, psutil.disk_usage("/").percent
-        s = "OK" if cpu<CPU_LIMIT and mem<RAM_LIMIT and disk<DISK_LIMIT else "High Load"
-        return f"{s} (CPU {cpu:.0f}%, RAM {mem:.0f}%, Disk {disk:.0f}%)"
-    except Exception as e:
-        log_event(f"Health err: {e}", "ERROR")
-        return "Error"
-
-def check_db_connection():
-    try:
-        db_url = os.getenv("DATABASE_URL", "sqlite:///db/matches.db")
-        if db_url.startswith("sqlite:///"):
-            path = db_url.replace("sqlite:///", "")
-            if not os.path.exists(path):
-                return "Fail (missing)"
-        e = create_engine(db_url)
-        with e.connect() as c: c.execute(text("SELECT 1"))
-        return "Connected"
-    except SQLAlchemyError as e:
-        log_event(f"DB conn err: {e}", "ERROR")
-        return "Fail"
-
-def get_render_status():
-    try:
-        url = os.getenv("RENDER_HEALTH_URL")
-        if not url: return "Inactive"
-        r = requests.get(url, timeout=5)
-        return "Active" if r.status_code==200 else f"Offline ({r.status_code})"
-    except Exception as e:
-        log_event(f"Render err: {e}", "ERROR")
-        return "Offline"
-
-# ================================================================
-# ROUTES – UI
-# ================================================================
 @app.get("/", response_class=HTMLResponse)
-async def home(req: Request):
-    return templates.TemplateResponse("system_status.html", {"request": req, "title": "EURO_GOALS v9.5.0 PRO+"})
+def root():
+    return """
+    <h2>🏆 EURO_GOALS v9.5.0 PRO+ – API Interface</h2>
+    <p>Available endpoints:</p>
+    <ul>
+      <li><a href="/system_status_data" target="_blank">/system_status_data</a> – JSON Unified Status</li>
+      <li><a href="/system_status_html" target="_blank">/system_status_html</a> – HTML Unified Dashboard</li>
+      <li><a href="/render_health" target="_blank">/render_health</a> – Render Health Check</li>
+      <li><a href="/smartmoney_monitor" target="_blank">/smartmoney_monitor</a> – SmartMoney Monitor</li>
+      <li><a href="/backup_status" target="_blank">/backup_status</a> – Backup Readiness</li>
+    </ul>
+    """
 
-@app.get("/system_status", response_class=HTMLResponse)
-async def sys_status(req: Request):
-    return templates.TemplateResponse("system_status.html", {"request": req, "title": "System Status"})
-
-@app.get("/system_logs", response_class=HTMLResponse)
-async def sys_logs(req: Request):
-    return templates.TemplateResponse("system_log.html", {"request": req, "title": "System Logs"})
-
-@app.get("/control_panel", response_class=HTMLResponse)
-async def ctrl_panel(req: Request):
-    return templates.TemplateResponse("control_panel.html", {"request": req, "title": "Control Dashboard"})
-
-# ================================================================
-# ROUTES – JSON APIs
-# ================================================================
-@app.get("/system_status_data")
-async def sys_status_data():
-    d = {
-        "DB": check_db_connection(),
-        "Health": get_health_info(),
-        "Render": get_render_status(),
+@app.get("/system_status_data", response_class=JSONResponse)
+def system_status_data():
+    data = {
+        "DB": "Connected" if os.path.exists("data/matches.db") else "Fail",
+        "Health": get_system_health(),
+        "Render": "Inactive",
         "SmartMoney": "Live",
         "Backup": "Ready",
-        "last_update": datetime.now().strftime("%H:%M:%S"),
+        "last_update": datetime.now().strftime("%H:%M:%S")
     }
-    log_event(f"Status → {d['DB']}, {d['Health']}", "INFO")
-    return JSONResponse(d)
+    return data
 
-@app.get("/system_logs_data")
-async def sys_logs_data():
-    return JSONResponse(LOG_BUFFER)
+@app.get("/system_status_html", response_class=HTMLResponse)
+def system_status_html():
+    data = system_status_data()
+    html = f"""
+    <h3>EURO_GOALS v9.5.0 PRO+ – System Status</h3>
+    <ul>
+      <li>DB: {data['DB']}</li>
+      <li>Health: {data['Health']}</li>
+      <li>Render: {data['Render']}</li>
+      <li>SmartMoney: {data['SmartMoney']}</li>
+      <li>Backup: {data['Backup']}</li>
+      <li>Last Update: {data['last_update']}</li>
+    </ul>
+    """
+    return HTMLResponse(content=html)
 
-@app.post("/manual_backup")
-async def manual_backup():
-    ok = make_backup()
-    cleanup_old_backups()
-    return {"result": "success" if ok else "fail"}
+# ------------------------------------------------------------
+# Render Health (Remote)
+# ------------------------------------------------------------
+@app.get("/render_health", response_class=JSONResponse)
+def render_health():
+    try:
+        import requests
+        r = requests.get(RENDER_HEALTH_URL, timeout=5)
+        if r.status_code == 200:
+            return {"Render": "Active", "status_code": 200}
+        else:
+            return {"Render": "Unstable", "status_code": r.status_code}
+    except Exception as e:
+        return {"Render": "Inactive", "error": str(e)}
 
-@app.post("/clear_logs")
-async def clear_logs():
-    LOG_BUFFER.clear()
-    log_event("System logs cleared manually", "INFO")
-    return {"result": "cleared"}
+# ------------------------------------------------------------
+# SmartMoney Monitor (Placeholder)
+# ------------------------------------------------------------
+@app.get("/smartmoney_monitor", response_class=JSONResponse)
+def smartmoney_monitor():
+    # placeholder – ready for API integration
+    return {
+        "SmartMoney": "Live",
+        "Monitored": ["Premier League", "La Liga", "Serie A", "Bundesliga", "Superleague Greece"],
+        "last_refresh": datetime.now().strftime("%H:%M:%S")
+    }
 
-# ================================================================
-# LOCAL RUN
-# ================================================================
+# ------------------------------------------------------------
+# Backup Status (Local readiness check)
+# ------------------------------------------------------------
+@app.get("/backup_status", response_class=JSONResponse)
+def backup_status():
+    backup_dir = "backups"
+    os.makedirs(backup_dir, exist_ok=True)
+    files = os.listdir(backup_dir)
+    return {
+        "Backup": "Ready",
+        "StoredFiles": len(files),
+        "LastChecked": datetime.now().strftime("%H:%M:%S")
+    }
+
+# ------------------------------------------------------------
+# Local test run
+# ------------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
