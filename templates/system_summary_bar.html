@@ -1,90 +1,59 @@
-<div id="system-summary-bar" class="status-bar">
-  <div class="status-item" id="summary-database">💾 DB: --</div>
-  <div class="status-item" id="summary-health">❤️ Health: --</div>
-  <div class="status-item" id="summary-refresh">🔁 Refresh: 60s</div>
-  <div class="status-item" id="summary-smartmoney">💰 SmartMoney: --</div>
-  <div class="status-item" id="summary-render">🌐 Render: --</div>
-  <div class="status-item" id="summary-clock">🕓 --:--:--</div>
+<div id="system-summary-bar" class="w-full bg-gray-800/80 backdrop-blur-md rounded-xl shadow p-2 mb-4 grid grid-cols-6 gap-2 text-center text-sm text-gray-200">
+  <div class="summary-item" id="summary-db">💾 DB: Checking...</div>
+  <div class="summary-item" id="summary-health">❤️ Health: Checking...</div>
+  <div class="summary-item" id="summary-auto">🔁 Refresh: 60s</div>
+  <div class="summary-item" id="summary-smartmoney">💰 SmartMoney: Checking...</div>
+  <div class="summary-item" id="summary-render">🌐 Render: Checking...</div>
+  <div class="summary-item" id="summary-backup">☁️ Backup: Checking...</div>
 </div>
 
-<style>
-  .status-bar {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    align-items: center;
-    text-align: center;
-    font-size: 14px;
-    background: linear-gradient(to right, #111827, #1f2937);
-    color: #e6edf3;
-    border-bottom: 2px solid #30363d;
-    padding: 6px 10px;
-    font-family: "Segoe UI", Roboto, sans-serif;
-    box-shadow: inset 0 -2px 0 #30363d;
-  }
-  .status-item {
-    transition: color 0.3s, transform 0.3s;
-  }
-  .status-item.ok {
-    color: #10b981;
-  }
-  .status-item.fail {
-    color: #ef4444;
-  }
-  .status-item.warn {
-    color: #facc15;
-  }
-  .status-item.flash {
-    transform: scale(1.1);
-  }
-  @media (max-width: 800px) {
-    .status-bar {
-      grid-template-columns: repeat(3, 1fr);
-      font-size: 12px;
-      padding: 8px;
-    }
-  }
-</style>
-
 <script>
-  // ======================================================
-  // EURO_GOALS v9.4.3 PRO+ – Live System Status Bar
-  // ======================================================
-  const elDB = document.getElementById("summary-database");
-  const elHealth = document.getElementById("summary-health");
-  const elSmart = document.getElementById("summary-smartmoney");
-  const elRender = document.getElementById("summary-render");
-  const elClock = document.getElementById("summary-clock");
+async function updateSummaryBar() {
+  try {
+    const res = await fetch("/system_status_data");
+    const data = await res.json();
 
-  async function updateSystemStatus() {
-    try {
-      const res = await fetch("/health");
-      const data = await res.json();
+    const map = {
+      "DB": "summary-db",
+      "Health": "summary-health",
+      "Render": "summary-render",
+      "SmartMoney": "summary-smartmoney",
+      "Backup": "summary-backup"
+    };
 
-      elDB.textContent = "💾 DB: " + (data.database === "connected" ? "OK" : "Fail");
-      elHealth.textContent = "❤️ Health: " + (data.status === "ok" ? "OK" : "Error");
+    for (const [key, value] of Object.entries(map)) {
+      const el = document.getElementById(value);
+      if (!el) continue;
 
-      elDB.className = "status-item " + (data.database === "connected" ? "ok" : "fail");
-      elHealth.className = "status-item " + (data.status === "ok" ? "ok" : "fail");
-    } catch (e) {
-      elDB.textContent = "💾 DB: --";
-      elHealth.textContent = "❤️ Health: --";
-      elDB.className = "status-item fail";
-      elHealth.className = "status-item fail";
+      let icon = "";
+      let color = "text-yellow-400";
+      let shortText = data[key];
+
+      // ---- icons ----
+      if (key === "DB") icon = "💾";
+      if (key === "Health") icon = "❤️";
+      if (key === "Render") icon = "🌐";
+      if (key === "SmartMoney") icon = "💰";
+      if (key === "Backup") icon = "☁️";
+
+      // ---- coloring ----
+      if (data[key].includes("OK") || data[key].includes("Connected") || data[key].includes("Active") || data[key].includes("Ready") || data[key].includes("Live")) {
+        color = "text-green-400";
+      } else if (data[key].includes("Fail") || data[key].includes("Error") || data[key].includes("Offline")) {
+        color = "text-red-400";
+      }
+
+      // ---- compact health view ----
+      if (key === "Health" && data[key].includes("OK")) shortText = "OK";
+
+      // ---- render content ----
+      el.innerHTML = `<span class="${color}" title="${data[key]}">${icon} ${key}: ${shortText}</span>`;
     }
 
-    // Mock SmartMoney and Render status (in production, update via backend)
-    const smartStatus = localStorage.getItem("smartmoneyPaused") === "true" ? "Paused" : "Live";
-    elSmart.textContent = "💰 SmartMoney: " + smartStatus;
-    elSmart.className = "status-item " + (smartStatus === "Live" ? "ok" : "warn");
-
-    elRender.textContent = "🌐 Render: Active";
-    elRender.className = "status-item ok";
-
-    const now = new Date().toLocaleTimeString("el-GR", { hour12: false });
-    elClock.textContent = "🕓 " + now;
+  } catch (err) {
+    console.error("[SUMMARY][ERR]", err);
   }
-
-  // Update every 10 seconds
-  updateSystemStatus();
-  setInterval(updateSystemStatus, 10000);
+}
+updateSummaryBar();
+setInterval(updateSummaryBar, 30000);
 </script>

@@ -1,160 +1,64 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-    <meta charset="UTF-8">
-    <title>EURO_GOALS v9.3.2 – Unified Monitor</title>
-    <link rel="stylesheet" href="/static/style.css">
+{% extends "base.html" %}
+{% block content %}
 
-    <style>
-        /* ===============================
-           EURO_GOALS v9.3.2 – System Status / Unified Monitor
-        =============================== */
-        body {
-            font-family: "Segoe UI", Roboto, sans-serif;
-            background-color: #0d1117;
-            color: #e6edf3;
-            margin: 0;
-            padding: 0;
-        }
+{% include "system_summary_bar.html" %}
 
-        header {
-            background-color: #161b22;
-            border-bottom: 2px solid #30363d;
-            padding: 25px 10px;
-            text-align: center;
-        }
+<div class="container mx-auto p-4">
+  <h1 class="text-3xl font-bold text-blue-400 mb-2 text-center">
+    ⚙️ EURO_GOALS v9.4.4 PRO+ – Unified System Status
+  </h1>
+  <p class="text-center text-gray-400 mb-6">
+    Πραγματικός χρόνος παρακολούθησης: DB • Render • Health • SmartMoney • Backup
+  </p>
 
-        header h1 {
-            color: #58a6ff;
-            margin: 0;
-        }
+  <div id="status-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <!-- Τα status cards θα δημιουργούνται δυναμικά -->
+  </div>
 
-        header p {
-            color: #8b949e;
-            margin-top: 5px;
-            font-size: 14px;
-        }
+  <p id="last-update" class="text-center text-sm text-gray-400 mt-6">Τελευταία ενημέρωση: —</p>
+</div>
 
-        main {
-            padding: 25px;
-            max-width: 1100px;
-            margin: auto;
-        }
+<script>
+async function loadStatus() {
+  const grid = document.getElementById("status-grid");
+  const last = document.getElementById("last-update");
+  grid.innerHTML = `
+    <div class="col-span-full text-center text-gray-400 animate-pulse">
+      Φόρτωση δεδομένων...
+    </div>
+  `;
 
-        h2 {
-            color: #58a6ff;
-            border-bottom: 1px solid #30363d;
-            padding-bottom: 5px;
-            margin-top: 10px;
-        }
+  try {
+    const res = await fetch("/system_status_data");
+    const data = await res.json();
+    grid.innerHTML = "";
 
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
+    for (const [key, value] of Object.entries(data)) {
+      if (key === "last_update") continue;
+      let color = "text-yellow-400";
+      if (value.includes("OK")) color = "text-green-400";
+      else if (value.includes("FAIL")) color = "text-red-400";
 
-        .status-card {
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 0 8px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-        }
+      const card = document.createElement("div");
+      card.className =
+        "status-card bg-gray-800/50 border border-gray-700 rounded-xl p-4 text-center shadow hover:scale-105 transition";
+      card.innerHTML = `
+        <h2 class="text-lg font-semibold text-blue-400 mb-1">${key}</h2>
+        <p class="${color} font-bold">${value}</p>
+      `;
+      grid.appendChild(card);
+    }
 
-        .status-card:hover {
-            transform: scale(1.03);
-        }
+    last.innerText = "Τελευταία ενημέρωση: " + (data.last_update || "—");
+  } catch (err) {
+    console.error("[STATUS][ERR]", err);
+    grid.innerHTML =
+      '<p class="text-center text-red-400">⚠️ Σφάλμα φόρτωσης δεδομένων</p>';
+  }
+}
 
-        .ok { color: #3fb950; font-weight: bold; }
-        .fail { color: #f85149; font-weight: bold; }
-        .pending { color: #d29922; font-weight: bold; }
+loadStatus();
+setInterval(loadStatus, 30000);
+</script>
 
-        .refreshing {
-            opacity: 0.5;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        footer {
-            margin-top: 25px;
-            text-align: center;
-            color: #8b949e;
-            font-size: 14px;
-            border-top: 1px solid #30363d;
-            padding-top: 15px;
-        }
-
-        @media (max-width: 600px) {
-            header h1 { font-size: 20px; }
-            .status-card { font-size: 13px; padding: 10px; }
-        }
-
-        @media (prefers-color-scheme: light) {
-            body { background-color: #f5f5f5; color: #222; }
-            header { background-color: #f0f0f0; border-color: #ddd; }
-            .status-card { background-color: #fff; border-color: #ccc; color: #222; }
-            footer { border-color: #ccc; color: #555; }
-        }
-    </style>
-</head>
-<body>
-
-    {% include "partials/system_summary_bar.html" %}
-
-    <header>
-        <h1>⚙️ EURO_GOALS v9.3.2 – Unified Monitor</h1>
-        <p>Real-time monitoring for System Status, SmartMoney & GoalMatrix</p>
-    </header>
-
-    <main>
-        <h2>System Status</h2>
-        <div id="statusGrid" class="status-grid"></div>
-        <footer>
-            <p id="lastUpdate">Τελευταία ενημέρωση: —</p>
-        </footer>
-    </main>
-
-    <script>
-        async function loadStatus() {
-            const grid = document.getElementById('statusGrid');
-            const footer = document.getElementById('lastUpdate');
-            grid.classList.add('refreshing');
-
-            try {
-                const res = await fetch('/system_status_data');
-                const data = await res.json();
-
-                grid.innerHTML = '';
-                for (const [key, value] of Object.entries(data)) {
-                    if (key === 'last_update') continue;
-                    const div = document.createElement('div');
-                    div.className = 'status-card';
-                    let cls = 'pending';
-                    if (value.includes('OK')) cls = 'ok';
-                    else if (value.includes('FAIL')) cls = 'fail';
-                    div.innerHTML = `<h3>${key}</h3><p class="${cls}">${value}</p>`;
-                    grid.appendChild(div);
-                }
-
-                footer.innerText = `Τελευταία ενημέρωση: ${data.last_update}`;
-            } catch (err) {
-                console.error('[STATUS] Error loading:', err);
-                grid.innerHTML = '<p class="fail">⚠️ Σφάλμα φόρτωσης δεδομένων</p>';
-            } finally {
-                grid.classList.remove('refreshing');
-            }
-        }
-
-        // Αρχική φόρτωση και επανάληψη κάθε 30''
-        loadStatus();
-        setInterval(loadStatus, 30000);
-    </script>
-
-    <footer>
-        <p>EURO_GOALS v9.3.2 | Unified Monitor – Build: 02/11/2025</p>
-    </footer>
-</body>
-</html>
+{% endblock %}

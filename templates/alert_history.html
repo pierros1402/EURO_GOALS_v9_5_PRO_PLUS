@@ -1,249 +1,94 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alert History – EURO_GOALS v9.4.3 PRO+</title>
-  <link rel="icon" href="/static/icons/ball.png">
-  <link rel="stylesheet" href="/static/style.css">
-  <style>
-    :root {
-      --bg-dark: #0d1117;
-      --bg-light: #f5f5f5;
-      --text-dark: #e6edf3;
-      --text-light: #222;
-      --accent: #58a6ff;
-    }
+{% extends "base.html" %}
+{% block content %}
 
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-dark);
-      font-family: "Segoe UI", Roboto, sans-serif;
-      margin: 0;
-      padding: 0;
-      transition: background 0.3s, color 0.3s;
-    }
+{% include "system_summary_bar.html" %}
 
-    header {
-      background-color: #161b22;
-      border-bottom: 2px solid #30363d;
-      text-align: center;
-      padding: 20px 10px;
-    }
+<div class="container mx-auto p-4">
+  <h1 class="text-3xl font-bold text-center text-blue-400 mb-2">
+    📜 EURO_GOALS v9.4.4 PRO+ – Alert History
+  </h1>
+  <p class="text-center text-gray-400 mb-6">
+    Προβολή SmartMoney / Goals / System Alerts σε πραγματικό χρόνο
+  </p>
 
-    header h1 { color: var(--accent); margin-bottom: 5px; }
-    header p { color: #8b949e; margin: 0; font-size: 14px; }
-
-    .controls {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 15px auto;
-    }
-
-    .controls button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 14px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background 0.2s;
-    }
-    .controls button:hover { background: #1e40af; }
-
-    main {
-      padding: 25px;
-      max-width: 1100px;
-      margin: auto;
-    }
-
-    .filter-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      justify-content: center;
-    }
-
-    select, input[type="text"], button.refresh-btn {
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #30363d;
-      background-color: #161b22;
-      color: #e6edf3;
-    }
-
-    .alert-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    .alert-table th, .alert-table td {
-      border: 1px solid #30363d;
-      padding: 8px;
-      text-align: left;
-    }
-
-    .alert-table th {
-      background-color: #21262d;
-      color: var(--accent);
-    }
-
-    .alert-table tr:nth-child(even) { background-color: #161b22; }
-    .alert-table tr:hover { background-color: #30363d; }
-
-    .flash { animation: highlight 1.5s ease; }
-    @keyframes highlight {
-      from { background-color: #1f6feb; }
-      to { background-color: transparent; }
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 40px;
-      padding: 20px;
-      border-top: 1px solid #30363d;
-      color: #8b949e;
-      font-size: 14px;
-    }
-
-    body.light {
-      background-color: var(--bg-light);
-      color: var(--text-light);
-    }
-  </style>
-</head>
-
-<body>
-
-  {% include "system_summary_bar.html" %}
-
-  <header>
-    <h1>📜 EURO_GOALS v9.4.3 PRO+ – Alert History</h1>
-    <p>Προβολή SmartMoney / Goals / System Alerts σε πραγματικό χρόνο</p>
-  </header>
-
-  <div class="controls">
-    <button onclick="location.href='/'">🏠 Dashboard</button>
-    <button id="muteBtn">🔊 Mute</button>
-    <button id="modeBtn">🌙 Dark</button>
-    <button id="refreshBtn">🔁 Refresh</button>
+  <div class="flex justify-center gap-2 mb-4">
+    <button id="btn-dashboard" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl shadow">🏠 Dashboard</button>
+    <button id="btn-mute" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-xl shadow">🔇 Mute</button>
+    <button id="btn-dark" class="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl shadow">🌙 Dark</button>
+    <button id="btn-refresh" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl shadow">🔁 Refresh</button>
   </div>
 
-  <main>
-    <div class="filter-bar">
-      <input type="text" id="searchBox" placeholder="Αναζήτηση...">
-      <select id="typeFilter">
-        <option value="all">Όλες οι ειδοποιήσεις</option>
-        <option value="smart">💰 Smart Money</option>
-        <option value="goal">⚽ Goal Alerts</option>
-        <option value="system">⚙️ System Events</option>
-      </select>
-    </div>
+  <div class="flex justify-between items-center mb-3">
+    <input
+      type="text"
+      id="search"
+      placeholder="Αναζήτηση..."
+      class="w-1/3 p-2 rounded-lg border border-gray-700 bg-gray-900 text-gray-100"
+    />
+    <select id="filter-type" class="p-2 rounded-lg border border-gray-700 bg-gray-900 text-gray-100">
+      <option value="all">Όλες οι ειδοποιήσεις</option>
+      <option value="smartmoney">SmartMoney</option>
+      <option value="system">System</option>
+      <option value="goal">Goals</option>
+    </select>
+    <span class="text-gray-400 text-sm">🕒 Τελευταία ενημέρωση: <span id="last-refresh">—</span></span>
+  </div>
 
-    <table class="alert-table" id="alertTable">
-      <thead>
-        <tr>
-          <th>Ώρα</th>
-          <th>Τύπος</th>
-          <th>Λεπτομέρειες</th>
-        </tr>
-      </thead>
-      <tbody id="alertRows">
-        <!-- Εισαγωγή δεδομένων -->
-      </tbody>
-    </table>
+  <table class="w-full text-left text-gray-200 border-t border-gray-700">
+    <thead class="bg-gray-800 text-gray-300 uppercase text-sm">
+      <tr>
+        <th class="py-2 px-3 w-1/6">Ώρα</th>
+        <th class="py-2 px-3 w-1/6">Τύπος</th>
+        <th class="py-2 px-3">Λεπτομέρειες</th>
+      </tr>
+    </thead>
+    <tbody id="alerts-body" class="text-sm divide-y divide-gray-700"></tbody>
+  </table>
+</div>
 
-    <p style="text-align:right; font-size:13px; color:#8b949e; margin-top:10px;">
-      🕓 Τελευταία ενημέρωση: <span id="last-update">—</span>
-    </p>
-  </main>
+<footer class="text-center text-gray-500 text-xs mt-6">
+  EURO_GOALS v9.4.4 PRO+ • Alert History | Build: 04/11/2025
+</footer>
 
-  <footer>
-    EURO_GOALS v9.4.3 PRO+ | Alert History | Build: 04/11/2025
-  </footer>
+<script>
+let autoRefresh = true;
+const REFRESH_INTERVAL = 60; // sec
 
-  <script>
-    // =============================================================
-    // ALERT HISTORY – Ultimate UI Edition (Mute / Mode / Auto)
-    // =============================================================
-
-    const rows = document.getElementById("alertRows");
-    const typeFilter = document.getElementById("typeFilter");
-    const searchBox = document.getElementById("searchBox");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const lastUpdateEl = document.getElementById("last-update");
-    const muteBtn = document.getElementById("muteBtn");
-    const modeBtn = document.getElementById("modeBtn");
-
-    let muted = localStorage.getItem("smartmoneyMuted") === "true";
-    let darkMode = localStorage.getItem("smartmoneyDark") !== "false";
-    document.body.classList.toggle("light", !darkMode);
-    modeBtn.textContent = darkMode ? "🌙 Dark" : "☀️ Light";
-    muteBtn.textContent = muted ? "🔇 Unmute" : "🔊 Mute";
-
-    async function fetchAlerts() {
-      try {
-        const r = await fetch("/smartmoney/history?limit=100");
-        const j = await r.json();
-        const items = j.items || [];
-        renderAlerts(items);
-        lastUpdateEl.textContent = new Date().toLocaleTimeString("el-GR", { hour12: false });
-        if (!muted) new Audio("/static/sounds/alert.mp3").play();
-      } catch (e) {
-        console.error("Fetch error:", e);
-      }
+async function loadAlerts() {
+  try {
+    const res = await fetch("/api/alerts");
+    const data = await res.json();
+    const tbody = document.getElementById("alerts-body");
+    tbody.innerHTML = "";
+    for (const a of data.alerts) {
+      const row = document.createElement("tr");
+      row.className = "hover:bg-gray-800";
+      row.innerHTML = `
+        <td class="py-2 px-3">${new Date(a.event_time).toLocaleTimeString()}</td>
+        <td class="py-2 px-3">${a.league || "SmartMoney"}</td>
+        <td class="py-2 px-3">${a.team || "-"} | Δ: ${a.delta_odds.toFixed(2)} | Εντ.: ${a.intensity.toFixed(2)}</td>
+      `;
+      tbody.appendChild(row);
     }
+    document.getElementById("last-refresh").innerText = new Date().toLocaleTimeString();
+  } catch (err) {
+    console.error("[ALERT_HISTORY][ERR]", err);
+  }
+}
 
-    function renderAlerts(alerts) {
-      const query = searchBox.value.toLowerCase();
-      const filter = typeFilter.value;
-      rows.innerHTML = "";
+document.getElementById("btn-refresh").addEventListener("click", loadAlerts);
+document.getElementById("btn-dashboard").addEventListener("click", () => {
+  window.location.href = "/";
+});
+document.getElementById("btn-dark").addEventListener("click", () => {
+  document.body.classList.toggle("bg-gray-900");
+});
 
-      alerts
-        .filter(a => (filter === "all" || (filter === "smart" && a.source) || (filter === "goal" && a.detail?.includes("Goal")) || (filter === "system" && a.detail?.includes("Render"))))
-        .filter(a => a.detail?.toLowerCase().includes(query))
-        .forEach(a => {
-          const tr = document.createElement("tr");
-          const dt = new Date(a.ts_utc).toLocaleTimeString("el-GR", { hour12: false });
-          const type = a.source ? "💰 SmartMoney" : "⚙️ System";
-          const detail = a.detail || `${a.home} vs ${a.away} (${a.bookmaker})`;
-          tr.innerHTML = `<td>${dt}</td><td>${type}</td><td>${detail}</td>`;
-          rows.appendChild(tr);
-        });
-    }
+setInterval(() => {
+  if (autoRefresh) loadAlerts();
+}, REFRESH_INTERVAL * 1000);
 
-    // ========== CONTROLS ==========
-    muteBtn.onclick = () => {
-      muted = !muted;
-      localStorage.setItem("smartmoneyMuted", muted);
-      muteBtn.textContent = muted ? "🔇 Unmute" : "🔊 Mute";
-    };
+window.addEventListener("DOMContentLoaded", loadAlerts);
+</script>
 
-    modeBtn.onclick = () => {
-      darkMode = !darkMode;
-      localStorage.setItem("smartmoneyDark", darkMode);
-      document.body.classList.toggle("light", !darkMode);
-      modeBtn.textContent = darkMode ? "🌙 Dark" : "☀️ Light";
-    };
-
-    refreshBtn.onclick = fetchAlerts;
-    typeFilter.onchange = fetchAlerts;
-    searchBox.oninput = fetchAlerts;
-
-    document.addEventListener("keydown", e => {
-      if (e.key.toLowerCase() === "r") fetchAlerts();
-      if (e.key.toLowerCase() === "m") muteBtn.click();
-      if (e.key.toLowerCase() === "l") modeBtn.click();
-    });
-
-    // ========== AUTO REFRESH ==========
-    fetchAlerts();
-    setInterval(fetchAlerts, 60000);
-  </script>
-
-</body>
-</html>
+{% endblock %}
