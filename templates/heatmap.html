@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartMoney Heatmap — EURO_GOALS</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto; margin: 16px; }
+#chart { width: 100%; height: 78vh; }
+.topbar { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+button { padding:8px 12px; border-radius:10px; border:0; background:#111; color:#fff; }
+select, input { padding:8px; border-radius:8px; border:1px solid #ddd; }
+</style>
+</head>
+<body>
+<div class="topbar">
+<button onclick="location.href='/'">← Πίσω</button>
+<strong>SmartMoney Heatmap</strong>
+<label>Ημέρες: <input type="number" id="days" value="2" min="1" max="30" /></label>
+<label>Bucket (λεπτά): <input type="number" id="bucket" value="5" min="1" max="30" /></label>
+<button id="reload">Ανανέωση</button>
+</div>
+<div id="chart"></div>
+
+
+<script src="/static/js/heatmap.js"></script>
+</body>
+</html>

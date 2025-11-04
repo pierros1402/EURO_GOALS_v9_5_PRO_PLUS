@@ -57,3 +57,22 @@ cryptography
 # --- AI / ML Analytics (SmartMoney Value Moves) ---
 scikit-learn
 scipy
+# --- Push Notifications ---
+pywebpush==1.14.0
+cryptography>=41.0.0
+
+
+# (Υπόλοιπα πακέτα όπως τα έχεις ήδη)
+fastapi
+uvicorn
+SQLAlchemy
+alembic
+jinja2
+python-dotenv
+requests
+httpx
+pandas
+openpyxl
+playsound==1.2.2
+pydub
+psycopg2-binary

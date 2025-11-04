@@ -1,201 +1,207 @@
 # ==============================================
-# EURO_GOALS v9.4.4 PRO+ – Main Application
-# Push Notifications + SmartMoney Heatmap + Mock APIs
+# EURO_GOALS v9.4.4 PRO+ — Push + SmartMoney Heatmap
 # ==============================================
+import os
+import json
+from datetime import datetime, timedelta
+from typing import List
 
-from fastapi import FastAPI, Request, Body
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import create_engine, text
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from dotenv import load_dotenv
-from datetime import datetime
-import os, json, platform, threading
 
-# Optional (for Push) – if not installed in local dev, keeps app alive
-try:
-    from pywebpush import webpush, WebPushException
-    HAS_WEBPUSH = True
-except Exception:
-    HAS_WEBPUSH = False
+from pywebpush import webpush, WebPushException
 
-# ------------------------------------------------
-# 1) Env & basic config
-# ------------------------------------------------
+# --------------------------------------------------
+# ENV & APP
+# --------------------------------------------------
 load_dotenv()
+PUSH_ENABLED = os.getenv("PUSH_ENABLED", "false").lower() == "true"
+VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY", "")
+VAPID_CONTACT = os.getenv("VAPID_CONTACT", "mailto:admin@eurogoals.local")
 
-DATABASE_URL        = os.getenv("DATABASE_URL", "sqlite:///matches.db")
-VAPID_PRIVATE_KEY   = os.getenv("VAPID_PRIVATE_KEY", "")
-VAPID_PUBLIC_KEY    = os.getenv("VAPID_PUBLIC_KEY", "")
-VAPID_EMAIL         = os.getenv("VAPID_EMAIL", "mailto:you@example.com")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///matches.db")
 
-# ------------------------------------------------
-# 2) App, static & templates
-# ------------------------------------------------
 app = FastAPI(title="EURO_GOALS v9.4.4 PRO+")
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
-
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# ------------------------------------------------
-# 3) Pages
-# ------------------------------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(BASE_DIR, "static")
+templates_dir = os.path.join(BASE_DIR, "templates")
+
+os.makedirs(static_dir, exist_ok=True)
+os.makedirs(templates_dir, exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+templates = Jinja2Templates(directory=templates_dir)
+
+# --------------------------------------------------
+# DATABASE
+# --------------------------------------------------
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+Base = declarative_base()
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# --------------------------------------------------
+# MODELS
+# --------------------------------------------------
+class PushSubscription(Base):
+    __tablename__ = "push_subscriptions"
+    id = Column(Integer, primary_key=True)
+    endpoint = Column(Text, unique=True, nullable=False)
+    p256dh = Column(String(255), nullable=False)
+    auth = Column(String(255), nullable=False)
+    user_agent = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class SmartMoneyAlert(Base):
+    __tablename__ = "smartmoney_alerts"
+    id = Column(Integer, primary_key=True)
+    match_id = Column(String(64), index=True)
+    league = Column(String(128))
+    team = Column(String(128), nullable=True)
+    event_time = Column(DateTime, default=datetime.utcnow, index=True)
+    minute = Column(Integer, nullable=True)
+    delta_odds = Column(Float, nullable=True)
+    intensity = Column(Float, nullable=True)
+
+
+Base.metadata.create_all(bind=engine)
+
+# --------------------------------------------------
+# ROUTES
+# --------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+async def index(request: Request):
+    return templates.TemplateResponse(
+        "index.html",
+        {"request": request, "vapid_public": VAPID_PUBLIC_KEY, "push_enabled": PUSH_ENABLED},
+    )
 
-@app.get("/smartmoney/heatmap", response_class=HTMLResponse)
-def heatmap_page(request: Request):
-    return templates.TemplateResponse("smartmoney_heatmap.html", {"request": request})
 
-# (προηγούμενες σελίδες – αν τις χρειάζεσαι)
-@app.get("/alert/history", response_class=HTMLResponse)
-def alert_history(request: Request):
-    return templates.TemplateResponse("alert_history.html", {"request": request})
+@app.get("/heatmap", response_class=HTMLResponse)
+async def heatmap_page(request: Request):
+    return templates.TemplateResponse("heatmap.html", {"request": request})
 
-@app.get("/smartmoney/logs", response_class=HTMLResponse)
-def smartmoney_logs(request: Request):
-    # Δείχνει log viewer αν υπάρχει logs/smartmoney_log.json
-    try:
-        log_path = "logs/smartmoney_log.json"
-        logs = json.load(open(log_path, "r", encoding="utf-8")) if os.path.exists(log_path) else []
-        return templates.TemplateResponse("smartmoney_logs.html", {"request": request, "logs": logs})
-    except Exception as e:
-        return HTMLResponse(f"<h3>Error reading logs: {e}</h3>")
 
-# ------------------------------------------------
-# 4) Health
-# ------------------------------------------------
-@app.get("/health", response_class=JSONResponse)
-def health_check():
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        return {"status": "ok", "database": "connected"}
-    except Exception as e:
-        return {"status": "error", "database": "disconnected", "error": str(e)}
+@app.get("/status/push")
+async def status_push(db: Session = Depends(get_db)):
+    subs = db.query(PushSubscription).count()
+    return {"enabled": PUSH_ENABLED, "subscriptions": subs, "vapid_public": bool(VAPID_PUBLIC_KEY)}
 
-# ------------------------------------------------
-# 5) Service Worker route (served from /service-worker.js)
-# ------------------------------------------------
-@app.get("/service-worker.js")
-def sw():
-    return FileResponse("static/service-worker.js", media_type="application/javascript")
 
-# ------------------------------------------------
-# 6) Browser Push endpoints (VAPID)
-# ------------------------------------------------
-PUSH_DB = "data/push_subs.json"
-os.makedirs("data", exist_ok=True)
-if not os.path.exists(PUSH_DB):
-    json.dump([], open(PUSH_DB, "w", encoding="utf-8"))
+@app.get("/status/heatmap")
+async def status_heatmap(db: Session = Depends(get_db)):
+    since = datetime.utcnow() - timedelta(days=1)
+    cnt = db.query(SmartMoneyAlert).filter(SmartMoneyAlert.event_time >= since).count()
+    return {"last24h_alerts": cnt}
 
-@app.get("/push/public_key", response_class=JSONResponse)
-def push_public_key():
-    return {"publicKey": VAPID_PUBLIC_KEY}
 
-@app.post("/push/subscribe", response_class=JSONResponse)
-def push_subscribe(payload: dict = Body(...)):
-    subs = json.load(open(PUSH_DB, "r", encoding="utf-8"))
-    # avoid duplicates
-    if payload not in subs:
-        subs.append(payload)
-        json.dump(subs, open(PUSH_DB, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-    return {"ok": True, "count": len(subs)}
+@app.post("/push/subscribe")
+async def push_subscribe(payload: dict, request: Request, db: Session = Depends(get_db)):
+    if not PUSH_ENABLED:
+        raise HTTPException(status_code=400, detail="Push disabled")
 
-@app.post("/push/test", response_class=JSONResponse)
-def push_test():
-    if not (HAS_WEBPUSH and VAPID_PRIVATE_KEY and VAPID_PUBLIC_KEY):
-        return {"ok": False, "reason": "webpush_not_configured"}
-    subs = json.load(open(PUSH_DB, "r", encoding="utf-8"))
-    sent = 0
+    endpoint = payload.get("endpoint")
+    keys = payload.get("keys", {})
+    p256dh = keys.get("p256dh")
+    auth = keys.get("auth")
+    ua = request.headers.get("User-Agent", "-")
+
+    if not endpoint or not p256dh or not auth:
+        raise HTTPException(status_code=400, detail="Invalid payload")
+
+    existing = db.query(PushSubscription).filter(PushSubscription.endpoint == endpoint).first()
+    if existing:
+        existing.p256dh = p256dh
+        existing.auth = auth
+        existing.user_agent = ua
+    else:
+        db.add(PushSubscription(endpoint=endpoint, p256dh=p256dh, auth=auth, user_agent=ua))
+    db.commit()
+    return {"ok": True}
+
+
+@app.post("/send_push")
+async def send_push(payload: dict, db: Session = Depends(get_db)):
+    if not PUSH_ENABLED:
+        raise HTTPException(status_code=400, detail="Push disabled")
+    if not (VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY):
+        raise HTTPException(status_code=400, detail="Missing VAPID keys")
+
+    title = payload.get("title", "EURO_GOALS")
+    body = payload.get("body", "")
+    url = payload.get("url", "/")
+    tag = payload.get("tag", "eurogoals")
+
+    data = {"title": title, "body": body, "url": url, "tag": tag}
+    vapid = {
+        "vapid_private_key": VAPID_PRIVATE_KEY,
+        "vapid_claims": {"sub": VAPID_CONTACT},
+    }
+
+    errors = 0
+    subs = db.query(PushSubscription).all()
     for s in subs:
         try:
-            webpush(
-                subscription_info=s,
-                data=json.dumps({
-                    "title": "EURO_GOALS",
-                    "body": "Test SmartMoney push",
-                    "url": "/smartmoney/heatmap"
-                }),
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims={"sub": VAPID_EMAIL},
-            )
-            sent += 1
-        except WebPushException as e:
-            print("[PUSH] error:", e)
-    return {"ok": True, "sent": sent}
+            sub_info = {"endpoint": s.endpoint, "keys": {"p256dh": s.p256dh, "auth": s.auth}}
+            webpush(subscription_info=sub_info, data=json.dumps(data), **vapid)
+        except WebPushException:
+            errors += 1
+    return {"sent": len(subs) - errors, "errors": errors, "total": len(subs)}
 
-# ------------------------------------------------
-# 7) SmartMoney demo data (history + heatmap)
-# ------------------------------------------------
-@app.get("/smartmoney/history", response_class=JSONResponse)
-def get_smartmoney_history(limit: int = 100):
-    # Demo/mock – αντικαθίσταται με real aggregator
-    sample = [{
-        "ts_utc": datetime.utcnow().isoformat(),
-        "home": "Chelsea", "away": "Arsenal",
-        "bookmaker": "Pinnacle", "market": "1X2", "selection": "1",
-        "old_price": 1.92, "new_price": 1.78, "change_pct": -0.072, "source": "TheOddsAPI"
-    }]
-    return {"items": sample[:limit]}
 
-@app.get("/smartmoney/heatmap/data", response_class=JSONResponse)
-def heatmap_data():
-    """
-    Επιστρέφει mock πλέγμα μεταβολών:
-    - matches: λίστα αγώνων
-    - bookmakers: λίστα books
-    - matrix: map[match][bookmaker] -> drop_pct (-0.12 = -12%)
-    """
-    matches = [
-        "Chelsea–Arsenal", "Bayern–Dortmund", "PAO–AEK", "Inter–Juve", "Real–Barca"
-    ]
-    bookmakers = ["Pinnacle", "Bet365", "Stoiximan", "Betano", "Unibet"]
-    # demo τυχαίες πτώσεις
-    import random
-    matrix = {}
-    for m in matches:
-        row = {}
-        for b in bookmakers:
-            drop = round(random.uniform(-0.15, 0.05), 3)  # -15% … +5%
-            row[b] = drop
-        matrix[m] = row
-    return {"matches": matches, "bookmakers": bookmakers, "matrix": matrix, "ts": datetime.utcnow().isoformat()}
+@app.get("/api/heatmap_data")
+async def api_heatmap_data(db: Session = Depends(get_db), days: int = 2, bucket: int = 5):
+    since = datetime.utcnow() - timedelta(days=days)
+    alerts = db.query(SmartMoneyAlert).filter(SmartMoneyAlert.event_time >= since).all()
 
-# ------------------------------------------------
-# 8) Mock routes (για να μην βλέπεις 404 από παλιό JS)
-# ------------------------------------------------
-@app.get("/smartmoney/events", response_class=JSONResponse)
-def mock_events():
-    return {"events": []}
+    heat_index = {}
 
-@app.get("/api/alerts/latest", response_class=JSONResponse)
-def mock_latest():
-    return {"latest": None}
+    def bucketize_minute(a: SmartMoneyAlert) -> int:
+        if a.minute is not None:
+            return max(0, min(95, a.minute))
+        t = a.event_time or datetime.utcnow()
+        return (t.hour * 60 + t.minute) % 96
 
-@app.get("/system_status_data", response_class=JSONResponse)
-def mock_status():
-    return {"database": "connected", "health": "ok", "smartmoney": "live", "render": "active", "timestamp": datetime.utcnow().isoformat()}
+    for a in alerts:
+        key = (a.match_id or "-"), bucketize_minute(a)
+        weight = a.intensity if a.intensity else (abs(a.delta_odds) if a.delta_odds else 1.0)
+        heat_index[key] = heat_index.get(key, 0.0) + float(weight)
 
-# ------------------------------------------------
-# 9) Startup (logs)
-# ------------------------------------------------
-@app.on_event("startup")
-def startup_event():
-    print("=============================================")
-    print("🚀 EURO_GOALS v9.4.4 PRO+ starting …")
-    print("🔔 Push:", "enabled" if (HAS_WEBPUSH and VAPID_PUBLIC_KEY) else "disabled")
-    print("💰 SmartMoney heatmap endpoint ready.")
-    print("=============================================")
+    match_ids = sorted(list({k[0] for k in heat_index.keys()}))
+    minutes = list(range(0, 96))
+    matrix = [[round(heat_index.get((mid, m), 0.0), 3) for m in minutes] for mid in match_ids]
 
-# ------------------------------------------------
-# 10) Local run
-# ------------------------------------------------
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    return {
+        "x": minutes,
+        "y": match_ids,
+        "z": matrix,
+        "meta": {"since": since.isoformat() + "Z", "alerts": len(alerts)},
+    }
+
+
+@app.get("/health")
+async def health():
+    return {"ok": True, "ts": datetime.utcnow().isoformat() + "Z"}

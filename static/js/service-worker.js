@@ -1,25 +1,58 @@
-// EURO_GOALS – Service Worker (Push Notifications)
+// ==============================================
+// EURO_GOALS v9.4.4 PRO+ — Service Worker (Push)
+// ==============================================
 
-self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
-
-self.addEventListener("push", (event) => {
+// Όταν φτάνει Push Notification από τον server:
+self.addEventListener('push', function (event) {
   let data = {};
-  try { data = event.data.json(); } catch (e) {}
-  const title = data.title || "EURO_GOALS Alert";
-  const body  = data.body  || "SmartMoney event detected";
-  const url   = data.url   || "/smartmoney/heatmap";
-  const options = {
-    body,
-    icon: "/static/icons/ball.png",
-    badge: "/static/icons/ball.png",
-    data: { url }
-  };
-  event.waitUntil(self.registration.showNotification(title, options));
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    console.error('Push event parse error:', e);
+  }
+
+  const title = data.title || 'EURO_GOALS';
+  const body = data.body || 'Νέα ειδοποίηση';
+  const url = data.url || '/';
+  const tag = data.tag || 'eurogoals';
+  const icon = '/static/icons/ball-512.png';  // μπορείς να βάλεις όποιο θες
+  const badge = '/static/icons/badge-128.png'; // προαιρετικό
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      tag,
+      icon,
+      badge,
+      data: { url },
+      renotify: true
+    })
+  );
 });
 
-self.addEventListener("notificationclick", (event) => {
+// Όταν ο χρήστης κάνει click στο notification:
+self.addEventListener('notificationclick', function (event) {
   event.notification.close();
-  const url = event.notification.data?.url || "/";
-  event.waitUntil(clients.openWindow(url));
+
+  const url = event.notification?.data?.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      for (let client of windowClients) {
+        if (client.url.includes(self.origin) && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
+  );
+});
+
+// Προαιρετικά: keep alive
+self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(clients.claim());
 });
