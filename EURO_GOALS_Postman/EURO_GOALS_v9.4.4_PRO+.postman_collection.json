@@ -1,0 +1,59 @@
+{
+  "info": {
+    "name": "EURO_GOALS v9.4.4 PRO+ API",
+    "_postman_id": "eurogoals-v9-4-4-proplus",
+    "description": "Postman collection for testing EURO_GOALS FastAPI endpoints (v9.4.4 PRO+)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🏁 Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{BASE_URL}}/health"
+      }
+    },
+    {
+      "name": "💾 Database Summary",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/system/db_summary"
+      }
+    },
+    {
+      "name": "🔁 Refresh Status",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/system/refresh_status"
+      }
+    },
+    {
+      "name": "💰 Smart Money Monitor",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/smartmoney/status"
+      }
+    },
+    {
+      "name": "⚽ Goals Feed",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/feeds/goals"
+      }
+    },
+    {
+      "name": "📜 Alert History",
+      "request": {
+        "method": "GET",
+        "url": "{{BASE_URL}}/alerts/history"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://127.0.0.1:8000"
+    }
+  ]
+}
