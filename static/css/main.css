@@ -1,141 +1,54 @@
 /* =====================================================
-   EURO_GOALS v9.5.0 PRO+ – Adaptive + Dark Mode
-   - Theme via CSS variables
-   - Responsive + Animations
+   EURO_GOALS v9.5.0 PRO+ – Adaptive UX + Dark Mode
    ===================================================== */
 
-/* -------- THEME TOKENS -------- */
 :root {
-  /* Base palette (light) */
   --bg-app: #f3f4f6;
-  --bg-card: rgba(255, 255, 255, 0.88);
+  --bg-card: rgba(255,255,255,0.88);
   --text-app: #1f2937;
   --text-muted: #6b7280;
-  --border: rgba(15, 23, 42, 0.12);
-  --hover: rgba(59, 130, 246, 0.06);
-
-  /* Brand */
+  --border: rgba(15,23,42,0.12);
+  --hover: rgba(59,130,246,0.06);
   --primary: #2563eb;
   --accent: #0ea5e9;
-
-  /* Panels */
-  --panel-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  --panel-shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
-
-  /* Tables */
-  --table-header: rgba(34,197,94,0.12);
-  --table-divider: #e5e7eb;
-
-  /* On colors */
   --onPrimary: #ffffff;
-}
-
-/* Dark scheme */
-@media (prefers-color-scheme: dark) {
-  html[data-theme="auto"] {
-    --bg-app: #0b1220;
-    --bg-card: rgba(17, 24, 39, 0.9);
-    --text-app: #e5e7eb;
-    --text-muted: #9ca3af;
-    --border: rgba(148, 163, 184, 0.18);
-    --hover: rgba(59, 130, 246, 0.12);
-
-    --primary: #60a5fa;
-    --accent: #38bdf8;
-
-    --panel-shadow: 0 2px 10px rgba(0,0,0,0.45);
-    --panel-shadow-hover: 0 6px 18px rgba(0,0,0,0.6);
-
-    --table-header: rgba(34,197,94,0.18);
-    --table-divider: rgba(148,163,184,0.24);
-
-    --onPrimary: #0b1220;
-  }
-}
-
-/* Force light */
-html[data-theme="light"] {
-  --bg-app: #f3f4f6;
-  --bg-card: rgba(255, 255, 255, 0.88);
-  --text-app: #1f2937;
-  --text-muted: #6b7280;
-  --border: rgba(15, 23, 42, 0.12);
-  --hover: rgba(59, 130, 246, 0.06);
-
-  --primary: #2563eb;
-  --accent: #0ea5e9;
-
-  --panel-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  --panel-shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
-
-  --table-header: rgba(34,197,94,0.12);
+  --table-header: rgba(37,99,235,0.08);
   --table-divider: #e5e7eb;
-
-  --onPrimary: #ffffff;
 }
 
-/* Force dark */
-html[data-theme="dark"] {
+/* Dark mode */
+html[data-theme="dark"], html[data-theme="auto"][data-prefers-dark="true"] {
   --bg-app: #0b1220;
-  --bg-card: rgba(17, 24, 39, 0.9);
+  --bg-card: rgba(17,24,39,0.9);
   --text-app: #e5e7eb;
   --text-muted: #9ca3af;
-  --border: rgba(148, 163, 184, 0.18);
-  --hover: rgba(59, 130, 246, 0.12);
-
+  --border: rgba(148,163,184,0.18);
+  --hover: rgba(59,130,246,0.12);
   --primary: #60a5fa;
   --accent: #38bdf8;
-
-  --panel-shadow: 0 2px 10px rgba(0,0,0,0.45);
-  --panel-shadow-hover: 0 6px 18px rgba(0,0,0,0.6);
-
-  --table-header: rgba(34,197,94,0.18);
-  --table-divider: rgba(148,163,184,0.24);
-
   --onPrimary: #0b1220;
+  --table-header: rgba(59,130,246,0.15);
+  --table-divider: rgba(148,163,184,0.24);
 }
 
-/* -------- BASE -------- */
-html, body {
-  margin: 0;
-  padding: 0;
-  scroll-behavior: smooth;
-}
-
-body { 
+body {
   background: var(--bg-app);
   color: var(--text-app);
+  transition: background 0.3s, color 0.3s;
 }
 
-/* Utility tokens for Tailwind interop */
-.bg-app { background-color: var(--bg-app); }
-.bg-card { background-color: var(--bg-card); }
-.text-app { color: var(--text-app); }
-.text-muted { color: var(--text-muted); }
-.text-primary { color: var(--primary); }
-.text-onPrimary { color: var(--onPrimary); }
-.border-border { border-color: var(--border); }
-.bg-hover { background-color: var(--hover); }
-.bg-primary { background-color: var(--primary); }
-.bg-accent { background-color: var(--accent); }
-.text-accent { color: var(--accent); }
-
-/* -------- CARDS / PANELS -------- */
+/* Cards & Panels */
 .summary-item, .panel {
   background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 1rem;
-  box-shadow: var(--panel-shadow);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   padding: 1rem;
   transition: all 0.25s ease-in-out;
-  border: 1px solid var(--border);
 }
+.panel:hover { transform: translateY(-2px); }
 
-.panel:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--panel-shadow-hover);
-}
-
-/* -------- SYSTEM SUMMARY GRID -------- */
+/* System summary grid */
 #system-summary-bar {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -144,76 +57,68 @@ body {
   font-size: 0.9rem;
 }
 
-/* -------- TABLES -------- */
-.goal-matrix-table,
-#smartmoney-panel .overflow-x-auto {
-  width: 100%;
+/* Table styling */
+.table-container {
   overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
 }
 
-.goal-matrix-table table,
-#smartmoney-panel table {
+table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 480px;
 }
-
-.goal-matrix-table thead,
-#smartmoney-panel thead {
+thead {
   background: var(--table-header);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
-
-.goal-matrix-table th, .goal-matrix-table td,
-#smartmoney-panel th, #smartmoney-panel td {
-  padding: 0.6rem;
+th, td {
+  padding: 0.6rem 0.5rem;
   border-bottom: 1px solid var(--table-divider);
+  text-align: left;
+  white-space: nowrap;
+}
+tbody tr:hover {
+  background: var(--hover);
+  transition: background 0.2s;
 }
 
-/* -------- ALERTS -------- */
-.alert-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
+/* Alerts */
 .alert-card {
-  background: linear-gradient(180deg, rgba(239,68,68,0.10), rgba(239,68,68,0.06));
+  background: linear-gradient(180deg, rgba(239,68,68,0.12), rgba(239,68,68,0.05));
   border-left: 4px solid rgba(239,68,68,0.7);
   border-radius: 0.75rem;
   padding: 0.75rem 1rem;
 }
 
-/* -------- FLOATING BUTTON -------- */
+/* Floating button */
 #fab-refresh {
   animation: pulse 3s infinite;
-  outline: none;
 }
 @keyframes pulse {
-  0%,100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.95; }
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
-/* -------- ANIMATIONS -------- */
-.fade-in { animation: fadeIn 0.8s ease-in-out forwards; }
-.slide-up { animation: slideUp 0.8s ease-in-out forwards; }
+/* Animations */
+.fade-in { animation: fadeIn 0.8s ease forwards; }
+.slide-up { animation: slideUp 0.6s ease forwards; }
 @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
-@keyframes slideUp { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+@keyframes slideUp { from {opacity:0; transform:translateY(15px);} to {opacity:1; transform:translateY(0);} }
 
-/* -------- RESPONSIVE -------- */
+/* Responsive tweaks */
 @media (max-width: 640px) {
   body { font-size: 14px; }
-  header h1 { font-size: 1rem; }
-  #system-summary-bar { grid-template-columns: repeat(2, 1fr); }
-  .panel { padding: 0.8rem; }
+  #system-summary-bar { grid-template-columns: repeat(2,1fr); }
+  table { font-size: 13px; }
+  th, td { padding: 0.4rem 0.3rem; }
 }
-
 @media (min-width: 641px) and (max-width: 1024px) {
-  body { font-size: 15px; }
-  header h1 { font-size: 1.1rem; }
-  #system-summary-bar { grid-template-columns: repeat(3, 1fr); }
-  .panel { padding: 1rem; }
+  #system-summary-bar { grid-template-columns: repeat(3,1fr); }
 }
-
 @media (min-width: 1025px) {
-  body { font-size: 16px; }
-  #system-summary-bar { grid-template-columns: repeat(6, 1fr); }
+  #system-summary-bar { grid-template-columns: repeat(6,1fr); }
 }
