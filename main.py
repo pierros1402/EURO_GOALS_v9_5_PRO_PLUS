@@ -205,3 +205,14 @@ async def api_heatmap_data(db: Session = Depends(get_db), days: int = 2, bucket:
 @app.get("/health")
 async def health():
     return {"ok": True, "ts": datetime.utcnow().isoformat() + "Z"}
+from fastapi.responses import FileResponse
+import os
+
+@app.get("/health")
+async def health():
+    return {"ok": True, "ts": datetime.utcnow().isoformat() + "Z"}
+
+@app.get("/service-worker.js")
+async def service_worker():
+    file_path = os.path.join("static", "service-worker.js")
+    return FileResponse(file_path, media_type="application/javascript")
