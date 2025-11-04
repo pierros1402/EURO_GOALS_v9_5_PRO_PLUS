@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+
+<link rel="stylesheet" href="/static/css/unified_theme.css" />
+
+<div class="eg-container">
+  <div class="eg-header">
+    <h1>🛠 Control Dashboard</h1>
+    <p class="eg-sub">Manual tools: Backup, Logs, Quick links</p>
+  </div>
+
+  <div class="eg-actions">
+    <button id="backupBtn" class="eg-btn eg-btn-primary">📦 Backup Now</button>
+    <button id="clearBtn" class="eg-btn eg-btn-danger">🧹 Clear Logs</button>
+    <a href="/system_status" class="eg-btn eg-btn-secondary">⚙️ System Status</a>
+    <a href="/system_logs" class="eg-btn eg-btn-secondary">🧾 Open Logs</a>
+  </div>
+
+  <div id="cp-result" class="eg-note">Ready.</div>
+</div>
+
+<script>
+async function postJSON(url) {
+  const res = await fetch(url, { method: "POST" });
+  return res.json();
+}
+const result = document.getElementById("cp-result");
+
+document.getElementById("backupBtn").addEventListener("click", async () => {
+  result.textContent = "Creating backup...";
+  try {
+    const r = await postJSON("/manual_backup");
+    result.textContent = r.result === "success" ? "✅ Backup created." : "❌ Backup failed.";
+  } catch {
+    result.textContent = "❌ Backup failed.";
+  }
+});
+
+document.getElementById("clearBtn").addEventListener("click", async () => {
+  result.textContent = "Clearing logs...";
+  try {
+    const r = await postJSON("/clear_logs");
+    result.textContent = r.result === "cleared" ? "🧹 Logs cleared." : "❌ Clear failed.";
+  } catch {
+    result.textContent = "❌ Clear failed.";
+  }
+});
+</script>
+{% endblock %}

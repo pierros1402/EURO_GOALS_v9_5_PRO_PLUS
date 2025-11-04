@@ -1,64 +1,60 @@
 {% extends "base.html" %}
 {% block content %}
 
+<link rel="stylesheet" href="/static/css/unified_theme.css" />
+
 {% include "system_summary_bar.html" %}
 
-<div class="container mx-auto p-4">
-  <h1 class="text-3xl font-bold text-blue-400 mb-2 text-center">
-    ⚙️ EURO_GOALS v9.4.4 PRO+ – Unified System Status
-  </h1>
-  <p class="text-center text-gray-400 mb-6">
-    Πραγματικός χρόνος παρακολούθησης: DB • Render • Health • SmartMoney • Backup
-  </p>
-
-  <div id="status-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <!-- Τα status cards θα δημιουργούνται δυναμικά -->
+<div class="eg-container">
+  <div class="eg-header">
+    <h1>⚙️ EURO_GOALS v9.5.0 PRO+ — System Status</h1>
+    <p class="eg-sub">Real-time status • DB • Health • Render • SmartMoney • Backup</p>
   </div>
 
-  <p id="last-update" class="text-center text-sm text-gray-400 mt-6">Τελευταία ενημέρωση: —</p>
+  <div id="status-grid" class="eg-grid">
+    <!-- dynamic cards -->
+  </div>
+
+  <div class="eg-footer-row">
+    <a href="/control_panel" class="eg-btn eg-btn-primary">🛠 Control Panel</a>
+    <a href="/system_logs" class="eg-btn eg-btn-secondary">🧾 System Logs</a>
+    <span id="last-update" class="eg-last">Last update: —</span>
+  </div>
 </div>
 
 <script>
 async function loadStatus() {
   const grid = document.getElementById("status-grid");
   const last = document.getElementById("last-update");
-  grid.innerHTML = `
-    <div class="col-span-full text-center text-gray-400 animate-pulse">
-      Φόρτωση δεδομένων...
-    </div>
-  `;
-
+  grid.innerHTML = `<div class="eg-card eg-card-dim">Loading...</div>`;
   try {
     const res = await fetch("/system_status_data");
     const data = await res.json();
     grid.innerHTML = "";
 
-    for (const [key, value] of Object.entries(data)) {
-      if (key === "last_update") continue;
-      let color = "text-yellow-400";
-      if (value.includes("OK")) color = "text-green-400";
-      else if (value.includes("FAIL")) color = "text-red-400";
+    const entries = Object.entries(data).filter(([k]) => k !== "last_update");
+    for (const [key, val] of entries) {
+      let tone = "ok";
+      const v = String(val);
+      if (v.includes("Fail") || v.includes("Error") || v.includes("Offline")) tone = "bad";
+      else if (v.includes("High Load") || v.includes("Inactive")) tone = "warn";
 
       const card = document.createElement("div");
-      card.className =
-        "status-card bg-gray-800/50 border border-gray-700 rounded-xl p-4 text-center shadow hover:scale-105 transition";
+      card.className = `eg-card eg-${tone}`;
       card.innerHTML = `
-        <h2 class="text-lg font-semibold text-blue-400 mb-1">${key}</h2>
-        <p class="${color} font-bold">${value}</p>
+        <div class="eg-card-title">${key}</div>
+        <div class="eg-card-body" title="${v}">${v}</div>
       `;
       grid.appendChild(card);
     }
-
-    last.innerText = "Τελευταία ενημέρωση: " + (data.last_update || "—");
-  } catch (err) {
-    console.error("[STATUS][ERR]", err);
-    grid.innerHTML =
-      '<p class="text-center text-red-400">⚠️ Σφάλμα φόρτωσης δεδομένων</p>';
+    last.textContent = "Last update: " + (data.last_update || "—");
+  } catch (e) {
+    console.error("[STATUS][ERR]", e);
+    grid.innerHTML = `<div class="eg-card eg-bad">⚠️ Error loading status</div>`;
   }
 }
 
 loadStatus();
 setInterval(loadStatus, 30000);
 </script>
-
 {% endblock %}
