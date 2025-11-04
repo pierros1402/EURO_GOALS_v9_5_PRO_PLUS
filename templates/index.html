@@ -1,46 +1,85 @@
 <!DOCTYPE html>
-<html lang="el">
+<html lang="el" data-theme="auto">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>EURO_GOALS v9.4.4 PRO+</title>
-<link rel="manifest" href="/static/manifest.json" />
-<style>
-body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto; margin: 16px; }
-.bar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 8px; background: #fff8; backdrop-filter: blur(6px); border-radius: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
-.summary-item { padding: 8px 10px; background:#f6f7fa; border-radius:10px; text-align:center; font-size: 14px; }
-.row { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
-button { padding:10px 14px; border-radius:10px; border:0; box-shadow:0 2px 10px rgba(0,0,0,0.06); cursor:pointer; }
-.cta { background:#111; color:#fff; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>EURO_GOALS v9.5.0 PRO+ – Adaptive + Dark Mode</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}">
 </head>
-<body>
-<h1>EURO_GOALS v9.4.4 PRO+ — Dashboard</h1>
 
+<body class="bg-app text-app font-sans">
 
-<!-- System Summary Bar (επέκταση) -->
-<div id="system-summary-bar" class="bar">
-<div class="summary-item" id="summary-database">💾 DB: …</div>
-<div class="summary-item" id="summary-health">❤️ Health: …</div>
-<div class="summary-item" id="summary-auto">🔁 Refresh: …</div>
-<div class="summary-item" id="summary-smartmoney">💰 SmartMoney: …</div>
-<div class="summary-item" id="summary-render">🌐 Render: …</div>
-<div class="summary-item" id="summary-push">🔔 Push: …</div>
-<div class="summary-item" id="summary-heatmap">🔥 Heatmap: …</div>
-</div>
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-card/90 backdrop-blur-md shadow-md px-4 py-3 flex justify-between items-center border-b border-border">
+    <div class="flex items-center gap-3">
+      <h1 class="text-lg font-bold text-primary">⚽ EURO_GOALS v9.5.0 PRO+</h1>
+      <span class="hidden sm:inline text-xs px-2 py-1 rounded bg-accent/20 text-accent border border-accent/40">Adaptive + Dark</span>
+    </div>
 
+    <div class="flex items-center gap-2">
+      <!-- Theme Toggle -->
+      <button id="theme-toggle" class="p-2 rounded-md border border-border hover:bg-hover transition text-app">
+        <span id="theme-icon" aria-hidden="true">🌙</span>
+        <span class="sr-only">Toggle theme</span>
+      </button>
 
-<div class="row">
-<button class="cta" onclick="window.location.href='/heatmap'">🔥 Άνοιγμα SmartMoney Heatmap</button>
-<button id="btn-push">🔔 Ενεργοποίηση Push</button>
-</div>
+      <!-- Mobile menu -->
+      <button id="menu-toggle" class="lg:hidden p-2 rounded-md border border-border hover:bg-hover transition text-app">
+        ☰
+      </button>
 
+      <!-- Desktop nav -->
+      <nav id="main-nav" class="hidden lg:flex gap-4 text-sm font-medium">
+        <a href="#summary" class="hover:text-primary">Σύνοψη</a>
+        <a href="#smartmoney" class="hover:text-primary">SmartMoney</a>
+        <a href="#goalmatrix" class="hover:text-primary">GoalMatrix</a>
+        <a href="#alerts" class="hover:text-primary">Alerts</a>
+      </nav>
+    </div>
+  </header>
 
-<script>
-window.VAPID_PUBLIC = "{{ vapid_public }}";
-window.PUSH_ENABLED = {{ 'true' if push_enabled else 'false' }};
-</script>
-<script src="/static/js/system_summary.js"></script>
-<script src="/static/js/push_manager.js"></script>
+  <!-- Mobile nav dropdown -->
+  <nav id="mobile-nav" class="hidden flex-col bg-card shadow-md p-3 space-y-2 text-sm lg:hidden animate-fade-in border-b border-border">
+    <a href="#summary" class="block hover:text-primary">Σύνοψη</a>
+    <a href="#smartmoney" class="block hover:text-primary">SmartMoney</a>
+    <a href="#goalmatrix" class="block hover:text-primary">GoalMatrix</a>
+    <a href="#alerts" class="block hover:text-primary">Alerts</a>
+  </nav>
+
+  <!-- Main content -->
+  <main class="p-4 space-y-6 max-w-7xl mx-auto">
+
+    <section id="summary" class="fade-section">{% include 'partials/system_summary_bar.html' %}</section>
+    <section id="smartmoney" class="fade-section">{% include 'partials/smartmoney_monitor.html' %}</section>
+    <section id="goalmatrix" class="fade-section">{% include 'partials/goal_matrix.html' %}</section>
+    <section id="alerts" class="fade-section">{% include 'partials/alert_center.html' %}</section>
+
+  </main>
+
+  <!-- Floating action button -->
+  <button id="fab-refresh" title="Refresh"
+    class="fixed bottom-5 right-5 bg-primary text-onPrimary rounded-full w-14 h-14 shadow-lg flex items-center justify-center text-2xl hover:opacity-90 transition lg:hidden border border-primary/50">⟳</button>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', path='js/system_summary.js') }}"></script>
+  <script src="{{ url_for('static', path='js/ui_animations.js') }}"></script>
+  <script src="{{ url_for('static', path='js/theme_toggle.js') }}"></script>
+
+  <script>
+    // Mobile nav toggle
+    document.getElementById('menu-toggle').addEventListener('click', () => {
+      document.getElementById('mobile-nav').classList.toggle('hidden');
+    });
+
+    // Floating refresh
+    document.getElementById('fab-refresh').addEventListener('click', () => {
+      location.reload();
+    });
+  </script>
 </body>
 </html>
