@@ -140,6 +140,29 @@ def startup_event():
     start_local_notifier()
     print("💰 [SmartMoney] PRO+ active.")
     print("✅ Ready.")
+# ==============================================
+# TEMP MOCK ENDPOINTS (to stabilize frontend)
+# ==============================================
+
+from fastapi.responses import JSONResponse
+
+@app.get("/smartmoney/events", response_class=JSONResponse)
+async def get_smartmoney_events():
+    return {"events": []}
+
+@app.get("/api/alerts/latest", response_class=JSONResponse)
+async def get_latest_alert():
+    return {"latest": None}
+
+@app.get("/system_status_data", response_class=JSONResponse)
+async def get_system_status_data():
+    return {
+        "database": "connected",
+        "health": "ok",
+        "smartmoney": "live",
+        "render": "active",
+        "timestamp": "2025-11-04T06:00:00Z"
+    }
 
 # ------------------------ DEV RUN ------------------------
 if __name__ == "__main__":
