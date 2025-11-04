@@ -1,5 +1,5 @@
 # ==============================================
-# EURO_GOALS v9.4.x – Dependencies
+# EURO_GOALS v9.4.3 PRO+ – Dependencies
 # ==============================================
 
 # --- Core framework ---
@@ -23,6 +23,7 @@ httpx
 # --- Data handling ---
 pandas
 openpyxl
+numpy
 
 # --- Audio / media (π.χ. για ειδοποιήσεις) ---
 playsound==1.2.2
@@ -39,11 +40,8 @@ psutil
 schedule
 pytz
 
-# --- Optional UI utilities (π.χ. notifications, web push στο μέλλον) ---
+# --- Optional UI utilities (π.χ. notifications, web push) ---
 python-multipart
-
-# --- Optional for future analytics ---
-numpy
 
 # --- Security / Auth (μελλοντικά αν χρειαστεί login) ---
 passlib[bcrypt]
@@ -51,3 +49,11 @@ python-jose[cryptography]
 
 # --- Misc utilities ---
 beautifulsoup4
+
+# --- Web Push Notifications ---
+pywebpush
+cryptography
+
+# --- AI / ML Analytics (SmartMoney Value Moves) ---
+scikit-learn
+scipy
