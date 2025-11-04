@@ -1,49 +1,18 @@
-# ==============================================
-# EURO_GOALS v9.4.4 PRO+ – Dependencies (CLEAN)
-# ==============================================
+# ============================================
+# EURO_GOALS v9.5.0 PRO+ – Python Dependencies
+# ============================================
 
 # --- Core framework ---
 fastapi
 uvicorn
 
-# --- Database & ORM ---
-SQLAlchemy
-alembic
-psycopg2-binary     # PostgreSQL (Render DB)
-
-# --- Templates & static ---
-jinja2
-aiofiles
-
-# --- Environment variables ---
+# --- Environment management ---
 python-dotenv
 
-# --- HTTP / APIs ---
+# --- System & monitoring ---
+psutil
 requests
-httpx
 
-# --- Data handling ---
+# --- Optional data handling ---
 pandas
 openpyxl
-numpy
-
-# --- Audio / media (ειδοποιήσεις ή ήχοι) ---
-playsound==1.2.2
-pydub
-
-# --- System monitoring / scheduling ---
-psutil
-schedule
-pytz
-
-# --- Web Push Notifications ---
-pywebpush==1.14.0
-cryptography>=41.0.0
-python-multipart
-
-# --- Machine Learning (SmartMoney analytics) ---
-scikit-learn
-scipy
-
-# --- Misc utilities ---
-beautifulsoup4
