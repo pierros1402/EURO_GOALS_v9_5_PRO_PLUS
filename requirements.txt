@@ -1,5 +1,5 @@
 # ==============================================
-# EURO_GOALS v9.4.3 PRO+ – Dependencies
+# EURO_GOALS v9.4.4 PRO+ – Dependencies (CLEAN)
 # ==============================================
 
 # --- Core framework ---
@@ -9,9 +9,11 @@ uvicorn
 # --- Database & ORM ---
 SQLAlchemy
 alembic
+psycopg2-binary     # PostgreSQL (Render DB)
 
 # --- Templates & static ---
 jinja2
+aiofiles
 
 # --- Environment variables ---
 python-dotenv
@@ -25,54 +27,23 @@ pandas
 openpyxl
 numpy
 
-# --- Audio / media (π.χ. για ειδοποιήσεις) ---
+# --- Audio / media (ειδοποιήσεις ή ήχοι) ---
 playsound==1.2.2
 pydub
 
-# --- Backup & file management ---
-psycopg2-binary   # για PostgreSQL (Render DB)
-aiofiles          # async file handling
-
-# --- System monitoring / health checks ---
+# --- System monitoring / scheduling ---
 psutil
-
-# --- Time & scheduling ---
 schedule
 pytz
 
-# --- Optional UI utilities (π.χ. notifications, web push) ---
+# --- Web Push Notifications ---
+pywebpush==1.14.0
+cryptography>=41.0.0
 python-multipart
 
-# --- Security / Auth (μελλοντικά αν χρειαστεί login) ---
-passlib[bcrypt]
-python-jose[cryptography]
+# --- Machine Learning (SmartMoney analytics) ---
+scikit-learn
+scipy
 
 # --- Misc utilities ---
 beautifulsoup4
-
-# --- Web Push Notifications ---
-pywebpush
-cryptography
-
-# --- AI / ML Analytics (SmartMoney Value Moves) ---
-scikit-learn
-scipy
-# --- Push Notifications ---
-pywebpush==1.14.0
-cryptography>=41.0.0
-
-
-# (Υπόλοιπα πακέτα όπως τα έχεις ήδη)
-fastapi
-uvicorn
-SQLAlchemy
-alembic
-jinja2
-python-dotenv
-requests
-httpx
-pandas
-openpyxl
-playsound==1.2.2
-pydub
-psycopg2-binary
