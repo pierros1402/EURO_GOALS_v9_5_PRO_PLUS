@@ -1,5 +1,5 @@
 # ================================================================
-# EURO_GOALS v9.4.4 PRO+ – Main Application
+# EURO_GOALS v9.4.6 PRO+ – Auto-Cleanup + Log Panel Edition
 # ================================================================
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 from datetime import datetime
 import os
 import psutil
+import asyncio
 import requests
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -14,52 +15,137 @@ from sqlalchemy.exc import SQLAlchemyError
 # ================================================================
 # APP INITIALIZATION
 # ================================================================
-app = FastAPI(title="EURO_GOALS v9.4.4 PRO+")
+app = FastAPI(title="EURO_GOALS v9.4.6 PRO+")
 templates = Jinja2Templates(directory="templates")
 
 # ================================================================
-# STARTUP MESSAGE
+# PATHS & GLOBAL SETTINGS
+# ================================================================
+DB_PATH = os.path.join("db", "matches.db")
+BACKUP_DIR = "backups"
+CPU_LIMIT = 95
+DISK_LIMIT = 85
+RAM_LIMIT = 90
+DB_LIMIT_MB = 200
+CLEAN_INTERVAL = 300  # seconds
+
+# ================================================================
+# GLOBAL LOG BUFFER
+# ================================================================
+LOG_BUFFER = []
+LOG_LIMIT = 50
+
+def log_event(message: str, level: str = "INFO"):
+    """Προσθέτει γραμμή στο system log buffer."""
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    entry = {"time": timestamp, "type": level, "message": message}
+    LOG_BUFFER.append(entry)
+    if len(LOG_BUFFER) > LOG_LIMIT:
+        LOG_BUFFER.pop(0)
+    print(f"[LOG][{level}] {message}")
+
+# ================================================================
+# AUTO-CLEANUP TASKS
+# ================================================================
+def cleanup_old_backups(max_keep: int = 3):
+    """Διατηρεί μόνο τα πιο πρόσφατα backups."""
+    try:
+        if not os.path.exists(BACKUP_DIR):
+            return
+        backups = sorted(
+            [os.path.join(BACKUP_DIR, f) for f in os.listdir(BACKUP_DIR)],
+            key=os.path.getmtime,
+            reverse=True
+        )
+        for old in backups[max_keep:]:
+            os.remove(old)
+            log_event(f"Removed old backup: {old}", "INFO")
+    except Exception as e:
+        log_event(f"Backup cleanup error: {e}", "ERROR")
+
+async def auto_cleanup_task():
+    """Παρακολουθεί CPU/RAM/Disk/DB και εκτελεί καθαρισμούς."""
+    await asyncio.sleep(10)
+    while True:
+        cpu = psutil.cpu_percent(interval=1)
+        mem = psutil.virtual_memory().percent
+        disk = psutil.disk_usage("/").percent
+
+        # ---- CPU overload ----
+        if cpu > CPU_LIMIT:
+            log_event(f"High CPU {cpu}%, pausing SmartMoney...", "WARNING")
+            await asyncio.sleep(30)
+            log_event("CPU normalized, SmartMoney resumed.", "INFO")
+
+        # ---- RAM alert ----
+        if mem > RAM_LIMIT:
+            log_event(f"High RAM usage {mem}%", "WARNING")
+
+        # ---- Disk cleanup ----
+        if disk > DISK_LIMIT:
+            log_event(f"Disk {disk}% full → cleaning old backups...", "WARNING")
+            cleanup_old_backups(max_keep=3)
+            log_event("Old backups removed successfully.", "INFO")
+
+        # ---- DB compact ----
+        if os.path.exists(DB_PATH):
+            db_size_mb = os.path.getsize(DB_PATH) / (1024 * 1024)
+            if db_size_mb > DB_LIMIT_MB:
+                log_event(f"DB size {db_size_mb:.1f}MB → compacting...", "WARNING")
+                os.system(f"sqlite3 {DB_PATH} 'VACUUM;'")
+                log_event("Database compacted successfully.", "INFO")
+
+        await asyncio.sleep(CLEAN_INTERVAL)
+
+# ================================================================
+# STARTUP EVENT
 # ================================================================
 @app.on_event("startup")
 async def startup_event():
-    print("🚀 EURO_GOALS v9.4.4 PRO+ started successfully!")
-    print("✅ Push notifications ENABLED")
-    print("🧠 SmartMoney loop started (interval=30s, threshold=0.2)")
-    print("🗂  Multi-league refresh placeholder active...")
+    print("🚀 EURO_GOALS v9.4.6 PRO+ started successfully!")
+    print("🧠 SmartMoney monitoring active")
+    print("💾 Auto-Cleanup Task running every 5min")
+    asyncio.create_task(auto_cleanup_task())
 
 # ================================================================
-# HOME / INDEX ROUTE
+# ROUTES
 # ================================================================
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "title": "EURO_GOALS v9.4.4 PRO+"})
+    return templates.TemplateResponse("index.html", {"request": request, "title": "EURO_GOALS v9.4.6 PRO+"})
 
-# ================================================================
-# SYSTEM STATUS PAGE (TEMPLATE)
-# ================================================================
 @app.get("/system_status", response_class=HTMLResponse)
 async def system_status(request: Request):
     return templates.TemplateResponse("system_status.html", {"request": request, "title": "System Status"})
 
+@app.get("/alert_history", response_class=HTMLResponse)
+async def alert_history(request: Request):
+    return templates.TemplateResponse("alert_history.html", {"request": request, "title": "Alert History"})
+
+@app.get("/system_logs", response_class=HTMLResponse)
+async def system_logs(request: Request):
+    return templates.TemplateResponse("system_log.html", {"request": request, "title": "System Logs"})
+
 # ================================================================
-# HEALTH CHECK FUNCTION
+# HEALTH CHECK
 # ================================================================
 def get_health_info():
-    """Επιστρέφει health summary (CPU, RAM, Disk)."""
     try:
         cpu = psutil.cpu_percent(interval=0.5)
         mem = psutil.virtual_memory().percent
         disk = psutil.disk_usage("/").percent
-        return f"OK (CPU {cpu:.0f}%, RAM {mem:.0f}%, Disk {disk:.0f}%)"
+        status = "OK"
+        if cpu > CPU_LIMIT or mem > RAM_LIMIT or disk > DISK_LIMIT:
+            status = "High Load"
+        return f"{status} (CPU {cpu:.0f}%, RAM {mem:.0f}%, Disk {disk:.0f}%)"
     except Exception as e:
-        print("[HEALTH][ERR]", e)
+        log_event(f"Health check error: {e}", "ERROR")
         return "Error"
 
 # ================================================================
-# RENDER SERVICE STATUS
+# RENDER STATUS
 # ================================================================
 def get_render_status():
-    """Ελέγχει την κατάσταση του Render service μέσω του health URL."""
     try:
         render_url = os.getenv("RENDER_HEALTH_URL")
         if not render_url:
@@ -67,33 +153,27 @@ def get_render_status():
         r = requests.get(render_url, timeout=5)
         if r.status_code == 200:
             return "Active"
-        else:
-            return f"Offline ({r.status_code})"
+        return f"Offline ({r.status_code})"
     except Exception as e:
-        print("[RENDER][ERR]", e)
+        log_event(f"Render check error: {e}", "ERROR")
         return "Offline"
 
 # ================================================================
-# DATABASE CONNECTION CHECK
+# DB CONNECTION CHECK
 # ================================================================
 def check_db_connection() -> str:
-    """Ελέγχει αν μπορεί να συνδεθεί πραγματικά στη βάση."""
     try:
         db_url = os.getenv("DATABASE_URL", "sqlite:///db/matches.db")
-
-        # Αν είναι SQLite, βρίσκουμε το πραγματικό path
         if db_url.startswith("sqlite:///"):
             path = db_url.replace("sqlite:///", "")
             if not os.path.exists(path):
                 return f"Fail (missing: {path})"
-
         engine = create_engine(db_url)
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         return "Connected"
-
     except SQLAlchemyError as e:
-        print("[DB][ERR] check:", e)
+        log_event(f"DB connection error: {e}", "ERROR")
         return "Fail"
 
 # ================================================================
@@ -101,7 +181,6 @@ def check_db_connection() -> str:
 # ================================================================
 @app.get("/system_status_data")
 async def system_status_data():
-    """Επιστρέφει δυναμικά δεδομένα για το System Status Panel."""
     db_status = check_db_connection()
     health = get_health_info()
     render_status = get_render_status()
@@ -116,28 +195,16 @@ async def system_status_data():
         "Backup": backup_status,
         "last_update": datetime.now().strftime("%H:%M:%S"),
     }
-
-    print("[STATUS]", data)
+    log_event(f"Status update → DB: {db_status}, Health: {health}", "INFO")
     return data
 
 # ================================================================
-# UTILS / PLACEHOLDER FUNCTIONS
+# SYSTEM LOG DATA (JSON)
 # ================================================================
-def playsound_safe():
-    """Placeholder – ενεργοποιεί ήχο ειδοποίησης αν είναι ON στο .env"""
-    if not os.getenv("AUDIO_ALERTS", "false").lower() == "true":
-        return
-    try:
-        print("[AUDIO] Playing sound alert...")
-    except Exception as e:
-        print("[AUDIO][ERR]", e)
-
-# ================================================================
-# ENDPOINT FOR ALERT HISTORY (PLACEHOLDER)
-# ================================================================
-@app.get("/alert_history", response_class=HTMLResponse)
-async def alert_history(request: Request):
-    return templates.TemplateResponse("alert_history.html", {"request": request, "title": "Alert History"})
+@app.get("/system_logs_data")
+async def system_logs_data():
+    """Επιστρέφει τα τελευταία log entries σε JSON."""
+    return LOG_BUFFER
 
 # ================================================================
 # MAIN EXECUTION (for local run)
