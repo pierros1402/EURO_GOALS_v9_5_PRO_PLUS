@@ -14,6 +14,52 @@ from dotenv import load_dotenv
 from src.smartmoney_engine import fetch_smartmoney_data, update_local_smartmoney
 from src.goalmatrix_engine import fetch_goalmatrix_data, calculate_goal_probabilities
 from src.monitor_engine import get_full_system_status
+# =====================================================
+# SMARTMONEY FEED ENDPOINT (The Odds API Integration)
+# =====================================================
+import os, requests
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+
+@app.get("/api/smartmoney_feed")
+async def get_smartmoney_feed():
+    api_key = os.getenv("SMARTMONEY_REALFEED_API_KEY")
+    url = "https://api.the-odds-api.com/v4/sports/upcoming/odds"
+    params = {"regions": "eu", "markets": "h2h", "apiKey": api_key}
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code != 200:
+            return JSONResponse(
+                {"error": f"API responded {response.status_code}"}, status_code=500
+            )
+
+        raw = response.json()
+        matches = []
+        for item in raw[:15]:  # Limit results for performance
+            if not item.get("bookmakers"): 
+                continue
+            first_bm = item["bookmakers"][0]
+            first_market = first_bm["markets"][0] if first_bm["markets"] else {}
+            outcomes = first_market.get("outcomes", [])
+            home_price = outcomes[0]["price"] if len(outcomes) > 0 else "-"
+            away_price = outcomes[1]["price"] if len(outcomes) > 1 else "-"
+
+            matches.append({
+                "league": item.get("sport_title", ""),
+                "home_team": item.get("home_team", ""),
+                "away_team": item.get("away_team", ""),
+                "bookmaker": first_bm.get("title", ""),
+                "market": first_market.get("key", ""),
+                "home_price": home_price,
+                "away_price": away_price,
+                "last_update": first_bm.get("last_update", "")
+            })
+
+        return {"matches": matches}
+
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 # ------------------------------------------------------------
 # Load Environment

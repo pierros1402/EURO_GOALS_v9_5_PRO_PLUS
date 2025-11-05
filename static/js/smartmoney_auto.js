@@ -1,55 +1,46 @@
-// ================================================================
-// EURO_GOALS v9.4.2 – SmartMoney Auto-Notifier PRO (Frontend Engine)
-// ================================================================
+// =============================================================
+// SMARTMONEY AUTO MONITOR (EURO_GOALS v9.5.4 PRO+)
+// =============================================================
 
-let smartmoneyActive = true; // τρέχουσα κατάσταση (LIVE ή PAUSED)
-const tableBody = document.getElementById("smartmoney-history-body");
-const lastUpdateEl = document.getElementById("last-update");
+console.log("[SmartMoney] Initializing live feed...");
 
-// Συνδέεται με το κουμπί ON/OFF του System Status Panel
-const toggleBtn = document.getElementById("toggle-smartmoney");
-if (toggleBtn) {
-  toggleBtn.addEventListener("click", () => {
-    smartmoneyActive = !smartmoneyActive;
-    console.log("SmartMoney:", smartmoneyActive ? "LIVE" : "PAUSED");
-  });
-}
-
-// Κύρια συνάρτηση fetch
-async function fetchSmartMoney() {
-  if (!smartmoneyActive) return; // αν είναι πατημένο PAUSED, σταματά
+async function fetchSmartMoneyData() {
+  const statusDiv = document.getElementById("smartmoney-status");
+  const tbody = document.getElementById("smartmoney-table-body");
 
   try {
-    const res = await fetch("/smartmoney/history?limit=50");
-    const data = await res.json();
-    const alerts = data.items || [];
+    const response = await fetch("/api/smartmoney_feed");
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const data = await response.json();
 
-    tableBody.innerHTML = "";
-    alerts.forEach(a => {
-      const tr = document.createElement("tr");
-      const pct = ((a.change_pct || 0) * 100).toFixed(1) + "%";
-      const odds = `${a.old_price} → ${a.new_price}`;
-      tr.innerHTML = `
-        <td class="px-2 py-1">${new Date(a.ts_utc).toLocaleTimeString("el-GR")}</td>
-        <td class="px-2 py-1">${a.home} vs ${a.away}</td>
-        <td class="px-2 py-1">${a.bookmaker}</td>
-        <td class="px-2 py-1">${a.market}</td>
-        <td class="px-2 py-1">${a.selection}</td>
-        <td class="px-2 py-1">${odds}</td>
-        <td class="px-2 py-1">${pct}</td>
-        <td class="px-2 py-1">${a.source}</td>
-      `;
-      tableBody.appendChild(tr);
-    });
+    if (!data || !data.matches || data.matches.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-3 text-gray-500">No data available</td></tr>`;
+      statusDiv.innerHTML = "⚠️ Waiting for next update...";
+      return;
+    }
 
-    // ενημέρωση ώρας τελευταίου update
-    const dt = new Date().toLocaleTimeString("el-GR", { hour12: false });
-    lastUpdateEl.textContent = dt;
+    tbody.innerHTML = data.matches
+      .map(
+        (m) => `
+      <tr class="border-t hover:bg-gray-50">
+        <td class="px-3 py-2">${m.league || '-'}</td>
+        <td class="px-3 py-2">${m.home_team} vs ${m.away_team}</td>
+        <td class="px-3 py-2">${m.bookmaker || '-'}</td>
+        <td class="px-3 py-2">${m.market || '-'}</td>
+        <td class="px-3 py-2">${m.home_price || '-'}</td>
+        <td class="px-3 py-2">${m.away_price || '-'}</td>
+        <td class="px-3 py-2">${m.last_update || '-'}</td>
+      </tr>`
+      )
+      .join("");
+
+    statusDiv.innerHTML = `✅ Updated: ${new Date().toLocaleTimeString()} (${data.matches.length} matches)`;
   } catch (err) {
-    console.error("SmartMoney fetch error:", err);
+    console.error("[SmartMoney] Error:", err);
+    statusDiv.innerHTML = "❌ Failed to load data";
   }
 }
 
-// Auto-update loop κάθε 60 δευτερόλεπτα
-fetchSmartMoney();
-setInterval(fetchSmartMoney, 60000);
+// Auto-refresh every 60 seconds
+fetchSmartMoneyData();
+setInterval(fetchSmartMoneyData, 60000);

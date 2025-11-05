@@ -1,59 +1,32 @@
-<!-- ========================================================= -->
+<!-- ===================================================== -->
 <!-- SMARTMONEY MONITOR PANEL – EURO_GOALS v9.5.4 PRO+ -->
-<!-- ========================================================= -->
-<div id="smartmoney-panel" class="bg-white/80 backdrop-blur-md rounded-xl shadow p-4 mb-4">
-  <h2 class="text-lg font-semibold mb-3 flex items-center">
-    💰 SmartMoney Engine
-    <span id="smartmoney-status" class="ml-3 text-sm text-gray-600">
-      Checking status...
-    </span>
-  </h2>
+<!-- ===================================================== -->
 
-  <div class="flex flex-wrap gap-2 mt-2">
-    <button onclick="loadSmartMoneyStatus()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">
-      🔁 Refresh Now
-    </button>
-    <button onclick="updateSmartMoneyData()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
-      📊 Update Data
-    </button>
+<div id="smartmoney-panel" class="bg-white/80 backdrop-blur-md rounded-xl shadow p-4 mb-4">
+  <h2 class="text-lg font-semibold mb-3">💰 SmartMoney Monitor</h2>
+  
+  <div id="smartmoney-status" class="text-sm text-gray-600 mb-2">
+    <span>📡 Loading live odds data...</span>
+  </div>
+
+  <div id="smartmoney-table-wrapper" class="overflow-x-auto">
+    <table class="min-w-full text-sm text-left border border-gray-300 rounded-lg shadow-sm">
+      <thead class="bg-gray-100 text-gray-700">
+        <tr>
+          <th class="px-3 py-2">🏆 League</th>
+          <th class="px-3 py-2">Match</th>
+          <th class="px-3 py-2">Bookmaker</th>
+          <th class="px-3 py-2">Market</th>
+          <th class="px-3 py-2">Home</th>
+          <th class="px-3 py-2">Away</th>
+          <th class="px-3 py-2">Last Update</th>
+        </tr>
+      </thead>
+      <tbody id="smartmoney-table-body">
+        <tr><td colspan="7" class="text-center py-3 text-gray-500">No data yet...</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
-<script>
-  // ============================================================
-  // SMARTMONEY PANEL SCRIPT – inline initialization
-  // ============================================================
-
-  async function loadSmartMoneyStatus() {
-    try {
-      const response = await fetch("/api/smartmoney/status");
-      const data = await response.json();
-
-      const statusElement = document.getElementById("smartmoney-status");
-      if (!statusElement) return;
-
-      if (data.error) {
-        statusElement.innerHTML = `🚫 Offline (${data.message || "No response"})`;
-        statusElement.style.color = "red";
-      } else {
-        statusElement.innerHTML = `✅ Active – ${data.status || "OK"}`;
-        statusElement.style.color = "green";
-      }
-    } catch (err) {
-      console.error("SmartMoney fetch error:", err);
-    }
-  }
-
-  async function updateSmartMoneyData() {
-    try {
-      const resp = await fetch("/api/smartmoney/update", { method: "POST" });
-      const data = await resp.json();
-      alert(`SmartMoney update: ${data.status.toUpperCase()} – ${data.info}`);
-      loadSmartMoneyStatus();
-    } catch (err) {
-      alert("SmartMoney update failed");
-    }
-  }
-
-  window.addEventListener("load", loadSmartMoneyStatus);
-</script>
+<script src="/static/js/smartmoney_auto.js"></script>
