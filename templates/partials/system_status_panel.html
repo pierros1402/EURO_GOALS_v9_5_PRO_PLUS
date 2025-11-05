@@ -1,0 +1,43 @@
+<!-- ========================================================= -->
+<!-- SYSTEM STATUS PANEL – EURO_GOALS v9.5.4 PRO+ -->
+<!-- ========================================================= -->
+<div id="system-status-panel" class="bg-white/80 backdrop-blur-md rounded-xl shadow p-4 mb-4">
+  <h2 class="text-lg font-semibold mb-3">🩺 System Health Monitor</h2>
+
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-gray-800">
+    <div>🌐 Render: <span id="status-render">Loading...</span></div>
+    <div>💾 Database: <span id="status-db">Loading...</span></div>
+    <div>💰 SmartMoney: <span id="status-sm">Loading...</span></div>
+    <div>⚽ GoalMatrix: <span id="status-gm">Loading...</span></div>
+    <div>🧠 CPU: <span id="status-cpu">Loading...</span></div>
+    <div>💻 RAM: <span id="status-ram">Loading...</span></div>
+  </div>
+
+  <div class="text-xs text-gray-500 mt-3">Auto-refreshes every 60s</div>
+</div>
+
+<script>
+  // ============================================================
+  // SYSTEM MONITOR SCRIPT – EURO_GOALS v9.5.4 PRO+
+  // ============================================================
+
+  async function loadSystemHealth() {
+    try {
+      const resp = await fetch("/api/system/health");
+      const data = await resp.json();
+
+      document.getElementById("status-render").innerText = data.render_status;
+      document.getElementById("status-db").innerText = data.db_status;
+      document.getElementById("status-sm").innerText = data.smartmoney;
+      document.getElementById("status-gm").innerText = data.goalmatrix;
+      document.getElementById("status-cpu").innerText = data.cpu;
+      document.getElementById("status-ram").innerText = data.ram;
+    } catch (err) {
+      console.error("Health fetch error:", err);
+    }
+  }
+
+  // Auto refresh every 60s
+  setInterval(loadSystemHealth, 60000);
+  window.addEventListener("load", loadSystemHealth);
+</script>

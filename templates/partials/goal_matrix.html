@@ -1,10 +1,36 @@
 <div class="panel fade-section" id="goal-matrix-panel">
   <h2 class="text-lg font-semibold text-green-600 dark:text-green-400 mb-2">🎯 GoalMatrix</h2>
+
+  <!-- Inline Filters -->
+  <form id="filters-gm" class="filter-bar" autocomplete="off">
+    <div class="fctl">
+      <label for="gm-search">Αναζήτηση</label>
+      <input id="gm-search" name="search" type="text" placeholder="Team, league, country..." />
+    </div>
+    <div class="fctl">
+      <label for="gm-pred">Prediction</label>
+      <select id="gm-pred" name="prediction">
+        <option value="">All</option>
+        <option value="over">Over</option>
+        <option value="under">Under</option>
+        <option value="gg">GG</option>
+        <option value="ng">NG</option>
+      </select>
+    </div>
+    <div class="fctl">
+      <label for="gm-minConf">Min %</label>
+      <input id="gm-minConf" name="minConf" type="range" min="0" max="100" step="1" value="0" />
+    </div>
+    <div class="fctl">
+      <span class="text-xs text-muted">Matches: <b data-count>0</b></span>
+    </div>
+  </form>
+
   <div class="table-container">
-    <table class="text-sm" data-compact="true" aria-label="GoalMatrix table">
+    <table id="goalmatrix-table-el" class="text-sm" data-compact="true" aria-label="GoalMatrix table">
       <thead>
         <tr>
-          <th data-key="match" data-priority="1">Match</th>
+          <th class="sticky-col" data-key="match" data-priority="1">Match</th>
           <th data-key="ou" data-priority="3">O/U Line</th>
           <th data-key="pred" data-priority="2">Prediction</th>
           <th data-key="conf" data-priority="4">Confidence</th>
@@ -12,7 +38,8 @@
       </thead>
       <tbody id="goal-matrix-body">
         <tr>
-          <td colspan="4" class="text-center text-muted py-3">Loading GoalMatrix data...</td>
+          <td class="sticky-col">Loading…</td>
+          <td>—</td><td>—</td><td>—</td>
         </tr>
       </tbody>
     </table>

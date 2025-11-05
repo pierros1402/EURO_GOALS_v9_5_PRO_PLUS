@@ -1,18 +1,32 @@
-# ============================================
-# EURO_GOALS v9.5.0 PRO+ – Python Dependencies
-# ============================================
+# =====================================================
+# EURO_GOALS v9.5.4 PRO+ – Dependencies
+# =====================================================
 
 # --- Core framework ---
 fastapi
 uvicorn
 
-# --- Environment management ---
+# --- Templates & static ---
+jinja2
+
+# --- Environment variables ---
 python-dotenv
 
-# --- System & monitoring ---
-psutil
+# --- HTTP / APIs ---
 requests
+httpx
 
-# --- Optional data handling ---
+# --- Database ---
+SQLAlchemy
+alembic
+
+# --- Data handling ---
 pandas
 openpyxl
+
+# --- Sound / Alerts ---
+playsound==1.2.2
+pydub
+
+# --- Backup / Management ---
+psycopg2-binary

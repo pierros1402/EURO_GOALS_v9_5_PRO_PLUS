@@ -1,5 +1,5 @@
 /* =====================================================
-   EURO_GOALS v9.5.2 PRO+ – Auto-Compact Tables
+   EURO_GOALS v9.5.3 PRO+ – Pinned First Column + Filters
    ===================================================== */
 
 /* THEME */
@@ -15,6 +15,7 @@
   --onPrimary: #ffffff;
   --table-header: rgba(59,130,246,0.08);
   --table-divider: #e5e7eb;
+  --pin-bg: #ffffff;
 }
 html[data-theme="dark"], html[data-theme="auto"][data-prefers-dark="true"] {
   --bg-app: #0b1220;
@@ -28,7 +29,9 @@ html[data-theme="dark"], html[data-theme="auto"][data-prefers-dark="true"] {
   --onPrimary: #0b1220;
   --table-header: rgba(59,130,246,0.18);
   --table-divider: rgba(148,163,184,0.24);
+  --pin-bg: rgba(17,24,39,1);
 }
+
 body { background: var(--bg-app); color: var(--text-app); transition: background .3s, color .3s; }
 
 /* PANELS */
@@ -51,20 +54,41 @@ body { background: var(--bg-app); color: var(--text-app); transition: background
   font-size: .9rem;
 }
 
-/* TABLES: base */
+/* FILTER BARS */
+.filter-bar {
+  display: grid;
+  grid-template-columns: 1fr repeat(3, minmax(0, 160px));
+  gap: .5rem;
+  margin-bottom: .5rem;
+}
+.filter-bar .fctl {
+  display: flex; gap: .4rem; align-items: center;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: .75rem; padding: .4rem .6rem;
+}
+.filter-bar label { color: var(--text-muted); font-size: .85rem; white-space: nowrap; }
+.filter-bar input[type="text"], .filter-bar select, .filter-bar input[type="number"], .filter-bar input[type="range"] {
+  width: 100%; background: transparent; color: inherit; border: none; outline: none;
+}
+
+/* TABLES */
 .table-container { overflow-x: auto; border-radius: .75rem; border: 1px solid var(--border); }
-table { width: 100%; border-collapse: collapse; min-width: 480px; }
+table { width: 100%; border-collapse: collapse; min-width: 640px; }
 thead { background: var(--table-header); position: sticky; top: 0; z-index: 10; }
 th, td { padding: .6rem .5rem; border-bottom: 1px solid var(--table-divider); text-align: left; white-space: nowrap; }
 tbody tr:hover { background: var(--hover); transition: background .2s; }
 
-/* AUTO-COMPACT: mobile rows */
+/* PINNED FIRST COLUMN (desktop / tablet only) */
+th.sticky-col, td.sticky-col {
+  position: sticky; left: 0; z-index: 11; background: var(--pin-bg);
+  box-shadow: 2px 0 0 0 var(--border);
+}
+thead th.sticky-col { z-index: 12; }
+
+/* AUTO-COMPACT elements */
 .compact-table { min-width: 0; }
 .compact-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: .5rem;
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .5rem;
 }
 .compact-primary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .compact-toggle {
@@ -75,9 +99,7 @@ tbody tr:hover { background: var(--hover); transition: background .2s; }
 .compact-toggle:hover { transform: scale(1.06); }
 .row-details { display: none; padding: .55rem .75rem; background: var(--hover); border-radius: .75rem; margin-top: .4rem; }
 .row-details.expanded { display: block; }
-.details-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .75rem;
-}
+.details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem .75rem; }
 .detail-label { color: var(--text-muted); font-size: .85rem; }
 .detail-value { font-weight: 500; }
 
@@ -85,8 +107,7 @@ tbody tr:hover { background: var(--hover); transition: background .2s; }
 .alert-card {
   background: linear-gradient(180deg, rgba(239,68,68,0.12), rgba(239,68,68,0.05));
   border-left: 4px solid rgba(239,68,68,0.7);
-  border-radius: .75rem;
-  padding: .75rem 1rem;
+  border-radius: .75rem; padding: .75rem 1rem;
 }
 
 /* QUICK TOOLBAR */
@@ -109,11 +130,10 @@ tbody tr:hover { background: var(--hover); transition: background .2s; }
 @media (max-width: 640px) {
   body { font-size: 14px; }
   #system-summary-bar { grid-template-columns: repeat(2,1fr); }
-  table { font-size: 13px; }
+  table { font-size: 13px; min-width: 0; }
+  th.sticky-col, td.sticky-col { position: static; box-shadow: none; } /* disable pin on compact */
   th, td { padding: .45rem .35rem; }
-  /* hide desktop tables when auto-compact is active */
-  table[data-compact="true"].is-compact thead { display: none; }
-  table[data-compact="true"].is-compact tbody tr td { display: block; padding: 0; border-bottom: none; }
+  .filter-bar { grid-template-columns: 1fr 1fr; }
 }
 @media (min-width: 641px) and (max-width: 1024px) { #system-summary-bar { grid-template-columns: repeat(3,1fr); } }
 @media (min-width: 1025px) { #system-summary-bar { grid-template-columns: repeat(6,1fr); } }

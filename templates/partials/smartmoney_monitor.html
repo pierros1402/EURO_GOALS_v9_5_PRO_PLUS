@@ -1,20 +1,59 @@
-<div class="panel fade-section" id="smartmoney-panel">
-  <h2 class="text-lg font-semibold text-primary mb-2">💰 SmartMoney Monitor</h2>
-  <div class="table-container">
-    <table class="text-sm" data-compact="true" aria-label="SmartMoney table">
-      <thead>
-        <tr>
-          <th data-key="match" data-priority="1">Match</th>
-          <th data-key="line" data-priority="2">Line</th>
-          <th data-key="movement" data-priority="3">Movement</th>
-          <th data-key="alert" data-priority="4">Alert</th>
-        </tr>
-      </thead>
-      <tbody id="smartmoney-table">
-        <tr>
-          <td colspan="4" class="text-center text-muted py-3">Loading SmartMoney data...</td>
-        </tr>
-      </tbody>
-    </table>
+<!-- ========================================================= -->
+<!-- SMARTMONEY MONITOR PANEL – EURO_GOALS v9.5.4 PRO+ -->
+<!-- ========================================================= -->
+<div id="smartmoney-panel" class="bg-white/80 backdrop-blur-md rounded-xl shadow p-4 mb-4">
+  <h2 class="text-lg font-semibold mb-3 flex items-center">
+    💰 SmartMoney Engine
+    <span id="smartmoney-status" class="ml-3 text-sm text-gray-600">
+      Checking status...
+    </span>
+  </h2>
+
+  <div class="flex flex-wrap gap-2 mt-2">
+    <button onclick="loadSmartMoneyStatus()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">
+      🔁 Refresh Now
+    </button>
+    <button onclick="updateSmartMoneyData()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
+      📊 Update Data
+    </button>
   </div>
 </div>
+
+<script>
+  // ============================================================
+  // SMARTMONEY PANEL SCRIPT – inline initialization
+  // ============================================================
+
+  async function loadSmartMoneyStatus() {
+    try {
+      const response = await fetch("/api/smartmoney/status");
+      const data = await response.json();
+
+      const statusElement = document.getElementById("smartmoney-status");
+      if (!statusElement) return;
+
+      if (data.error) {
+        statusElement.innerHTML = `🚫 Offline (${data.message || "No response"})`;
+        statusElement.style.color = "red";
+      } else {
+        statusElement.innerHTML = `✅ Active – ${data.status || "OK"}`;
+        statusElement.style.color = "green";
+      }
+    } catch (err) {
+      console.error("SmartMoney fetch error:", err);
+    }
+  }
+
+  async function updateSmartMoneyData() {
+    try {
+      const resp = await fetch("/api/smartmoney/update", { method: "POST" });
+      const data = await resp.json();
+      alert(`SmartMoney update: ${data.status.toUpperCase()} – ${data.info}`);
+      loadSmartMoneyStatus();
+    } catch (err) {
+      alert("SmartMoney update failed");
+    }
+  }
+
+  window.addEventListener("load", loadSmartMoneyStatus);
+</script>
