@@ -30,3 +30,6 @@ pydub
 
 # --- Backup / Management ---
 psycopg2-binary
+
+# --- System Monitoring (Monitor v3) ---
+psutil
