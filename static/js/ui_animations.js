@@ -4,7 +4,6 @@ function animateOnScroll() {
     if (rect.top < window.innerHeight - 80) el.classList.add('fade-in');
   });
 }
-
 window.addEventListener('scroll', animateOnScroll);
 window.addEventListener('load', () => {
   animateOnScroll();

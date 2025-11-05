@@ -3,32 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>EURO_GOALS v9.5.0 PRO+ – Adaptive UX Edition</title>
+  <title>EURO_GOALS v9.5.2 PRO+ – Auto-Compact Tables</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="{{ url_for('static', path='css/main.css') }}">
 </head>
 
 <body class="bg-app text-app font-sans">
-
   <!-- Header -->
   <header class="sticky top-0 z-50 bg-card/90 backdrop-blur-md shadow-md border-b border-border px-4 py-3 flex justify-between items-center">
     <div class="flex items-center gap-3">
-      <h1 class="text-lg font-bold text-primary">⚽ EURO_GOALS v9.5.0 PRO+</h1>
-      <span class="hidden sm:inline text-xs px-2 py-1 rounded bg-accent/20 text-accent border border-accent/40">Adaptive UX</span>
+      <h1 class="text-lg font-bold text-primary">⚽ EURO_GOALS v9.5.2 PRO+</h1>
+      <span class="hidden sm:inline text-xs px-2 py-1 rounded bg-accent/20 text-accent border border-accent/40">Auto-Compact Tables</span>
     </div>
 
     <div class="flex items-center gap-2">
-      <!-- Theme toggle -->
       <button id="theme-toggle" class="p-2 rounded-md border border-border hover:bg-hover transition text-app">
         <span id="theme-icon">🌙</span>
       </button>
-
-      <!-- Mobile menu -->
-      <button id="menu-toggle" class="lg:hidden p-2 rounded-md border border-border hover:bg-hover transition text-app">
-        ☰
-      </button>
-
-      <!-- Desktop nav -->
+      <button id="menu-toggle" class="lg:hidden p-2 rounded-md border border-border hover:bg-hover transition text-app">☰</button>
       <nav id="main-nav" class="hidden lg:flex gap-4 text-sm font-medium">
         <a href="#summary" class="hover:text-primary">Σύνοψη</a>
         <a href="#smartmoney" class="hover:text-primary">SmartMoney</a>
@@ -46,6 +38,17 @@
     <a href="#alerts" class="hover:text-primary">Alerts</a>
   </nav>
 
+  <!-- Quick Actions Toolbar -->
+  <div id="quick-toolbar"
+    class="fixed bottom-20 right-5 flex flex-col gap-2 lg:flex-row lg:bottom-auto lg:top-[72px] lg:right-10
+           bg-card/80 backdrop-blur-md border border-border shadow-md rounded-xl p-2 z-40 transition">
+    <button data-action="refresh" title="Refresh" class="qbtn bg-primary text-onPrimary">⟳</button>
+    <button data-action="scrollTop" title="Scroll to top" class="qbtn bg-accent text-onPrimary">⇧</button>
+    <button data-action="toggleSmartMoney" title="Toggle SmartMoney" class="qbtn bg-green-500 text-onPrimary">💰</button>
+    <button data-action="toggleGoalMatrix" title="Toggle GoalMatrix" class="qbtn bg-yellow-400 text-black">🎯</button>
+    <button data-action="toggleAlerts" title="Toggle Alerts" class="qbtn bg-red-500 text-onPrimary">🚨</button>
+  </div>
+
   <!-- Main content -->
   <main class="p-4 space-y-6 max-w-7xl mx-auto">
     <section id="summary" class="fade-section">{% include 'partials/system_summary_bar.html' %}</section>
@@ -54,7 +57,7 @@
     <section id="alerts" class="fade-section">{% include 'partials/alert_center.html' %}</section>
   </main>
 
-  <!-- Floating action -->
+  <!-- FAB (backup refresh) -->
   <button id="fab-refresh" title="Refresh"
     class="fixed bottom-5 right-5 bg-primary text-onPrimary rounded-full w-14 h-14 shadow-lg flex items-center justify-center text-2xl hover:opacity-90 transition lg:hidden border border-primary/50">⟳</button>
 
@@ -62,6 +65,8 @@
   <script src="{{ url_for('static', path='js/system_summary.js') }}"></script>
   <script src="{{ url_for('static', path='js/ui_animations.js') }}"></script>
   <script src="{{ url_for('static', path='js/theme_toggle.js') }}"></script>
+  <script src="{{ url_for('static', path='js/quick_toolbar.js') }}"></script>
+  <script src="{{ url_for('static', path='js/auto_compact_tables.js') }}"></script>
   <script>
     document.getElementById('menu-toggle').addEventListener('click', () => {
       document.getElementById('mobile-nav').classList.toggle('hidden');
