@@ -1,0 +1,41 @@
+<!-- templates/partials/smartmoney_panel.html -->
+<div class="bg-white/80 rounded-2xl shadow p-4">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-lg font-semibold">SmartMoney Monitor</h2>
+    <div class="flex items-center gap-2">
+      <span id="smn-status-pill" class="px-2 py-1 rounded text-xs bg-gray-200">—</span>
+      <button id="smn-refresh" class="px-3 py-1 rounded-xl shadow text-sm">Refresh</button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-2 text-sm mb-3">
+    <div id="smn-provider-odds" class="p-2 rounded bg-gray-100">Odds Provider: —</div>
+    <div id="smn-provider-depth" class="p-2 rounded bg-gray-100">Depth Provider: —</div>
+    <div id="smn-last-updated" class="p-2 rounded bg-gray-100">Last Updated: —</div>
+  </div>
+
+  <div class="mb-2">
+    <input id="smn-search" type="text" placeholder="Αναζήτηση (match, league)…" class="w-full p-2 rounded border">
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm" id="smn-table">
+      <thead>
+        <tr class="text-left">
+          <th class="p-2">Kickoff</th>
+          <th class="p-2">Match</th>
+          <th class="p-2">League</th>
+          <th class="p-2">Move</th>
+          <th class="p-2">Flow</th>
+          <th class="p-2">Δ5’</th>
+          <th class="p-2">Score</th>
+          <th class="p-2">Signal</th>
+        </tr>
+      </thead>
+      <tbody id="smn-body">
+        <tr><td class="p-2" colspan="8">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<script src="/static/js/smartmoney_panel.js"></script>

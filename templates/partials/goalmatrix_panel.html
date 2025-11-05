@@ -1,75 +1,35 @@
-<!-- ========================================================= -->
-<!-- GOALMATRIX PANEL – EURO_GOALS v9.5.4 PRO+ -->
-<!-- ========================================================= -->
-<div id="goalmatrix-panel" class="bg-white/80 backdrop-blur-md rounded-xl shadow p-4 mb-4">
-  <h2 class="text-lg font-semibold mb-3 flex items-center">
-    ⚽ GoalMatrix Engine
-    <span id="goalmatrix-status" class="ml-3 text-sm text-gray-600">
-      Checking status...
-    </span>
-  </h2>
-
-  <div class="flex flex-wrap gap-2 mt-2">
-    <button onclick="loadGoalMatrixStatus()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">
-      🔁 Refresh
-    </button>
-    <button onclick="loadGoalMatrixProbabilities()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
-      📊 Calculate Probabilities
-    </button>
+<!-- GOALMATRIX PANEL v1.0.0 -->
+<div class="bg-white/80 rounded-2xl shadow p-4">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-lg font-semibold">GoalMatrix Engine</h2>
+    <div class="flex items-center gap-2">
+      <span id="gm-status-pill" class="px-2 py-1 rounded text-xs bg-gray-200">—</span>
+      <button id="gm-refresh" class="px-3 py-1 rounded-xl shadow text-sm">Refresh</button>
+    </div>
   </div>
 
-  <div id="goalmatrix-results" class="mt-3 text-sm text-gray-800"></div>
+  <div class="grid grid-cols-3 gap-2 text-sm mb-3">
+    <div id="gm-summary-total" class="p-2 rounded bg-gray-100">Matches: —</div>
+    <div id="gm-summary-avg" class="p-2 rounded bg-gray-100">Avg xG: —</div>
+    <div id="gm-summary-time" class="p-2 rounded bg-gray-100">Last Updated: —</div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm" id="gm-table">
+      <thead>
+        <tr class="text-left">
+          <th class="p-2">League</th>
+          <th class="p-2">Match</th>
+          <th class="p-2">xG Home</th>
+          <th class="p-2">xG Away</th>
+          <th class="p-2">Total xG</th>
+          <th class="p-2">Tendency</th>
+        </tr>
+      </thead>
+      <tbody id="gm-body">
+        <tr><td colspan="6" class="p-2">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
-
-<script>
-  // ============================================================
-  // GOALMATRIX PANEL SCRIPT
-  // ============================================================
-
-  async function loadGoalMatrixStatus() {
-    try {
-      const resp = await fetch("/api/goalmatrix/status");
-      const data = await resp.json();
-      const el = document.getElementById("goalmatrix-status");
-      if (!el) return;
-
-      if (data.error) {
-        el.innerHTML = `🚫 Offline (${data.message || "No data"})`;
-        el.style.color = "red";
-      } else {
-        el.innerHTML = `✅ Active`;
-        el.style.color = "green";
-      }
-    } catch (e) {
-      console.error("GoalMatrix fetch error:", e);
-    }
-  }
-
-  async function loadGoalMatrixProbabilities() {
-    try {
-      const resp = await fetch("/api/goalmatrix/probabilities");
-      const data = await resp.json();
-      const results = document.getElementById("goalmatrix-results");
-      if (!results) return;
-
-      if (data.error) {
-        results.innerHTML = `<span style="color:red">⚠️ ${data.message}</span>`;
-        return;
-      }
-
-      let html = "<table class='min-w-full text-left text-sm border border-gray-200 rounded'>";
-      html += "<tr><th>Match</th><th>Over 2.5</th><th>Under 2.5</th></tr>";
-
-      data.data.forEach(m => {
-        html += `<tr><td>${m.match}</td><td>${m.over25}</td><td>${m.under25}</td></tr>`;
-      });
-      html += "</table>";
-
-      results.innerHTML = html;
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  window.addEventListener("load", loadGoalMatrixStatus);
-</script>
+<script src="/static/js/goalmatrix_panel.js"></script>
