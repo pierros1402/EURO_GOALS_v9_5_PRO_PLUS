@@ -24,9 +24,16 @@ GM_REFRESH_SEC = int(os.getenv("GM_REFRESH_SEC", "20"))
 # ------------------------------------------------------------
 app = FastAPI(title="EURO_GOALS_UNIFIED v9.5.4 PRO+", version="9.5.4")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR = os.path.join(BASE_DIR, "static")
-TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+# ------------------------------------------------------------
+# Static Files (Render absolute path)
+# ------------------------------------------------------------
+import pathlib
+
+BASE_DIR = pathlib.Path(__file__).resolve().parent
+STATIC_DIR = os.getenv("RENDER_STATIC_DIR", str(BASE_DIR / "static"))
+TEMPLATES_DIR = os.getenv("RENDER_TEMPLATES_DIR", str(BASE_DIR / "templates"))
+
+print(f"[DEBUG] Static dir mounted from: {STATIC_DIR}")
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
