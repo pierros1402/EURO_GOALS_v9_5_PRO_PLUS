@@ -1,38 +1,83 @@
+<!-- =======================================================
+     EURO_GOALS v9.5.4 PRO+ — Unified Dashboard (SmartMoney + GoalMatrix)
+     ======================================================= -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="el">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EURO_GOALS_UNIFIED v9.5.x</title>
-  <link rel="stylesheet" href="/static/css/dashboard.css">
-  <script src="/static/js/smartmoney_refresh.js" defer></script>
+  <title>EURO_GOALS v9.5.4 PRO+</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="apple-touch-icon" href="/static/icons/icon-512.png">
+  <meta name="theme-color" content="#0d0d0d">
+  <link rel="stylesheet" href="/static/css/tailwind.css">
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: #e5e5e5;
+      font-family: 'Inter', sans-serif;
+    }
+    .card {
+      background-color: #111;
+      border: 1px solid #222;
+      border-radius: 1rem;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+    }
+  </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="p-4">
+  <!-- =======================================================
+       HEADER / SYSTEM SUMMARY
+       ======================================================= -->
+  <div class="mb-6 text-center">
+    <h1 class="text-3xl font-bold text-emerald-400">EURO_GOALS v9.5.4 PRO+</h1>
+    <p class="text-sm text-gray-400 mt-1">Unified Dashboard — SmartMoney & GoalMatrix Engines</p>
+  </div>
 
-  <!-- Header / System Summary -->
-  <header class="bg-white shadow p-4 mb-4 flex justify-between items-center">
-    <h1 class="text-xl font-semibold text-blue-600">⚽ EURO_GOALS UNIFIED v9.5.x</h1>
-    <div id="system-status" class="text-sm text-gray-600">
-      <span>💓 Health: OK</span> |
-      <span>💰 SmartMoney: OK</span> |
-      <span>🕒 Updated: <span id="last-update-time">--:--</span></span>
-    </div>
-  </header>
+  <!-- =======================================================
+       SMARTMONEY PANEL (αν υπάρχει ήδη)
+       ======================================================= -->
+  {% include 'partials/smartmoney_panel.html' ignore missing %}
 
-  <main class="container mx-auto px-4">
-    <!-- SmartMoney Panel -->
-    {% include 'partials/smartmoney_panel.html' %}
+  <!-- =======================================================
+       GOALMATRIX PANEL
+       ======================================================= -->
+  {% include 'partials/goal_matrix_panel.html' ignore missing %}
 
-    <!-- Future modules will be included below -->
-    <div class="mt-6 text-center text-gray-400 text-sm">
-      <p>Next: GoalMatrix Engine v1.0.0 → Dual Data Mode Integration</p>
-    </div>
-  </main>
+  <!-- =======================================================
+       SYSTEM FOOTER
+       ======================================================= -->
+  <div class="text-center text-gray-600 text-xs mt-6">
+    <hr class="border-gray-700 mb-3">
+    <p>EURO_GOALS PRO+ © {{ now().year if now else '2025' }} | Render & Local Sync</p>
+  </div>
 
-  <footer class="text-center text-gray-400 text-xs py-6 mt-8 border-t">
-    EURO_GOALS_UNIFIED © 2025 — Powered by SmartMoney Engine v1.0.0
-  </footer>
+  <!-- =======================================================
+       AUTO REFRESH / PWA SERVICE WORKER
+       ======================================================= -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/static/service-worker.js')
+        .then(() => console.log('✅ EURO_GOALS PWA active'))
+        .catch(err => console.warn('Service Worker error', err));
+    }
+  </script>
 
+  <!-- =======================================================
+       GOALMATRIX AUTO REFRESH (fallback)
+       ======================================================= -->
+  <script>
+    function autoReloadGoalMatrix() {
+      const panel = document.getElementById('goalmatrix-panel');
+      if (!panel) return;
+      fetch('/api/goalmatrix/feed')
+        .then(r => r.json())
+        .then(data => console.log('[GoalMatrix feed OK]', data.updated))
+        .catch(err => console.warn('[GoalMatrix feed error]', err));
+    }
+    setInterval(autoReloadGoalMatrix, 60000);
+  </script>
 </body>
 </html>

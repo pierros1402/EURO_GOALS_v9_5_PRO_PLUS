@@ -1,0 +1,68 @@
+<!-- =======================================================
+     EURO_GOALS UNIFIED v9.5.4 PRO+ – GoalMatrix Panel
+     ======================================================= -->
+<div id="goalmatrix-panel" class="p-4 text-gray-200 bg-[#111] rounded-2xl shadow-lg">
+  <h2 class="text-xl font-bold mb-4 text-emerald-400">⚙️ GoalMatrix Engine</h2>
+  <div id="goalmatrix-list" class="space-y-3">
+    <div class="text-gray-400 text-sm">Loading GoalMatrix data...</div>
+  </div>
+</div>
+
+<script>
+async function loadGoalMatrix() {
+  try {
+    const res = await fetch('/api/goalmatrix/feed');
+    const data = await res.json();
+
+    const container = document.getElementById('goalmatrix-list');
+    container.innerHTML = '';
+
+    if (!data.items || data.items.length === 0) {
+      container.innerHTML = `<div class='text-gray-500'>No GoalMatrix data available.</div>`;
+      return;
+    }
+
+    data.items.forEach(item => {
+      const topScores = item.top_scores
+        .map(([score, prob]) => {
+          const pct = (prob * 100).toFixed(1);
+          return `
+            <div class="flex justify-between text-xs text-gray-400">
+              <span>${score}</span>
+              <div class="w-24 bg-gray-700 h-1.5 mx-2 rounded-full overflow-hidden">
+                <div class="bg-emerald-400 h-1.5" style="width:${pct}%"></div>
+              </div>
+              <span>${pct}%</span>
+            </div>`;
+        })
+        .join('');
+
+      const block = `
+        <div class="bg-[#1a1a1a] rounded-xl p-3 border border-gray-700 hover:border-emerald-400 transition-all">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-semibold text-gray-200">${item.league}</span>
+            <span class="text-xs text-gray-500">${new Date(data.updated).toLocaleTimeString()}</span>
+          </div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-bold text-emerald-300">${item.home}</span>
+            <span class="text-gray-400">vs</span>
+            <span class="font-bold text-emerald-300">${item.away}</span>
+          </div>
+          <div class="flex justify-around text-sm mb-2">
+            <span class="text-blue-400">Over: ${(item.p_over*100).toFixed(1)}%</span>
+            <span class="text-pink-400">Under: ${(item.p_under*100).toFixed(1)}%</span>
+          </div>
+          ${topScores}
+        </div>`;
+      container.innerHTML += block;
+    });
+  } catch (err) {
+    document.getElementById('goalmatrix-list').innerHTML =
+      `<div class='text-red-400 text-sm'>⚠️ Error loading data</div>`;
+  }
+}
+
+// Auto refresh every 20 seconds
+setInterval(loadGoalMatrix, 20000);
+loadGoalMatrix();
+</script>

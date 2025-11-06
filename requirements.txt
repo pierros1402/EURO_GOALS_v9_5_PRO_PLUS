@@ -1,42 +1,30 @@
 # =====================================================
-# EURO_GOALS v9.5.4 PRO+ – Dependencies
+# EURO_GOALS v9.5.4 PRO+ — Requirements (Clean)
 # =====================================================
 
-# --- Core framework ---
-fastapi
-uvicorn
+# --- Core Framework ---
+fastapi==0.115.5
+uvicorn[standard]==0.32.0
 
-# --- Templates & static ---
-jinja2
-
-# --- Environment variables ---
-python-dotenv
+# --- Templates & Environment ---
+jinja2==3.1.4
+python-dotenv==1.0.1
+pydantic==2.9.2
 
 # --- HTTP / APIs ---
-requests
-httpx
+httpx==0.27.0
+requests==2.32.3
 
 # --- Database ---
-SQLAlchemy
-alembic
+SQLAlchemy==2.0.36
+alembic==1.14.0
+psycopg2-binary==2.9.9
 
-# --- Data handling ---
-pandas
-openpyxl
+# --- Data Handling ---
+pandas==2.2.3
+openpyxl==3.1.5
 
-# --- Sound / Alerts ---
+# --- System Monitoring / Sound / Alerts ---
+psutil==6.1.0
 playsound==1.2.2
-pydub
-
-# --- Backup / Management ---
-psycopg2-binary
-
-# --- System Monitoring (Monitor v3) ---
-psutil
-fastapi
-uvicorn
-jinja2
-httpx
-pydantic
-python-dotenv
-
+pydub==0.25.1
