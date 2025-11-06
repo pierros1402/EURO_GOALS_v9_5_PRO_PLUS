@@ -1,11 +1,35 @@
-<div id="system-summary-bar"
-     class="w-full bg-white/70 backdrop-blur-md rounded-xl shadow p-3 mb-4 grid grid-cols-7 gap-2 text-center text-sm">
-  <div id="summary-database">💾 DB: Checking...</div>
-  <div id="summary-health">❤️ Health: Checking...</div>
-  <div id="summary-auto">🔁 Refresh: Checking...</div>
-  <div id="summary-smartmoney">💰 SmartMoney: Checking...</div>
-  <div id="summary-goalmatrix">⚽ GoalMatrix: Checking...</div>
-  <div id="summary-render">🌐 Render: Checking...</div>
-  <div id="summary-time">⏱️ Updated: —</div>
+<div class="summary-bar">
+  <div class="summary-grid">
+
+    <div class="summary-item">
+      <span class="label">API Engine</span>
+      <span class="led green"></span>
+    </div>
+
+    <div class="summary-item">
+      <span class="label">SmartMoney</span>
+      <span class="led yellow"></span>
+    </div>
+
+    <div class="summary-item">
+      <span class="label">GoalMatrix</span>
+      <span class="led green"></span>
+    </div>
+
+    <div class="summary-item">
+      <span class="label">AsianConnect</span>
+      <span class="led red"></span>
+    </div>
+
+    <div class="summary-item">
+      <span class="label">Render Health</span>
+      <span class="led green"></span>
+    </div>
+
+    <div class="summary-item">
+      <span class="label">Database Sync</span>
+      <span class="led green"></span>
+    </div>
+
+  </div>
 </div>
-<script src="/static/js/system_summary.js"></script>

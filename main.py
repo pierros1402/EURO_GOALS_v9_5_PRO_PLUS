@@ -111,6 +111,10 @@ async def favicon():
         return HTMLResponse(path.read_bytes(), media_type="image/x-icon")
     return JSONResponse({"error": "favicon.ico not found"}, status_code=404)
 
+@app.get("/system_summary_bar", response_class=HTMLResponse)
+async def system_summary_bar(request: Request):
+    return templates.TemplateResponse("partials/system_summary_bar.html", {"request": request})
+
 # ============================================================
 # Startup Event
 # ============================================================

@@ -29,24 +29,20 @@ async function updateSummaryBar() {
       let color = "text-yellow-400";
       let shortText = data[key];
 
-      // ---- icons ----
       if (key === "DB") icon = "💾";
       if (key === "Health") icon = "❤️";
       if (key === "Render") icon = "🌐";
       if (key === "SmartMoney") icon = "💰";
       if (key === "Backup") icon = "☁️";
 
-      // ---- coloring ----
       if (data[key].includes("OK") || data[key].includes("Connected") || data[key].includes("Active") || data[key].includes("Ready") || data[key].includes("Live")) {
         color = "text-green-400";
       } else if (data[key].includes("Fail") || data[key].includes("Error") || data[key].includes("Offline")) {
         color = "text-red-400";
       }
 
-      // ---- compact health view ----
       if (key === "Health" && data[key].includes("OK")) shortText = "OK";
 
-      // ---- render content ----
       el.innerHTML = `<span class="${color}" title="${data[key]}">${icon} ${key}: ${shortText}</span>`;
     }
 

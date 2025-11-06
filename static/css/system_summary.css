@@ -1,0 +1,151 @@
+/* =====================================================
+   EURO_GOALS v9.5.4 PRO+ – Responsive System Summary Bar
+   ===================================================== */
+
+body {
+  background-color: #0d1117;
+  color: #e6edf3;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* ----- Container ----- */
+.summary-bar {
+  background: linear-gradient(145deg, #111827, #1f2937);
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease-in-out;
+}
+
+/* ----- Grid Layout (desktop) ----- */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 8px;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+.summary-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* ----- Labels & LEDs ----- */
+.label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
+}
+
+.led {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* ----- LED Colors ----- */
+.led.green {
+  background-color: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+  animation: pulseGreen 1s ease-in-out infinite;
+}
+
+.led.red {
+  background-color: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+  animation: pulseRed 1s ease-in-out infinite;
+}
+
+.led.yellow {
+  background-color: #facc15;
+  box-shadow: 0 0 10px #facc15;
+  animation: pulseYellow 1s ease-in-out infinite;
+}
+
+.led.grey {
+  background-color: #6b7280;
+}
+
+/* ----- Animations ----- */
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 0 8px #22c55e; }
+  50% { box-shadow: 0 0 18px #22c55e; }
+}
+
+@keyframes pulseRed {
+  0%, 100% { box-shadow: 0 0 8px #ef4444; }
+  50% { box-shadow: 0 0 18px #ef4444; }
+}
+
+@keyframes pulseYellow {
+  0%, 100% { box-shadow: 0 0 8px #facc15; }
+  50% { box-shadow: 0 0 18px #facc15; }
+}
+
+/* =====================================================
+   Responsive (Tablet / Mobile Optimized)
+   ===================================================== */
+
+@media (max-width: 1024px) {
+  .summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .summary-item {
+    padding: 10px 8px;
+    flex-direction: column;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .label {
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .led {
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .summary-item {
+    gap: 4px;
+    padding: 8px 6px;
+  }
+
+  .label {
+    font-size: 0.95rem;
+  }
+
+  .led {
+    width: 18px;
+    height: 18px;
+  }
+}

@@ -1,60 +1,63 @@
-{% extends "base.html" %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EURO_GOALS v9.5.4 PRO+ – System Status</title>
 
-<link rel="stylesheet" href="/static/css/unified_theme.css" />
+  <!-- Tailwind & Custom CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="/static/css/system_summary.css">
+</head>
 
-{% include "system_summary_bar.html" %}
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+  <div class="max-w-6xl mx-auto p-4">
 
-<div class="eg-container">
-  <div class="eg-header">
-    <h1>⚙️ EURO_GOALS v9.5.0 PRO+ — System Status</h1>
-    <p class="eg-sub">Real-time status • DB • Health • Render • SmartMoney • Backup</p>
+    <!-- === Include Dynamic Summary Bar === -->
+    {% include 'partials/system_summary_bar.html' %}
+
+    <!-- === Unified Dashboard Section === -->
+    <div class="p-4 bg-gray-800/70 rounded-xl shadow-lg border border-gray-700">
+      <h2 class="text-xl font-bold mb-3 text-green-400">
+        ⚙️ Unified System Status Dashboard
+      </h2>
+      <div id="status-content" class="text-gray-200 text-sm">
+        <p>Loading system data...</p>
+      </div>
+    </div>
+
+    <!-- === Footer Info === -->
+    <footer class="mt-6 text-center text-gray-500 text-xs">
+      EURO_GOALS v9.5.4 PRO+ © {{ year if year else '2025' }} – Render Unified Monitor
+    </footer>
   </div>
 
-  <div id="status-grid" class="eg-grid">
-    <!-- dynamic cards -->
-  </div>
+  <!-- === System Status Auto-Refresh Script === -->
+  <script>
+  async function loadSystemStatus() {
+    try {
+      const res = await fetch("/system_status_data");
+      const data = await res.json();
 
-  <div class="eg-footer-row">
-    <a href="/control_panel" class="eg-btn eg-btn-primary">🛠 Control Panel</a>
-    <a href="/system_logs" class="eg-btn eg-btn-secondary">🧾 System Logs</a>
-    <span id="last-update" class="eg-last">Last update: —</span>
-  </div>
-</div>
+      let html = "<ul class='list-disc pl-6 space-y-1'>";
+      for (const [key, value] of Object.entries(data)) {
+        let color = "text-yellow-400";
+        if (value.includes("OK") || value.includes("Active") || value.includes("Connected")) color = "text-green-400";
+        if (value.includes("Fail") || value.includes("Error") || value.includes("Offline")) color = "text-red-400";
 
-<script>
-async function loadStatus() {
-  const grid = document.getElementById("status-grid");
-  const last = document.getElementById("last-update");
-  grid.innerHTML = `<div class="eg-card eg-card-dim">Loading...</div>`;
-  try {
-    const res = await fetch("/system_status_data");
-    const data = await res.json();
-    grid.innerHTML = "";
-
-    const entries = Object.entries(data).filter(([k]) => k !== "last_update");
-    for (const [key, val] of entries) {
-      let tone = "ok";
-      const v = String(val);
-      if (v.includes("Fail") || v.includes("Error") || v.includes("Offline")) tone = "bad";
-      else if (v.includes("High Load") || v.includes("Inactive")) tone = "warn";
-
-      const card = document.createElement("div");
-      card.className = `eg-card eg-${tone}`;
-      card.innerHTML = `
-        <div class="eg-card-title">${key}</div>
-        <div class="eg-card-body" title="${v}">${v}</div>
-      `;
-      grid.appendChild(card);
+        html += `<li class="${color}"><b>${key}:</b> ${value}</li>`;
+      }
+      html += "</ul>";
+      document.getElementById("status-content").innerHTML = html;
+    } catch (err) {
+      console.error("[SystemStatus][Error]", err);
+      document.getElementById("status-content").innerHTML =
+        "<p class='text-red-400'>Error fetching system status data.</p>";
     }
-    last.textContent = "Last update: " + (data.last_update || "—");
-  } catch (e) {
-    console.error("[STATUS][ERR]", e);
-    grid.innerHTML = `<div class="eg-card eg-bad">⚠️ Error loading status</div>`;
   }
-}
 
-loadStatus();
-setInterval(loadStatus, 30000);
-</script>
-{% endblock %}
+  loadSystemStatus();
+  setInterval(loadSystemStatus, 30000);
+  </script>
+</body>
+</html>
