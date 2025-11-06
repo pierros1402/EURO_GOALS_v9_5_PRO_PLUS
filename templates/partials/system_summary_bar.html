@@ -1,35 +1,66 @@
-<div class="summary-bar">
-  <div class="summary-grid">
-
-    <div class="summary-item">
-      <span class="label">API Engine</span>
-      <span class="led green"></span>
+<div class="summarybar">
+  <div class="sb-left">
+    <div class="brand">
+      <img src="/static/icons/ball.svg" alt="" class="brand-icon">
+      <div>
+        <div class="brand-title">EURO_GOALS</div>
+        <div class="brand-sub">System Summary</div>
+      </div>
     </div>
+  </div>
 
-    <div class="summary-item">
-      <span class="label">SmartMoney</span>
-      <span class="led yellow"></span>
+  <div class="sb-center">
+    <div class="led-group">
+      <div class="led">
+        <span class="dot" id="led-render"></span>
+        <span class="label">Render</span>
+      </div>
+      <div class="led">
+        <span class="dot" id="led-db"></span>
+        <span class="label">DB</span>
+      </div>
+      <div class="led">
+        <span class="dot" id="led-flashscore"></span>
+        <span class="label">Flashscore</span>
+      </div>
+      <div class="led">
+        <span class="dot" id="led-sofascore"></span>
+        <span class="label">Sofascore</span>
+      </div>
+      <div class="led">
+        <span class="dot" id="led-asianconnect"></span>
+        <span class="label">AsianConnect</span>
+      </div>
     </div>
+  </div>
 
-    <div class="summary-item">
-      <span class="label">GoalMatrix</span>
-      <span class="led green"></span>
+  <div class="sb-right">
+    <div class="controls">
+      <div class="ctrl">
+        <span class="ctrl-label">SmartMoney</span>
+        <label class="switch">
+          <input id="sbSmartMoney" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">GoalMatrix</span>
+        <label class="switch">
+          <input id="sbGoalMatrix" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">Auto-refresh</span>
+        <label class="switch">
+          <input id="sbAutoRefresh" type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="ctrl">
+        <span class="ctrl-label">Interval</span>
+        <input id="sbInterval" class="interval" type="number" min="5" max="300" step="5">
+      </div>
     </div>
-
-    <div class="summary-item">
-      <span class="label">AsianConnect</span>
-      <span class="led red"></span>
-    </div>
-
-    <div class="summary-item">
-      <span class="label">Render Health</span>
-      <span class="led green"></span>
-    </div>
-
-    <div class="summary-item">
-      <span class="label">Database Sync</span>
-      <span class="led green"></span>
-    </div>
-
   </div>
 </div>

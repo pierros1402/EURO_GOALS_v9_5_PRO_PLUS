@@ -1,59 +1,28 @@
-// ==============================================
-// EURO_GOALS v9.4.4 PRO+ — Service Worker (Push)
-// ==============================================
+const CACHE_NAME = "euro_goals_v950_pro";
+const URLS_TO_CACHE = [
+  "/",
+  "/static/css/style.css",
+  "/static/js/ui_controls.js",
+  "/static/icons/icon-192.png",
+  "/static/icons/icon-512.png"
+];
 
-// Όταν φτάνει Push Notification από τον server
-self.addEventListener('push', event => {
-  if (!event.data) return;
-
-  let data = {};
-  try {
-    data = event.data.json();
-  } catch (e) {
-    console.error('[EURO_GOALS] Push event parse error:', e);
-  }
-
-  const title = data.title || 'EURO_GOALS';
-  const options = {
-    body: data.body || 'Νέα ειδοποίηση',
-    icon: '/static/icons/ball-512.png',     // κύριο εικονίδιο
-    badge: '/static/icons/badge-128.png',   // μικρό badge (προαιρετικό)
-    tag: data.tag || 'eurogoals',
-    renotify: true,
-    data: {
-      url: data.url || '/',
-      timestamp: Date.now()
-    }
-  };
-
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(URLS_TO_CACHE))
   );
 });
 
-// Όταν ο χρήστης κάνει click στο notification
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-
-  const targetUrl = event.notification.data?.url || '/';
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      for (let client of windowClients) {
-        if (client.url.includes(self.origin) && 'focus' in client) {
-          client.navigate(targetUrl);
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) return clients.openWindow(targetUrl);
-    })
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => response || fetch(event.request))
   );
 });
 
-// Keep-alive & instant activation
-self.addEventListener('install', event => {
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(clients.claim());
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((names) =>
+      Promise.all(names.map((n) => n !== CACHE_NAME && caches.delete(n)))
+    )
+  );
 });

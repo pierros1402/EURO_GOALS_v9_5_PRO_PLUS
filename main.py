@@ -1,130 +1,105 @@
-# ============================================================
-# EURO_GOALS_UNIFIED v9.5.4 PRO+  (Docker / Render Compatible)
-# ============================================================
-
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+import os
+import time
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import os
-from pathlib import Path
 
-# ============================================================
-# App setup
-# ============================================================
-app = FastAPI(
-    title="EURO_GOALS_UNIFIED v9.5.4 PRO+",
-    version="9.5.4",
-)
+APP_VERSION = os.getenv("EURO_GOALS_VERSION", "v9.5.0 PRO+")
+START_TS = time.time()
 
-# ============================================================
-# Directories
-# ============================================================
-BASE_DIR = Path(__file__).resolve().parent
-STATIC_DIR = BASE_DIR / "static"
-TEMPLATES_DIR = BASE_DIR / "templates"
+# ----------------------------
+# In-memory UI toggles (server-side truth)
+# ----------------------------
+def env_bool(key: str, default: bool) -> bool:
+    v = os.getenv(key)
+    if v is None: 
+        return default
+    return str(v).strip().lower() in ("1", "true", "yes", "on")
 
-# --- Render & Local Compatible Static Mount ---
-if not STATIC_DIR.exists():
-    os.makedirs(STATIC_DIR, exist_ok=True)
+STATE = {
+    "smartmoney_on": env_bool("SMARTMONEY_ON", True),
+    "goalmatrix_on": env_bool("GOALMATRIX_ON", True),
+    "auto_refresh_on": env_bool("AUTO_REFRESH_ON", True),
+    "refresh_secs": int(os.getenv("AUTO_REFRESH_SECS", "15")),
+}
 
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+# ----------------------------
+# FastAPI app
+# ----------------------------
+app = FastAPI(title="EURO_GOALS", version=APP_VERSION)
 
-# ============================================================
-# Root Endpoint
-# ============================================================
+# Static & templates
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
-    html_content = """
-    <html>
-        <head>
-            <meta charset="utf-8">
-            <title>🏆 EURO_GOALS v9.5.0 PRO+ – API Interface</title>
-            <link rel="manifest" href="/static/manifest.json">
-            <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
-            <script src="/static/service-worker.js"></script>
-        </head>
-        <body style="font-family:Arial; background:#fff; color:#000; margin:40px;">
-            <h2>🏆 <b>EURO_GOALS v9.5.0 PRO+</b> – API Interface</h2>
-            <p><b>Available endpoints:</b></p>
-            <ul>
-                <li><a href="/system_status_data">/system_status_data</a> – JSON Unified Status</li>
-                <li><a href="/system_status_html">/system_status_html</a> – HTML Unified Dashboard</li>
-                <li><a href="/render_health">/render_health</a> – Render Health Check</li>
-                <li><a href="/smartmoney_monitor">/smartmoney_monitor</a> – SmartMoney Monitor</li>
-                <li><a href="/backup_status">/backup_status</a> – Backup Readiness</li>
-            </ul>
-        </body>
-    </html>
-    """
-    return HTMLResponse(content=html_content)
+async def index(request: Request):
+    ctx = {
+        "request": request,
+        "APP_VERSION": APP_VERSION,
+        "refresh_secs": STATE["refresh_secs"],
+    }
+    return templates.TemplateResponse("index.html", ctx)
 
-# ============================================================
-# Example API endpoints (active ones)
-# ============================================================
-@app.get("/system_status_data")
-async def system_status_data():
+
+# ----------------------------
+# Lightweight status endpoints
+# ----------------------------
+@app.get("/api/ping")
+async def ping():
+    return {"ok": True, "version": APP_VERSION, "uptime_sec": int(time.time() - START_TS)}
+
+@app.get("/api/toggles")
+async def get_toggles():
     return {
-        "status": "✅ OK",
-        "version": "9.5.4 PRO+",
-        "environment": os.getenv("RENDER", "Local"),
+        "smartmoney_on": STATE["smartmoney_on"],
+        "goalmatrix_on": STATE["goalmatrix_on"],
+        "auto_refresh_on": STATE["auto_refresh_on"],
+        "refresh_secs": STATE["refresh_secs"],
     }
 
-@app.get("/system_status_html", response_class=HTMLResponse)
-async def system_status_html(request: Request):
-    return templates.TemplateResponse("system_status.html", {"request": request})
+@app.post("/api/toggle/{name}")
+async def set_toggle(name: str, value: bool | None = None, secs: int | None = None):
+    name = name.lower()
+    if name in ("smartmoney_on", "goalmatrix_on", "auto_refresh_on"):
+        if value is None:
+            raise HTTPException(400, "Provide ?value=true|false")
+        STATE[name] = bool(value)
+        return {"ok": True, name: STATE[name]}
+    if name == "refresh_secs":
+        if secs is None or secs < 5 or secs > 300:
+            raise HTTPException(400, "Provide ?secs=5..300")
+        STATE["refresh_secs"] = int(secs)
+        return {"ok": True, "refresh_secs": STATE["refresh_secs"]}
+    raise HTTPException(404, "Unknown toggle")
 
-@app.get("/render_health")
-async def render_health():
-    return {"health": "OK", "source": "Render Docker"}
+@app.get("/api/status")
+async def status():
+    # Σε αυτή την έκδοση κρατάμε deterministic statuses (χωρίς εξωτερικά calls)
+    uptime = int(time.time() - START_TS)
+    services = {
+        "render_health": "ok",   # hook για μελλοντικό http check
+        "db": "ok",              # hook για πραγματικό DB check
+        "apis": {
+            "flashscore": "ok",
+            "sofascore": "ok",
+            "asianconnect": "ok"
+        }
+    }
+    return {
+        "ok": True,
+        "version": APP_VERSION,
+        "uptime_sec": uptime,
+        "state": STATE,
+        "services": services
+    }
 
-@app.get("/smartmoney_monitor")
-async def smartmoney_monitor():
-    return {"smartmoney": "Monitoring active"}
 
-@app.get("/backup_status")
-async def backup_status():
-    return {"backup": "Ready", "storage": "Google Drive / Local"}
-
-# ============================================================
-# Service Worker / Manifest / Favicon routes (explicit fallback)
-# ============================================================
-@app.get("/service-worker.js")
-async def service_worker():
-    path = STATIC_DIR / "service-worker.js"
-    if path.exists():
-        return HTMLResponse(path.read_text(), media_type="application/javascript")
-    return JSONResponse({"error": "service-worker.js not found"}, status_code=404)
-
-@app.get("/static/manifest.json")
-async def manifest_json():
-    path = STATIC_DIR / "manifest.json"
-    if path.exists():
-        return HTMLResponse(path.read_text(), media_type="application/json")
-    return JSONResponse({"error": "manifest.json not found"}, status_code=404)
-
-@app.get("/favicon.ico")
-async def favicon():
-    path = STATIC_DIR / "favicon.ico"
-    if path.exists():
-        return HTMLResponse(path.read_bytes(), media_type="image/x-icon")
-    return JSONResponse({"error": "favicon.ico not found"}, status_code=404)
-
-@app.get("/system_summary_bar", response_class=HTMLResponse)
-async def system_summary_bar(request: Request):
-    return templates.TemplateResponse("partials/system_summary_bar.html", {"request": request})
-
-# ============================================================
-# Startup Event
-# ============================================================
-@app.on_event("startup")
-async def startup_event():
-    print("🚀 EURO_GOALS v9.5.4 PRO+ started successfully!")
-
-# ============================================================
-# Run (local debug only)
-# ============================================================
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=10000, reload=True)
+# ----------------------------
+# Error handlers (clean JSON)
+# ----------------------------
+@app.exception_handler(HTTPException)
+async def http_exc_handler(request: Request, exc: HTTPException):
+    return JSONResponse(status_code=exc.status_code, content={"ok": False, "error": exc.detail})

@@ -1,83 +1,158 @@
-<!-- =======================================================
-     EURO_GOALS v9.5.4 PRO+ — Unified Dashboard (SmartMoney + GoalMatrix)
-     ======================================================= -->
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EURO_GOALS v9.5.4 PRO+</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>EURO_GOALS {{ APP_VERSION }}</title>
+
+  <!-- ============================================== -->
+  <!-- 🌐 Progressive Web App / Meta Tags -->
+  <!-- ============================================== -->
   <link rel="manifest" href="/static/manifest.json">
-  <link rel="apple-touch-icon" href="/static/icons/icon-512.png">
-  <meta name="theme-color" content="#0d0d0d">
-  <link rel="stylesheet" href="/static/css/tailwind.css">
-  <style>
-    body {
-      background-color: #0d0d0d;
-      color: #e5e5e5;
-      font-family: 'Inter', sans-serif;
-    }
-    .card {
-      background-color: #111;
-      border: 1px solid #222;
-      border-radius: 1rem;
-      padding: 1rem;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
-    }
-  </style>
+  <meta name="theme-color" content="#0b0f17">
+  <meta name="background-color" content="#0b0f17">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="EURO_GOALS PRO+">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash_1080x1920.png">
+
+  <!-- Favicon -->
+  <link rel="icon" href="/static/icons/eurogoals_192.png">
+
+  <!-- ============================================== -->
+  <!-- 🎨 Ενιαίο Dark UI CSS -->
+  <!-- ============================================== -->
+  <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
-<body class="p-4">
-  <!-- =======================================================
-       HEADER / SYSTEM SUMMARY
-       ======================================================= -->
-  <div class="mb-6 text-center">
-    <h1 class="text-3xl font-bold text-emerald-400">EURO_GOALS v9.5.4 PRO+</h1>
-    <p class="text-sm text-gray-400 mt-1">Unified Dashboard — SmartMoney & GoalMatrix Engines</p>
-  </div>
+<body>
+  <!-- ============================================== -->
+  <!-- 🔝 Mobile Top Bar -->
+  <!-- ============================================== -->
+  <header class="eg-topbar">
+    <button id="menuBtn" class="eg-btn icon only" aria-label="Menu">☰</button>
+    <div class="eg-topbar-title">
+      EURO_GOALS <span class="muted">{{ APP_VERSION }}</span>
+    </div>
+    <div class="eg-topbar-actions">
+      <button id="refreshNowBtn" class="eg-btn sm">Refresh</button>
+    </div>
+  </header>
 
-  <!-- =======================================================
-       SMARTMONEY PANEL (αν υπάρχει ήδη)
-       ======================================================= -->
-  {% include 'partials/smartmoney_panel.html' ignore missing %}
+  <!-- ============================================== -->
+  <!-- 📱 Mobile Drawer -->
+  <!-- ============================================== -->
+  <nav id="mobileDrawer" class="drawer">
+    <div class="drawer-inner">
+      <button id="drawerClose" class="eg-btn icon only" aria-label="Close">✕</button>
+      <h3>Μενού</h3>
+      <ul class="drawer-menu">
+        <li><a href="#summary">System Summary</a></li>
+        <li><a href="#smartmoney">SmartMoney</a></li>
+        <li><a href="#goalmatrix">GoalMatrix</a></li>
+        <li><a href="#alerts">Alert History</a></li>
+        <li><a href="#status">System Status</a></li>
+      </ul>
+    </div>
+  </nav>
 
-  <!-- =======================================================
-       GOALMATRIX PANEL
-       ======================================================= -->
-  {% include 'partials/goal_matrix_panel.html' ignore missing %}
+  <!-- ============================================== -->
+  <!-- 🧠 Κύριο Περιεχόμενο -->
+  <!-- ============================================== -->
+  <main class="eg-container">
 
-  <!-- =======================================================
-       SYSTEM FOOTER
-       ======================================================= -->
-  <div class="text-center text-gray-600 text-xs mt-6">
-    <hr class="border-gray-700 mb-3">
-    <p>EURO_GOALS PRO+ © {{ now().year if now else '2025' }} | Render & Local Sync</p>
-  </div>
+    <!-- ===== System Summary Bar (Tailwind-based) ===== -->
+    <section id="summary" class="eg-section">
+      {% include 'partials/system_summary_bar.html' %}
+    </section>
 
-  <!-- =======================================================
-       AUTO REFRESH / PWA SERVICE WORKER
-       ======================================================= -->
+    <!-- ===== Περιεχόμενο ===== -->
+    <section class="eg-grid">
+
+      <!-- SmartMoney -->
+      <div id="smartmoney" class="eg-card">
+        <div class="eg-card-header">
+          <h2>SmartMoney Monitor</h2>
+          <div class="eg-actions">
+            <label class="switch">
+              <input id="toggleSmartMoney" type="checkbox">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label">ON/OFF</span>
+          </div>
+        </div>
+        <div class="eg-card-body">
+          <div class="placeholder">SmartMoney table/feed placeholder</div>
+        </div>
+      </div>
+
+      <!-- GoalMatrix -->
+      <div id="goalmatrix" class="eg-card">
+        <div class="eg-card-header">
+          <h2>GoalMatrix</h2>
+          <div class="eg-actions">
+            <label class="switch">
+              <input id="toggleGoalMatrix" type="checkbox">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label">ON/OFF</span>
+          </div>
+        </div>
+        <div class="eg-card-body">
+          <div class="placeholder">GoalMatrix heatmap/lines placeholder</div>
+        </div>
+      </div>
+
+      <!-- Alert History -->
+      <div id="alerts" class="eg-card full">
+        <div class="eg-card-header">
+          <h2>Alert History</h2>
+          <div class="eg-actions">
+            <button id="clearAlerts" class="eg-btn ghost sm">Clear</button>
+          </div>
+        </div>
+        <div class="eg-card-body">
+          <div class="placeholder">Alerts table placeholder</div>
+        </div>
+      </div>
+
+      <!-- System Status -->
+      <div id="status" class="eg-card">
+        <div class="eg-card-header">
+          <h2>System Status</h2>
+        </div>
+        <div class="eg-card-body">
+          <ul class="kv">
+            <li><span>Version</span><b id="kvVersion">—</b></li>
+            <li><span>Uptime</span><b id="kvUptime">—</b></li>
+            <li><span>Auto-refresh</span><b id="kvAuto">—</b></li>
+          </ul>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ============================================== -->
+  <!-- ⚙️ JS -->
+  <!-- ============================================== -->
   <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/static/service-worker.js')
-        .then(() => console.log('✅ EURO_GOALS PWA active'))
-        .catch(err => console.warn('Service Worker error', err));
-    }
+    window.__EG__ = { initialRefreshSecs: {{ refresh_secs|int }} };
   </script>
+  <script src="/static/js/ui_controls.js"></script>
 
-  <!-- =======================================================
-       GOALMATRIX AUTO REFRESH (fallback)
-       ======================================================= -->
+  <!-- ============================================== -->
+  <!-- 🧩 Service Worker Registration (PWA) -->
+  <!-- ============================================== -->
   <script>
-    function autoReloadGoalMatrix() {
-      const panel = document.getElementById('goalmatrix-panel');
-      if (!panel) return;
-      fetch('/api/goalmatrix/feed')
-        .then(r => r.json())
-        .then(data => console.log('[GoalMatrix feed OK]', data.updated))
-        .catch(err => console.warn('[GoalMatrix feed error]', err));
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/static/js/service_worker.js")
+          .then(reg => console.log("✅ Service Worker registered:", reg.scope))
+          .catch(err => console.warn("Service Worker failed:", err));
+      });
     }
-    setInterval(autoReloadGoalMatrix, 60000);
   </script>
 </body>
 </html>

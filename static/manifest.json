@@ -1,10 +1,13 @@
 {
-  "name": "EURO_GOALS",
+  "name": "EURO_GOALS PRO+",
   "short_name": "EURO_GOALS",
+  "description": "EURO_GOALS v9.5.0 PRO+ — Live SmartMoney, GoalMatrix & Alerts System",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0d0d0d",
-  "theme_color": "#0d0d0d",
+  "background_color": "#0b0f17",
+  "theme_color": "#0b0f17",
+  "orientation": "portrait-primary",
+  "scope": "/",
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
@@ -14,6 +17,18 @@
     {
       "src": "/static/icons/icon-512.png",
       "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/icons/splash_720x1280.png",
+      "sizes": "720x1280",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/splash_1080x1920.png",
+      "sizes": "1080x1920",
       "type": "image/png"
     }
   ]
