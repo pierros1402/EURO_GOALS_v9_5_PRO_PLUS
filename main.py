@@ -1,136 +1,126 @@
 # ============================================================
-# EURO_GOALS v9.5.4 PRO+ — Main Application (Unified Engine)
+# EURO_GOALS_UNIFIED v9.5.4 PRO+  (Docker / Render Compatible)
 # ============================================================
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from datetime import datetime
-from dotenv import load_dotenv
-from pydantic import BaseModel
 import os
-import math
 from pathlib import Path
 
-# ------------------------------------------------------------
-# Load environment variables
-# ------------------------------------------------------------
-load_dotenv()
-
-GM_ENABLED = os.getenv("GM_ENABLED", "false").lower() == "true"
-GM_REFRESH_SEC = int(os.getenv("GM_REFRESH_SEC", "20"))
-
-# ------------------------------------------------------------
+# ============================================================
 # App setup
-# ------------------------------------------------------------
-app = FastAPI(title="EURO_GOALS_UNIFIED v9.5.4 PRO+", version="9.5.4")
+# ============================================================
+app = FastAPI(
+    title="EURO_GOALS_UNIFIED v9.5.4 PRO+",
+    version="9.5.4",
+)
 
-# ------------------------------------------------------------
-# Static & Template directories (Render-compatible absolute paths)
-# ------------------------------------------------------------
+# ============================================================
+# Directories
+# ============================================================
 BASE_DIR = Path(__file__).resolve().parent
-STATIC_DIR = Path(BASE_DIR / "static").resolve()
-TEMPLATE_DIR = Path(BASE_DIR / "templates").resolve()
+STATIC_DIR = BASE_DIR / "static"
+TEMPLATES_DIR = BASE_DIR / "templates"
 
-print(f"[EURO_GOALS] 🧩 Static dir mounted from: {STATIC_DIR}")
-print(f"[EURO_GOALS] 🧩 Templates dir from: {TEMPLATE_DIR}")
+# --- Render & Local Compatible Static Mount ---
+if not STATIC_DIR.exists():
+    os.makedirs(STATIC_DIR, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# ------------------------------------------------------------
-# Public routes for manifest & service worker
-# ------------------------------------------------------------
-@app.get("/service-worker.js")
-async def service_worker():
-    """Serve PWA service worker file."""
-    return FileResponse(STATIC_DIR / "service-worker.js")
-
-@app.get("/manifest.json")
-async def manifest():
-    """Serve PWA manifest file."""
-    return FileResponse(STATIC_DIR / "manifest.json")
-
-# ------------------------------------------------------------
-# Routers import (GoalMatrix Engine)
-# ------------------------------------------------------------
-from feeds.goal_matrix_feed import router as goalmatrix_router
-app.include_router(goalmatrix_router)
-
-# ------------------------------------------------------------
-# Root route (Dashboard)
-# ------------------------------------------------------------
+# ============================================================
+# Root Endpoint
+# ============================================================
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    context = {
-        "request": request,
-        "GM_ENABLED": GM_ENABLED,
-        "GM_REFRESH_SEC": GM_REFRESH_SEC,
-    }
-    return templates.TemplateResponse("index.html", context)
+    html_content = """
+    <html>
+        <head>
+            <meta charset="utf-8">
+            <title>🏆 EURO_GOALS v9.5.0 PRO+ – API Interface</title>
+            <link rel="manifest" href="/static/manifest.json">
+            <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+            <script src="/static/service-worker.js"></script>
+        </head>
+        <body style="font-family:Arial; background:#fff; color:#000; margin:40px;">
+            <h2>🏆 <b>EURO_GOALS v9.5.0 PRO+</b> – API Interface</h2>
+            <p><b>Available endpoints:</b></p>
+            <ul>
+                <li><a href="/system_status_data">/system_status_data</a> – JSON Unified Status</li>
+                <li><a href="/system_status_html">/system_status_html</a> – HTML Unified Dashboard</li>
+                <li><a href="/render_health">/render_health</a> – Render Health Check</li>
+                <li><a href="/smartmoney_monitor">/smartmoney_monitor</a> – SmartMoney Monitor</li>
+                <li><a href="/backup_status">/backup_status</a> – Backup Readiness</li>
+            </ul>
+        </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
 
-# ------------------------------------------------------------
-# Healthcheck
-# ------------------------------------------------------------
-@app.get("/health", response_class=JSONResponse)
-async def health_check():
+# ============================================================
+# Example API endpoints (active ones)
+# ============================================================
+@app.get("/system_status_data")
+async def system_status_data():
     return {
-        "status": "OK",
-        "timestamp": datetime.utcnow().isoformat(),
-        "goal_matrix_enabled": GM_ENABLED,
-        "goal_matrix_refresh": GM_REFRESH_SEC,
+        "status": "✅ OK",
+        "version": "9.5.4 PRO+",
+        "environment": os.getenv("RENDER", "Local"),
     }
 
-# ------------------------------------------------------------
-# GoalMatrix Calculation API
-# ------------------------------------------------------------
-class GoalMatrixInput(BaseModel):
-    home_avg: float
-    away_avg: float
-    over_line: float
+@app.get("/system_status_html", response_class=HTMLResponse)
+async def system_status_html(request: Request):
+    return templates.TemplateResponse("system_status.html", {"request": request})
 
-def poisson_prob(lmbda, k):
-    return (math.exp(-lmbda) * (lmbda ** k)) / math.factorial(k)
+@app.get("/render_health")
+async def render_health():
+    return {"health": "OK", "source": "Render Docker"}
 
-@app.post("/api/goalmatrix/calc")
-async def calc_goal_matrix(data: GoalMatrixInput):
-    if not GM_ENABLED:
-        return {"enabled": False}
+@app.get("/smartmoney_monitor")
+async def smartmoney_monitor():
+    return {"smartmoney": "Monitoring active"}
 
-    l_home = data.home_avg
-    l_away = data.away_avg
-    line = data.over_line
+@app.get("/backup_status")
+async def backup_status():
+    return {"backup": "Ready", "storage": "Google Drive / Local"}
 
-    # Calculate under probability
-    p_under = 0.0
-    for h in range(0, 10):
-        for a in range(0, 10):
-            if h + a <= line:
-                p_under += poisson_prob(l_home, h) * poisson_prob(l_away, a)
-    p_over = 1 - p_under
+# ============================================================
+# Service Worker / Manifest / Favicon routes (explicit fallback)
+# ============================================================
+@app.get("/service-worker.js")
+async def service_worker():
+    path = STATIC_DIR / "service-worker.js"
+    if path.exists():
+        return HTMLResponse(path.read_text(), media_type="application/javascript")
+    return JSONResponse({"error": "service-worker.js not found"}, status_code=404)
 
-    # Top 3 most likely scorelines
-    scores = []
-    for h in range(0, 5):
-        for a in range(0, 5):
-            prob = poisson_prob(l_home, h) * poisson_prob(l_away, a)
-            scores.append((f"{h}-{a}", prob))
-    scores.sort(key=lambda x: x[1], reverse=True)
-    top_scores = scores[:3]
+@app.get("/static/manifest.json")
+async def manifest_json():
+    path = STATIC_DIR / "manifest.json"
+    if path.exists():
+        return HTMLResponse(path.read_text(), media_type="application/json")
+    return JSONResponse({"error": "manifest.json not found"}, status_code=404)
 
-    return {
-        "enabled": True,
-        "lambda_home": l_home,
-        "lambda_away": l_away,
-        "p_over": p_over,
-        "p_under": p_under,
-        "top_scores": top_scores,
-    }
+@app.get("/favicon.ico")
+async def favicon():
+    path = STATIC_DIR / "favicon.ico"
+    if path.exists():
+        return HTMLResponse(path.read_bytes(), media_type="image/x-icon")
+    return JSONResponse({"error": "favicon.ico not found"}, status_code=404)
 
-# ------------------------------------------------------------
-# Run (Local only)
-# ------------------------------------------------------------
+# ============================================================
+# Startup Event
+# ============================================================
+@app.on_event("startup")
+async def startup_event():
+    print("🚀 EURO_GOALS v9.5.4 PRO+ started successfully!")
+
+# ============================================================
+# Run (local debug only)
+# ============================================================
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=10000, reload=True)
