@@ -8,6 +8,8 @@ from fastapi.templating import Jinja2Templates
 from datetime import datetime
 from dotenv import load_dotenv
 import os
+import math
+from pydantic import BaseModel
 
 # ------------------------------------------------------------
 # Load environment variables
@@ -18,24 +20,16 @@ GM_ENABLED = os.getenv("GM_ENABLED", "false").lower() == "true"
 GM_REFRESH_SEC = int(os.getenv("GM_REFRESH_SEC", "20"))
 
 # ------------------------------------------------------------
-# App setup
+# App setup (Render-compatible static paths)
 # ------------------------------------------------------------
 app = FastAPI(title="EURO_GOALS_UNIFIED v9.5.4 PRO+", version="9.5.4")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
-
-# ============================================================
-# Static Files (Render compatible absolute path)
-# ============================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
-app.mount(
-    "/static",
-    StaticFiles(directory=STATIC_DIR),
-    name="static"
-)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # ------------------------------------------------------------
 # Routers import
@@ -74,9 +68,6 @@ async def health_check():
 # ------------------------------------------------------------
 # GoalMatrix calc endpoint (manual input from UI)
 # ------------------------------------------------------------
-import math
-from pydantic import BaseModel
-
 class GoalMatrixInput(BaseModel):
     home_avg: float
     away_avg: float
