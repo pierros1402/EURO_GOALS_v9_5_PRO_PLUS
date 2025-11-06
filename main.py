@@ -1,6 +1,7 @@
 # ============================================================
 # EURO_GOALS v9.5.4 PRO+ — Main Application (Unified Engine)
 # ============================================================
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,36 +9,30 @@ from fastapi.templating import Jinja2Templates
 from datetime import datetime
 from dotenv import load_dotenv
 import os
-import math
-from pydantic import BaseModel
+from pathlib import Path
 
 # ------------------------------------------------------------
 # Load environment variables
 # ------------------------------------------------------------
 load_dotenv()
 
-GM_ENABLED = os.getenv("GM_ENABLED", "false").lower() == "true"
-GM_REFRESH_SEC = int(os.getenv("GM_REFRESH_SEC", "20"))
-
 # ------------------------------------------------------------
-# App setup (Render-compatible static paths)
+# App setup
 # ------------------------------------------------------------
 app = FastAPI(title="EURO_GOALS_UNIFIED v9.5.4 PRO+", version="9.5.4")
 
 # ------------------------------------------------------------
-# Static Files (Render absolute path)
+# Static & Template directories (Render-compatible absolute paths)
 # ------------------------------------------------------------
-import pathlib
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = Path(os.getenv("STATIC_PATH", BASE_DIR / "static")).resolve()
+TEMPLATE_DIR = Path(os.getenv("TEMPLATE_PATH", BASE_DIR / "templates")).resolve()
 
-BASE_DIR = pathlib.Path(__file__).resolve().parent
-STATIC_DIR = os.getenv("RENDER_STATIC_DIR", str(BASE_DIR / "static"))
-TEMPLATES_DIR = os.getenv("RENDER_TEMPLATES_DIR", str(BASE_DIR / "templates"))
+print(f"[EURO_GOALS] 🧩 Static dir mounted from: {STATIC_DIR}")
+print(f"[EURO_GOALS] 🧩 Templates dir from: {TEMPLATE_DIR}")
 
-print(f"[DEBUG] Static dir mounted from: {STATIC_DIR}")
-
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
-
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 # ------------------------------------------------------------
 # Routers import
 # ------------------------------------------------------------
