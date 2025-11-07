@@ -1,88 +1,83 @@
 /* ============================================================
-   EURO_GOALS PRO+ v9.5.x | Dark Green Adaptive UI
+   EURO_GOALS PRO+ v9.5.2 | Stable Compact Dark Green UI
    ============================================================ */
 
 :root {
   --green: #00ff6a;
   --blue: #00b7ff;
-  --dark: #0e0e0e;
-  --gray: #1c1c1c;
-  --text: #eaeaea;
-  --text-dim: #9b9b9b;
+  --dark: #0b0b0b;
+  --gray: #141414;
+  --text: #f0f0f0;
+  --text-dim: #a0a0a0;
   --radius: 14px;
-  --shadow: 0 0 15px rgba(0, 255, 106, 0.2);
+  --shadow: 0 0 10px rgba(0, 255, 106, 0.15);
   --transition: 0.25s ease;
 }
 
-/* Body ----------------------------------------------------- */
+/* BODY ------------------------------------------------------ */
 body {
   background-color: var(--dark);
   color: var(--text);
   font-family: 'Segoe UI', Tahoma, sans-serif;
   margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
-/* Header --------------------------------------------------- */
+/* HEADER ---------------------------------------------------- */
 .header-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: var(--gray);
   padding: 8px 20px;
-  box-shadow: var(--shadow);
   border-bottom: 1px solid #00ff6a33;
+  box-shadow: 0 2px 12px rgba(0, 255, 106, 0.1);
 }
+
 .logo-section {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .logo-icon {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
 }
+
 .logo-text {
   font-weight: 700;
   color: var(--green);
-  font-size: 1.2rem;
+  font-size: 1.15rem;
 }
+
 .version {
   font-size: 0.9rem;
   color: var(--text-dim);
-  margin-left: 8px;
+  margin-left: 6px;
 }
 
-/* LED Status Indicators ------------------------------------ */
+/* STATUS LEDs ---------------------------------------------- */
 .status-indicators {
   display: flex;
-  gap: 8px;
+  gap: 7px;
   align-items: center;
 }
 .led {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  box-shadow: 0 0 6px #000;
-  opacity: 0.85;
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
 }
-.led.green {
-  background: var(--green);
-  box-shadow: 0 0 10px var(--green);
-}
-.led.blue {
-  background: var(--blue);
-  box-shadow: 0 0 10px var(--blue);
-}
-.led.gray {
-  background: #555;
-  box-shadow: 0 0 6px #444;
-}
+.led.green { background: var(--green); box-shadow: 0 0 5px var(--green); }
+.led.blue { background: var(--blue); box-shadow: 0 0 5px var(--blue); }
+.led.gray { background: #555; box-shadow: 0 0 4px #333; }
+.led:hover { opacity: 1; transform: scale(1.15); }
 
-/* Theme toggle --------------------------------------------- */
+/* THEME TOGGLE --------------------------------------------- */
 .mode-toggle button {
   background: var(--green);
   border: none;
@@ -97,15 +92,15 @@ body {
   transform: scale(1.05);
 }
 
-/* Main container ------------------------------------------- */
+/* MAIN CONTAINER ------------------------------------------- */
 .main-container {
   flex-grow: 1;
-  padding: 20px;
+  padding: 25px;
   display: flex;
   justify-content: center;
 }
 
-/* Grid layout ---------------------------------------------- */
+/* GRID ------------------------------------------------------ */
 .grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
@@ -114,46 +109,46 @@ body {
   max-width: 1300px;
 }
 
-/* Cards ----------------------------------------------------- */
+/* CARD ------------------------------------------------------ */
 .card {
   background-color: var(--gray);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  padding: 15px 20px;
+  padding: 18px 22px;
   transition: var(--transition);
 }
 .card:hover {
   transform: scale(1.01);
-  box-shadow: 0 0 20px rgba(0, 255, 106, 0.3);
+  box-shadow: 0 0 16px rgba(0, 255, 106, 0.25);
 }
 .card h2 {
   color: var(--green);
   margin-top: 0;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 .card-body {
   margin-top: 10px;
-  background-color: #111;
-  border: 1px dashed #00ff6a55;
+  background-color: #0e0e0e;
+  border: 1px dashed #00ff6a33;
   border-radius: var(--radius);
   padding: 15px;
   color: var(--text-dim);
   font-size: 0.95rem;
 }
-.card.wide {
-  grid-column: span 2;
-}
+.card.wide { grid-column: span 2; }
+
 .card-body.center {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .main-logo {
-  width: 340px;
+  width: 320px;
   opacity: 0.9;
 }
 
-/* Footer ---------------------------------------------------- */
+/* FOOTER ---------------------------------------------------- */
 .footer-bar {
   text-align: center;
   padding: 10px;
@@ -163,18 +158,10 @@ body {
   border-top: 1px solid #00ff6a33;
 }
 
-/* Responsive ----------------------------------------------- */
+/* RESPONSIVE ------------------------------------------------ */
 @media (max-width: 768px) {
-  .grid-container {
-    grid-template-columns: 1fr;
-  }
-  .card.wide {
-    grid-column: span 1;
-  }
-  .main-logo {
-    width: 240px;
-  }
-  .status-indicators {
-    display: none;
-  }
+  .grid-container { grid-template-columns: 1fr; }
+  .card.wide { grid-column: span 1; }
+  .main-logo { width: 240px; }
+  .status-indicators { display: none; }
 }
