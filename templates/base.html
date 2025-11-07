@@ -1,26 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>EURO_GOALS PRO+</title>
-
-  <link rel="icon" href="/static/icons/icon-192.png">
-  <link rel="stylesheet" href="/static/css/style.css" id="main-style">
-
-  <script defer src="/static/js/theme_toggle.js"></script>
-  <script defer src="/static/js/render_auto_stop.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ version }}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="/static/icons/icon-192.png" type="image/png">
 </head>
-<body>
-  <header class="top-bar">
-    <span class="title">EURO_GOALS v9.5.2 PRO+ | Smart Adaptive Mode</span>
-    <button id="themeToggle" class="theme-btn">☀️/🌙</button>
-  </header>
+<body class="dark-mode">
+    <header class="header-bar">
+        <div class="logo-section">
+            <img src="/static/icons/icon-192.png" alt="EURO_GOALS" class="logo-icon">
+            <span class="logo-text">EURO_GOALS</span>
+            <span class="version">{{ version }}</span>
+        </div>
 
-  {% block content %}{% endblock %}
+        <div class="status-indicators">
+            <div class="led green" title="Render"></div>
+            <div class="led green" title="Database"></div>
+            <div class="led blue" title="Flashscore"></div>
+            <div class="led blue" title="Sofascore"></div>
+            <div class="led gray" title="AsianConnect (Offline)"></div>
+        </div>
 
-  <footer class="footer">
-    <small>© 2025 EURO_GOALS PRO+ | Adaptive Compact UI</small>
-  </footer>
+        <div class="mode-toggle">
+            <button id="themeToggle">🌙 / ☀️</button>
+        </div>
+    </header>
+
+    <main class="main-container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer-bar">
+        <p>© 2025 <strong>EURO_GOALS PRO+</strong> | Adaptive Compact UI | Smart Engine v9.5.x</p>
+    </footer>
+
+    <script src="/static/js/theme_toggle.js"></script>
 </body>
 </html>

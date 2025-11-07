@@ -1,26 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
-<main class="grid">
-  <section class="panel">
-    <h2>SmartMoney Monitor</h2>
-    <div class="panel-body">SmartMoney feed placeholder</div>
-  </section>
 
-  <section class="panel">
-    <h2>GoalMatrix</h2>
-    <div class="panel-body">GoalMatrix heatmap placeholder</div>
-  </section>
+<div class="grid-container">
 
-  <section class="panel full">
-    <h2>Alert History</h2>
-    <div class="panel-body">Alerts list placeholder</div>
-  </section>
+    <!-- SMARTMONEY -->
+    <section class="card">
+        <h2>SmartMoney Monitor</h2>
+        <div class="card-body">
+            SmartMoney feed placeholder
+        </div>
+    </section>
 
-  <section class="panel full">
-    <h2>System Health</h2>
-    <div class="panel-body">
-      {% include "partials/system_summary_bar.html" %}
-    </div>
-  </section>
-</main>
+    <!-- GOALMATRIX -->
+    <section class="card">
+        <h2>GoalMatrix</h2>
+        <div class="card-body">
+            GoalMatrix heatmap placeholder
+        </div>
+    </section>
+
+    <!-- ALERTS -->
+    <section class="card wide">
+        <h2>Alert History</h2>
+        <div class="card-body">
+            Alerts list placeholder
+        </div>
+    </section>
+
+    <!-- SYSTEM HEALTH -->
+    <section class="card wide">
+        <h2>System Health</h2>
+        <div class="card-body center">
+            <img src="/static/icons/eg_logo.png" alt="EURO_GOALS PRO+" class="main-logo">
+        </div>
+    </section>
+
+</div>
+
 {% endblock %}
