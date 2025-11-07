@@ -5,25 +5,29 @@
 let startTime = Date.now();
 
 async function checkHealth() {
-  const start = performance.now();
-  const res = await fetch("/health", { cache: "no-store" });
-  const data = await res.json();
-  const latency = Math.round(performance.now() - start);
-  updateLED("led-render", true);
-  updateLED("led-db", data.components?.db ?? true);
-  updateLED("led-flashscore", data.components?.flashscore ?? true);
-  updateLED("led-sofascore", data.components?.sofascore ?? true);
-  updateLED("led-asianconnect", data.components?.asianconnect ?? false);
+  try {
+    const start = performance.now();
+    const res = await fetch("/health", { cache: "no-store" });
+    const data = await res.json();
+    const latency = Math.round(performance.now() - start);
 
-  document.getElementById("status-latency").innerHTML = `⏱ ${latency} ms`;
-  updateUptime();
+    updateLED("led-render", true);
+    updateLED("led-db", data.components?.db ?? true);
+    updateLED("led-flashscore", data.components?.flashscore ?? true);
+    updateLED("led-sofascore", data.components?.sofascore ?? true);
+    updateLED("led-asianconnect", data.components?.asianconnect ?? false);
+
+    document.getElementById("status-latency").innerHTML = `⏱ ${latency} ms`;
+    updateUptime();
+  } catch (err) {
+    console.warn("Health check failed", err);
+  }
 }
 
 function updateLED(id, active) {
   const led = document.getElementById(id);
   if (!led) return;
-  if (active) led.classList.add("on");
-  else led.classList.remove("on");
+  active ? led.classList.add("on") : led.classList.remove("on");
 }
 
 function updateUptime() {
@@ -37,7 +41,6 @@ function updateUptime() {
       .padStart(2, "0")}`;
 }
 
-// Auto-refresh status sync
 function setRefreshStatus(on) {
   const el = document.getElementById("status-refresh");
   if (!el) return;
