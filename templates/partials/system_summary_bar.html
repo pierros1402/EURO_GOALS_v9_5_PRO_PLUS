@@ -1,66 +1,26 @@
-<div class="summarybar">
-  <div class="sb-left">
-    <div class="brand">
-      <img src="/static/icons/ball.svg" alt="" class="brand-icon">
-      <div>
-        <div class="brand-title">EURO_GOALS</div>
-        <div class="brand-sub">System Summary</div>
-      </div>
-    </div>
+<!-- ============================================================
+     EURO_GOALS v9.5.1 PRO+ Smart Mode
+     System Summary Bar with Live Status Panel
+     ============================================================ -->
+
+<div id="system-summary-bar" class="summary-bar">
+  <div class="logo-section">
+    <img src="/static/icons/icon-192.png" alt="EURO_GOALS" class="logo-icon">
+    <span class="logo-text">EURO_GOALS</span>
+    <span class="version">v9.5.1 PRO+ Smart Mode</span>
   </div>
 
-  <div class="sb-center">
-    <div class="led-group">
-      <div class="led">
-        <span class="dot" id="led-render"></span>
-        <span class="label">Render</span>
-      </div>
-      <div class="led">
-        <span class="dot" id="led-db"></span>
-        <span class="label">DB</span>
-      </div>
-      <div class="led">
-        <span class="dot" id="led-flashscore"></span>
-        <span class="label">Flashscore</span>
-      </div>
-      <div class="led">
-        <span class="dot" id="led-sofascore"></span>
-        <span class="label">Sofascore</span>
-      </div>
-      <div class="led">
-        <span class="dot" id="led-asianconnect"></span>
-        <span class="label">AsianConnect</span>
-      </div>
-    </div>
+  <div class="led-section">
+    <div class="led" id="led-render" data-label="Render"></div>
+    <div class="led" id="led-db" data-label="DB"></div>
+    <div class="led" id="led-flashscore" data-label="Flashscore"></div>
+    <div class="led" id="led-sofascore" data-label="Sofascore"></div>
+    <div class="led" id="led-asianconnect" data-label="AsianConnect"></div>
   </div>
 
-  <div class="sb-right">
-    <div class="controls">
-      <div class="ctrl">
-        <span class="ctrl-label">SmartMoney</span>
-        <label class="switch">
-          <input id="sbSmartMoney" type="checkbox">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="ctrl">
-        <span class="ctrl-label">GoalMatrix</span>
-        <label class="switch">
-          <input id="sbGoalMatrix" type="checkbox">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="ctrl">
-        <span class="ctrl-label">Auto-refresh</span>
-        <label class="switch">
-          <input id="sbAutoRefresh" type="checkbox">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="ctrl">
-        <span class="ctrl-label">Interval</span>
-        <input id="sbInterval" class="interval" type="number" min="5" max="300" step="5">
-      </div>
-    </div>
+  <div class="status-panel">
+    <span id="status-refresh" class="status-pill">🔄 Refresh: <b>ON</b></span>
+    <span id="status-latency" class="status-pill">⏱ 0 ms</span>
+    <span id="status-uptime" class="status-pill">🕒 0:00:00</span>
   </div>
 </div>

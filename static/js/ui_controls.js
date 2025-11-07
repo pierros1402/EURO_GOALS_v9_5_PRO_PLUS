@@ -41,3 +41,7 @@ function resetIdleTimer() {
   window.addEventListener(ev, resetIdleTimer)
 );
 resetIdleTimer();
+function refreshStatusSync() {
+  setRefreshStatus(autoRefreshEnabled);
+}
+setInterval(refreshStatusSync, 2000);

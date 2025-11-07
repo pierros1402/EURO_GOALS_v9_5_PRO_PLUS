@@ -1,6 +1,24 @@
 // =====================================================
-// System Status & LED Updater (Adaptive LEDs)
+// System Status & LED Updater + Render Status Panel
 // =====================================================
+
+let startTime = Date.now();
+
+async function checkHealth() {
+  const start = performance.now();
+  const res = await fetch("/health", { cache: "no-store" });
+  const data = await res.json();
+  const latency = Math.round(performance.now() - start);
+  updateLED("led-render", true);
+  updateLED("led-db", data.components?.db ?? true);
+  updateLED("led-flashscore", data.components?.flashscore ?? true);
+  updateLED("led-sofascore", data.components?.sofascore ?? true);
+  updateLED("led-asianconnect", data.components?.asianconnect ?? false);
+
+  document.getElementById("status-latency").innerHTML = `⏱ ${latency} ms`;
+  updateUptime();
+}
+
 function updateLED(id, active) {
   const led = document.getElementById(id);
   if (!led) return;
@@ -8,10 +26,28 @@ function updateLED(id, active) {
   else led.classList.remove("on");
 }
 
-function updateSystemStatus(data) {
-  updateLED("led-render", data.render_ok);
-  updateLED("led-db", data.db_ok);
-  updateLED("led-flashscore", data.flashscore_ok);
-  updateLED("led-sofascore", data.sofascore_ok);
-  updateLED("led-asianconnect", data.asianconnect_ok);
+function updateUptime() {
+  const uptimeMs = Date.now() - startTime;
+  const hrs = Math.floor(uptimeMs / 3600000);
+  const mins = Math.floor((uptimeMs % 3600000) / 60000);
+  const secs = Math.floor((uptimeMs % 60000) / 1000);
+  document.getElementById("status-uptime").innerHTML =
+    `🕒 ${hrs}:${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
 }
+
+// Auto-refresh status sync
+function setRefreshStatus(on) {
+  const el = document.getElementById("status-refresh");
+  if (!el) return;
+  el.innerHTML = on
+    ? "🔄 Refresh: <b>ON</b>"
+    : "⏸ Refresh: <b>OFF</b>";
+}
+
+// Periodic updates
+setInterval(checkHealth, 30000);
+checkHealth();
+updateUptime();
+setInterval(updateUptime, 1000);

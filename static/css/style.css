@@ -147,3 +147,24 @@ input[type="checkbox"] {
   transform: scale(1.1);
   background: var(--elev);
 }
+/* =====================================================
+   Status Panel Styles
+   ===================================================== */
+.status-panel {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.75rem;
+}
+.status-pill {
+  background: var(--elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  color: var(--text);
+  min-width: 90px;
+  text-align: center;
+}
+[data-theme="light"] .status-pill {
+  background: #f3f5f9;
+}
