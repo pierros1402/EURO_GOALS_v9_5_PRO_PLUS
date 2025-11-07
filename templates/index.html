@@ -16,8 +16,6 @@
   <meta name="apple-mobile-web-app-title" content="EURO_GOALS PRO+">
   <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
   <link rel="apple-touch-startup-image" href="/static/icons/splash_1080x1920.png">
-
-  <!-- Favicon -->
   <link rel="icon" href="/static/icons/eurogoals_192.png">
 
   <!-- ============================================== -->
@@ -37,6 +35,7 @@
     </div>
     <div class="eg-topbar-actions">
       <button id="refreshNowBtn" class="eg-btn sm">Refresh</button>
+      <span id="pwaStatus" title="PWA status indicator" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#444;margin-left:8px;"></span>
     </div>
   </header>
 
@@ -62,7 +61,7 @@
   <!-- ============================================== -->
   <main class="eg-container">
 
-    <!-- ===== System Summary Bar (Tailwind-based) ===== -->
+    <!-- ===== System Summary Bar ===== -->
     <section id="summary" class="eg-section">
       {% include 'partials/system_summary_bar.html' %}
     </section>
@@ -140,7 +139,10 @@
   <script>
     window.__EG__ = { initialRefreshSecs: {{ refresh_secs|int }} };
   </script>
+
   <script src="/static/js/ui_controls.js"></script>
+  <script src="/static/js/ui_alerts.js"></script>
+  <script src="/static/js/pwa_manifest_check.js"></script>
 
   <!-- ============================================== -->
   <!-- 🧩 Service Worker Registration (PWA) -->
@@ -153,6 +155,23 @@
           .catch(err => console.warn("Service Worker failed:", err));
       });
     }
+  </script>
+
+  <!-- ============================================== -->
+  <!-- 📱 PWA Visual Status Indicator -->
+  <!-- ============================================== -->
+  <script>
+    const led = document.getElementById("pwaStatus");
+    function updatePWALed(){
+      if(window.matchMedia("(display-mode: standalone)").matches){
+        led.style.background = "#00c853"; // green = installed
+        led.title = "Running as installed PWA";
+      }else{
+        led.style.background = "#ffb300"; // amber = browser
+        led.title = "Running in browser tab mode";
+      }
+    }
+    updatePWALed();
   </script>
 </body>
 </html>

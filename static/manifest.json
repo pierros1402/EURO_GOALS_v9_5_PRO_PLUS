@@ -1,35 +1,69 @@
 {
   "name": "EURO_GOALS PRO+",
   "short_name": "EURO_GOALS",
-  "description": "EURO_GOALS v9.5.0 PRO+ — Live SmartMoney, GoalMatrix & Alerts System",
+  "description": "EURO_GOALS v9.5.0 PRO+ — Live SmartMoney, GoalMatrix & Alerts Dashboard",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0b0f17",
   "theme_color": "#0b0f17",
-  "orientation": "portrait-primary",
-  "scope": "/",
+  "categories": ["sports", "analytics", "betting", "dashboard"],
+
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/static/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
+
   "screenshots": [
     {
       "src": "/static/icons/splash_720x1280.png",
       "sizes": "720x1280",
-      "type": "image/png"
+      "type": "image/png",
+      "form_factor": "narrow"
     },
     {
       "src": "/static/icons/splash_1080x1920.png",
       "sizes": "1080x1920",
-      "type": "image/png"
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "SmartMoney Monitor",
+      "short_name": "SmartMoney",
+      "url": "/#smartmoney",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "GoalMatrix",
+      "short_name": "GoalMatrix",
+      "url": "/#goalmatrix",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Alerts",
+      "short_name": "Alerts",
+      "url": "/#alerts",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "System Status",
+      "short_name": "Status",
+      "url": "/#status",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

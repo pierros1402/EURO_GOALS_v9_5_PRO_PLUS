@@ -1,14 +1,6 @@
 # =====================================================
-# EURO_GOALS v9.5.4 PRO+ — Requirements (Clean)
+# EURO_GOALS v9.5.4 PRO+ — Clean Requirements for Render
 # =====================================================
-
-fastapi
-uvicorn
-python-dotenv
-psutil
-# ...
-# Force compatible build
---python-version 3.12.6
 
 # --- Core Framework ---
 fastapi==0.115.5
