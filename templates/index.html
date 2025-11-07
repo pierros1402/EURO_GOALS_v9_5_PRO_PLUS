@@ -1,92 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EURO_GOALS PRO+</title>
+{% extends "base.html" %}
+{% block content %}
+<main class="grid">
+  <section class="panel">
+    <h2>SmartMoney Monitor</h2>
+    <div class="panel-body">SmartMoney feed placeholder</div>
+  </section>
 
-    <!-- Core Stylesheet -->
-    <link rel="stylesheet" href="/static/css/style.css" id="main-style">
+  <section class="panel">
+    <h2>GoalMatrix</h2>
+    <div class="panel-body">GoalMatrix heatmap placeholder</div>
+  </section>
 
-    <!-- Fallback check in case CSS fails -->
-    <script>
-        window.addEventListener("load", () => {
-            const sheet = document.getElementById("main-style");
-            if (!sheet || sheet.sheet === null) {
-                console.warn("⚠️ style.css not loaded – reloading with cache-bust...");
-                const newSheet = document.createElement("link");
-                newSheet.rel = "stylesheet";
-                newSheet.href = `/static/css/style.css?v=${Date.now()}`;
-                document.head.appendChild(newSheet);
-            }
-        });
-    </script>
+  <section class="panel full">
+    <h2>Alert History</h2>
+    <div class="panel-body">Alerts list placeholder</div>
+  </section>
 
-    <!-- JS Core -->
-    <script defer src="/static/js/theme_toggle.js"></script>
-    <script defer src="/static/js/ui_controls.js"></script>
-    <script defer src="/static/js/ui_alerts.js"></script>
-    <script defer src="/static/js/system_status.js"></script>
-    <script defer src="/static/js/system_summary.js"></script>
-</head>
-
-<body>
-    <header class="app-header">
-        <div class="logo-section">
-            <img src="/static/icons/icon-192.png" alt="EURO_GOALS" class="logo">
-            <h1>EURO_GOALS <span id="appVersion">{{ APP_VERSION }}</span></h1>
-        </div>
-
-        <div class="summary-status">
-            {% include 'partials/system_summary_bar.html' %}
-        </div>
-    </header>
-
-    <main class="content-wrapper">
-        <section id="smartmoney-monitor" class="panel">
-            <h2>SmartMoney Monitor</h2>
-            <label><input type="checkbox" id="smartmoney-toggle"> ON/OFF</label>
-            <div class="panel-body">SmartMoney table/feed placeholder</div>
-        </section>
-
-        <section id="goalmatrix-monitor" class="panel">
-            <h2>GoalMatrix</h2>
-            <label><input type="checkbox" id="goalmatrix-toggle"> ON/OFF</label>
-            <div class="panel-body">GoalMatrix heatmap/lines placeholder</div>
-        </section>
-
-        <section id="alert-history" class="panel">
-            <h2>Alert History</h2>
-            <button id="clear-alerts">Clear</button>
-            <div id="alerts-container">
-                <div>22:31:10 SMARTMONEY – Unusual odds shift in Premier League (Chelsea – Arsenal)</div>
-                <div>22:34:55 GOALMATRIX – Over 2.5 probability > 78% (LaLiga)</div>
-            </div>
-        </section>
-
-        <section id="system-status" class="panel">
-            {% include 'partials/system_status_panel.html' %}
-        </section>
-    </main>
-
-    <footer class="footer">
-        <small>© 2025 EURO_GOALS PRO+ | Adaptive UI Engine v9.5.x</small>
-    </footer>
-
-    <!-- Optional Sounds -->
-    <audio id="alertSound" src="/static/sounds/alert.mp3" preload="auto"></audio>
-    <audio id="goalSound" src="/static/sounds/goal_alert.mp3" preload="auto"></audio>
-    <audio id="smartmoneySound" src="/static/sounds/smartmoney_alert.mp3" preload="auto"></audio>
-
-    <!-- PWA -->
-    <script src="/static/js/pwa_install_prompt.js"></script>
-    <script src="/static/js/pwa_manifest_check.js"></script>
-
-    <!-- Loader for first load -->
-    <script>
-        window.addEventListener('load', () => {
-            document.body.classList.add('loaded');
-        });
-    </script>
-</body>
-</html>
+  <section class="panel full">
+    <h2>System Health</h2>
+    <div class="panel-body">
+      {% include "partials/system_summary_bar.html" %}
+    </div>
+  </section>
+</main>
+{% endblock %}

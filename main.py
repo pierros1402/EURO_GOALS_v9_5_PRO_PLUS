@@ -1,5 +1,5 @@
 # ============================================================
-# EURO_GOALS v9.5.3 PRO+ Smart Monitor
+# EURO_GOALS v9.5.2 PRO+ | Smart Adaptive Mode (Compact Edition)
 # Main Application File (FastAPI)
 # ============================================================
 
@@ -7,13 +7,13 @@ from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import time
+import time, os
 
 # ============================================================
 # APP SETTINGS
 # ============================================================
 
-APP_VERSION = "EURO_GOALS v9.5.2 PRO+ Smart Monitor"
+APP_VERSION = "EURO_GOALS v9.5.2 PRO+ | Smart Adaptive Mode"
 app = FastAPI(title=APP_VERSION)
 templates = Jinja2Templates(directory="templates")
 
@@ -34,13 +34,13 @@ async def index(request: Request):
         {"request": request, "version": APP_VERSION}
     )
 
-# ============================================================
-# API ENDPOINTS
-# ============================================================
+# ------------------------------------------------------------
+# SAMPLE API ENDPOINTS
+# ------------------------------------------------------------
 
 @app.get("/api/alerts_feed")
 async def alerts_feed():
-    """Placeholder alerts feed."""
+    """Demo alerts feed"""
     sample = [
         {"time": "22:31:10", "type": "SMARTMONEY", "desc": "Unusual odds shift (Chelsea - Arsenal)"},
         {"time": "22:34:55", "type": "GOALMATRIX", "desc": "Over 2.5 probability > 78% (LaLiga)"}
@@ -65,29 +65,43 @@ async def render_health_check():
     }
 
 # ============================================================
+# SHUTDOWN ENDPOINT (auto-stop από render_auto_stop.js)
+# ============================================================
+
+@app.post("/shutdown")
+async def shutdown_server():
+    """Auto-stop Render process after inactivity."""
+    print("[EURO_GOALS] 💤 Auto-shutdown triggered by inactivity.")
+    os._exit(0)
+
+# ============================================================
 # STARTUP MESSAGE
 # ============================================================
+
 @app.on_event("startup")
 def startup_event():
     print(f"[EURO_GOALS] 🚀 Application started: {APP_VERSION}")
-# ============================================================
-# AUTO STOP BACKGROUND LOOP WHEN NO REQUESTS FOR X MINUTES
-# ============================================================
-import threading, time
 
-LAST_REQUEST_TIME = time.time()
+# ============================================================
+# IDLE CHECKER (safety exit if Render keeps running forever)
+# ============================================================
+
+import threading
+
+LAST_REQUEST = time.time()
 
 @app.middleware("http")
-async def update_last_request(request, call_next):
-    global LAST_REQUEST_TIME
-    LAST_REQUEST_TIME = time.time()
+async def track_activity(request, call_next):
+    """Updates last activity timestamp on every request"""
+    global LAST_REQUEST
+    LAST_REQUEST = time.time()
     return await call_next(request)
 
 def idle_shutdown_checker():
+    """Daemon thread to auto-terminate app after 10 min idle"""
     while True:
-        now = time.time()
-        if now - LAST_REQUEST_TIME > 600:  # 10 λεπτά αδράνειας
-            print("[EURO_GOALS] 💤 No activity for 10 min → shutting down.")
+        if time.time() - LAST_REQUEST > 600:  # 10 min inactivity
+            print("[EURO_GOALS] ⏹ Idle >10 min, shutting down Render instance.")
             os._exit(0)
         time.sleep(60)
 
