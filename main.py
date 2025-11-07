@@ -70,3 +70,25 @@ async def render_health_check():
 @app.on_event("startup")
 def startup_event():
     print(f"[EURO_GOALS] 🚀 Application started: {APP_VERSION}")
+# ============================================================
+# AUTO STOP BACKGROUND LOOP WHEN NO REQUESTS FOR X MINUTES
+# ============================================================
+import threading, time
+
+LAST_REQUEST_TIME = time.time()
+
+@app.middleware("http")
+async def update_last_request(request, call_next):
+    global LAST_REQUEST_TIME
+    LAST_REQUEST_TIME = time.time()
+    return await call_next(request)
+
+def idle_shutdown_checker():
+    while True:
+        now = time.time()
+        if now - LAST_REQUEST_TIME > 600:  # 10 λεπτά αδράνειας
+            print("[EURO_GOALS] 💤 No activity for 10 min → shutting down.")
+            os._exit(0)
+        time.sleep(60)
+
+threading.Thread(target=idle_shutdown_checker, daemon=True).start()
