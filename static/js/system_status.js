@@ -1,73 +1,43 @@
-async function egFetchStatus(){
-  try{
-    const r = await fetch('/api/status', {cache:'no-store'});
-    const j = await r.json();
+// ============================================================
+// EURO_GOALS v9.5.0 PRO+
+// System Status LED Monitor
+// ============================================================
 
-    const renderDot = document.getElementById('st-render-dot');
-    const renderTxt = document.getElementById('st-render-txt');
-    const lastHealth = document.getElementById('st-last-health');
-    const db = document.getElementById('st-db');
-    const routerDot = document.getElementById('st-router-dot');
-    const router = document.getElementById('st-router');
-    const uptime = document.getElementById('st-uptime');
-    const ver = document.getElementById('st-version');
+async function updateSystemStatus() {
+  try {
+    const res = await fetch('/health', { cache: 'no-store' });
+    const data = await res.json();
 
-    // Render status
-    const online = !!j.render_online;
-    renderDot.classList.remove('ok','bad');
-    renderDot.classList.add(online ? 'ok' : 'bad');
-    renderTxt.textContent = online ? 'Online' : 'Offline';
+    const comps = data.components || {};
+    updateLed('render', comps.render);
+    updateLed('db', comps.db);
+    updateLed('flashscore', comps.flashscore);
+    updateLed('sofascore', comps.sofascore);
+    updateLed('asianconnect', comps.asianconnect);
+    updateLed('network', true);
 
-    // DB
-    db.textContent = j.db_in_use || '—';
+    document.getElementById('summaryCPU').textContent = `CPU: ${data.cpu || '—'}%`;
+    document.getElementById('summaryRAM').textContent = `RAM: ${data.ram || '—'}%`;
+    document.getElementById('summaryDISK').textContent = `Disk: ${data.disk || '—'}%`;
+    document.getElementById('summaryLast').textContent = `Last: ${new Date().toLocaleTimeString()}`;
+    document.getElementById('summaryNext').textContent = `Next: ${new Date(Date.now() + 30000).toLocaleTimeString()}`;
 
-    // Router
-    const active = !!j.feeds_router_active;
-    routerDot.classList.remove('ok','bad');
-    routerDot.classList.add(active ? 'ok' : 'bad');
-    router.textContent = active ? 'Feeds Active' : 'Idle';
-
-    // Uptime
-    const secs = Number(j.uptime_seconds || 0);
-    const hh = Math.floor(secs/3600).toString().padStart(2,'0');
-    const mm = Math.floor((secs%3600)/60).toString().padStart(2,'0');
-    const ss = (secs%60).toString().padStart(2,'0');
-    uptime.textContent = `${hh}:${mm}:${ss}`;
-
-    ver.textContent = `Version: ${j.version || '-'}`;
-    if (j.last_health_ok_at){
-      const dt = new Date(j.last_health_ok_at);
-      lastHealth.textContent = `Last health: ${dt.toLocaleString()}`;
-    } else if (j.last_health_error){
-      lastHealth.textContent = `Last health error: ${j.last_health_error}`;
-    } else {
-      lastHealth.textContent = 'Last health: —';
-    }
-
-    // ΝΕΟ: Module & League Badges
-    const cont = document.getElementById('modules-container');
-    cont.innerHTML = '';
-    if (j.modules){
-      Object.entries(j.modules).forEach(([name, state])=>{
-        const el = document.createElement('div');
-        el.style.display='flex';
-        el.style.alignItems='center';
-        el.style.gap='4px';
-        el.style.border='1px solid #1f2a44';
-        el.style.background= state ? '#142a18':'#2a1414';
-        el.style.color='#dfe9f6';
-        el.style.borderRadius='12px';
-        el.style.padding='4px 8px';
-        el.style.fontSize='13px';
-        el.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${state?'#23d18b':'#ff5757'};display:inline-block"></span>${name}`;
-        cont.appendChild(el);
-      });
-    }
-
-  }catch(e){
-    console.error('status fetch error', e);
+  } catch (err) {
+    console.warn('[EURO_GOALS] Health check failed:', err);
+    document.querySelectorAll('.dot').forEach(el => {
+      el.classList.remove('ok', 'bad');
+      el.classList.add('bad');
+    });
   }
 }
 
-egFetchStatus();
-setInterval(egFetchStatus, 10000);
+function updateLed(id, isOn) {
+  const led = document.querySelector(`.dot[data-id="${id}"]`);
+  if (!led) return;
+  led.classList.remove('ok', 'bad');
+  led.classList.add(isOn ? 'ok' : 'bad');
+}
+
+// Initial + auto-refresh
+updateSystemStatus();
+setInterval(updateSystemStatus, 30000);

@@ -1,3 +1,8 @@
+<!-- ============================================================
+     EURO_GOALS v9.5.0 PRO+
+     System Summary Bar – LED Status Monitor
+     ============================================================ -->
+
 <div class="summarybar">
   <div class="sb-left">
     <div class="brand">
@@ -12,15 +17,29 @@
   <div class="sb-center">
     <div class="led-group">
       <div class="led" title="Render Server">
-        <span class="dot" id="led-render"></span><span class="label">Render</span>
+        <span class="dot" data-id="render"></span>
+        <span class="label">Render</span>
       </div>
       <div class="led" title="Database Connection">
-        <span class="dot" id="led-db"></span><span class="label">DB</span>
+        <span class="dot" data-id="db"></span>
+        <span class="label">DB</span>
       </div>
-      <div class="led" title="Flashscore Feed"><span class="dot" id="led-flashscore"></span><span class="label">Flashscore</span></div>
-      <div class="led" title="Sofascore Feed"><span class="dot" id="led-sofascore"></span><span class="label">Sofascore</span></div>
-      <div class="led" title="AsianConnect Feed"><span class="dot" id="led-asianconnect"></span><span class="label">AsianConnect</span></div>
-      <div class="led" title="Network Connection"><span class="dot" id="led-network"></span><span class="label">Network</span></div>
+      <div class="led" title="Flashscore Feed">
+        <span class="dot" data-id="flashscore"></span>
+        <span class="label">Flashscore</span>
+      </div>
+      <div class="led" title="Sofascore Feed">
+        <span class="dot" data-id="sofascore"></span>
+        <span class="label">Sofascore</span>
+      </div>
+      <div class="led" title="AsianConnect Feed">
+        <span class="dot" data-id="asianconnect"></span>
+        <span class="label">AsianConnect</span>
+      </div>
+      <div class="led" title="Network Connection">
+        <span class="dot" data-id="network"></span>
+        <span class="label">Network</span>
+      </div>
     </div>
   </div>
 
@@ -34,3 +53,5 @@
     </div>
   </div>
 </div>
+
+<script src="/static/js/system_status.js"></script>

@@ -89,3 +89,23 @@ async def alerts_feed():
 @app.exception_handler(HTTPException)
 async def err(request, exc):
     return JSONResponse(status_code=exc.status_code, content={"ok": False, "error": exc.detail})
+# ============================================================
+# HEALTH CHECK ENDPOINT (for Render monitoring)
+# ============================================================
+@app.get("/health")
+async def render_health_check():
+    """
+    Basic Render health check endpoint for Render and UI indicator.
+    Returns 200 OK if the app is responsive.
+    """
+    return {
+        "status": "ok",
+        "service": "EURO_GOALS v9.5.0 PRO+",
+        "components": {
+            "render": True,
+            "db": True,
+            "flashscore": True,
+            "sofascore": True,
+            "asianconnect": False
+        }
+    }
