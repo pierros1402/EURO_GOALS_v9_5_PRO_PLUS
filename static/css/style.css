@@ -148,3 +148,26 @@ body{
   display:inline-block;margin-left:4px;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+/* =====================================================
+   Theme Toggle Button
+   ===================================================== */
+.theme-toggle-btn {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: background .25s ease, transform .2s ease;
+  z-index: 100;
+}
+.theme-toggle-btn:hover {
+  transform: scale(1.1);
+  background: var(--elev);
+}

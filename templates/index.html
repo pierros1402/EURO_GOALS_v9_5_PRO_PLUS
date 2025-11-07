@@ -1,172 +1,57 @@
 <!DOCTYPE html>
-<html lang="el">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>EURO_GOALS {{ APP_VERSION }}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EURO_GOALS v9.5.0 PRO+</title>
 
-  <!-- Manifest & Meta -->
-  <link rel="manifest" href="/static/manifest.json">
-  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="/static/icons/icon-192.png">
   <link rel="stylesheet" href="/static/css/style.css">
+
+  <!-- Scripts -->
+  <script src="/static/js/theme_toggle.js" defer></script>
+  <script src="/static/js/ui_controls.js" defer></script>
+  <script src="/static/js/ui_alerts.js" defer></script>
+  <script src="/static/js/system_status.js" defer></script>
 </head>
 
 <body>
-  <!-- ========================================================= -->
-  <!-- 🌀 LOADING OVERLAY -->
-  <!-- ========================================================= -->
-  <div id="loadingOverlay" style="
-      position:fixed;inset:0;background:#0b0f17;color:#90caf9;
-      display:flex;flex-direction:column;justify-content:center;align-items:center;
-      font-family:sans-serif;z-index:9999;">
-    <img src="/static/icons/icon-192.png" alt="EURO_GOALS" style="width:72px;margin-bottom:16px;">
-    <h2>EURO_GOALS v9.5.0 PRO+</h2>
-    <p style="font-size:14px;color:#ccc;margin-top:8px;">Connecting to Render servers...</p>
-  </div>
+  {% include 'partials/system_summary_bar.html' %}
 
-  <!-- ========================================================= -->
-  <!-- 🔝 Top Bar -->
-  <!-- ========================================================= -->
-  <header class="eg-topbar">
-    <button id="menuBtn" class="eg-btn icon only" aria-label="Menu">☰</button>
-    <div class="eg-topbar-title">
-      EURO_GOALS <span class="muted">{{ APP_VERSION }}</span>
-    </div>
-    <div class="eg-topbar-actions">
-      <button id="refreshNowBtn" class="eg-btn sm">Refresh</button>
-      <button id="themeToggleBtn" class="btn-small" title="Toggle Theme">🌙</button>
-      <span id="pwaStatus" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#444;margin-left:8px;" title="PWA status"></span>
-    </div>
-  </header>
-
-  <!-- ========================================================= -->
-  <!-- 🧠 Κύριο Περιεχόμενο -->
-  <!-- ========================================================= -->
-  <main class="eg-container">
-
-    <!-- ===== System Summary Bar ===== -->
-    <section id="summary" class="eg-section">
-      {% include 'partials/system_summary_bar.html' %}
+  <main class="container">
+    <section class="panel">
+      <h2>SmartMoney Monitor</h2>
+      <label><input type="checkbox" id="smartmoneyToggle"> ON/OFF</label>
+      <div id="smartmoneyTable" class="placeholder">SmartMoney table/feed placeholder</div>
     </section>
 
-    <!-- ===== SmartMoney + GoalMatrix + Alerts + Status ===== -->
-    <section class="eg-grid">
-      <div id="smartmoney" class="eg-card">
-        <div class="eg-card-header">
-          <h2>SmartMoney Monitor</h2>
-          <div class="eg-actions">
-            <label class="switch">
-              <input id="toggleSmartMoney" type="checkbox">
-              <span class="slider"></span>
-            </label>
-            <span class="switch-label">ON/OFF</span>
-          </div>
-        </div>
-        <div class="eg-card-body">
-          <div class="placeholder">SmartMoney table/feed placeholder</div>
-        </div>
-      </div>
+    <section class="panel">
+      <h2>GoalMatrix</h2>
+      <label><input type="checkbox" id="goalMatrixToggle"> ON/OFF</label>
+      <div id="goalMatrixHeatmap" class="placeholder">GoalMatrix heatmap/lines placeholder</div>
+    </section>
 
-      <div id="goalmatrix" class="eg-card">
-        <div class="eg-card-header">
-          <h2>GoalMatrix</h2>
-          <div class="eg-actions">
-            <label class="switch">
-              <input id="toggleGoalMatrix" type="checkbox">
-              <span class="slider"></span>
-            </label>
-            <span class="switch-label">ON/OFF</span>
-          </div>
-        </div>
-        <div class="eg-card-body">
-          <div class="placeholder">GoalMatrix heatmap/lines placeholder</div>
-        </div>
+    <section class="panel">
+      <h2>Alert History</h2>
+      <button class="btn-small" onclick="clearAlerts()">Clear</button>
+      <div id="alertHistory">
+        <div class="alert"><strong>22:31:10</strong> SMARTMONEY – Unusual odds shift in Premier League (Chelsea – Arsenal)</div>
+        <div class="alert"><strong>22:34:55</strong> GOALMATRIX – Over 2.5 probability &gt; 78% (LaLiga)</div>
       </div>
+    </section>
 
-      <div id="alerts" class="eg-card full">
-        <div class="eg-card-header">
-          <h2>Alert History</h2>
-          <div class="eg-actions">
-            <button id="clearAlerts" class="eg-btn ghost sm">Clear</button>
-          </div>
-        </div>
-        <div class="eg-card-body">
-          <div class="placeholder">Alerts table placeholder</div>
-        </div>
-      </div>
-
-      <div id="status" class="eg-card">
-        <div class="eg-card-header"><h2>System Status</h2></div>
-        <div class="eg-card-body">
-          <ul class="kv">
-            <li><span>Version</span><b id="kvVersion">{{ APP_VERSION }}</b></li>
-            <li><span>Uptime</span><b id="kvUptime">—</b></li>
-            <li><span>Auto-refresh</span><b id="kvAuto">{{ refresh_secs }}s</b></li>
-          </ul>
-        </div>
-      </div>
+    <section class="panel">
+      <h2>System Status</h2>
+      <ul>
+        <li>Version <strong>v9.5.0 PRO+</strong></li>
+        <li>Uptime —</li>
+        <li>Auto-refresh 15 s</li>
+      </ul>
     </section>
   </main>
 
-  <!-- ========================================================= -->
-  <!-- ⚙️ JS MODULES -->
-  <!-- ========================================================= -->
-  <script>
-    window.__EG__ = { initialRefreshSecs: {{ refresh_secs|int }} };
-  </script>
-
-  <script src="/static/js/ui_controls.js"></script>
-  <script src="/static/js/ui_alerts.js"></script>
-  <script src="/static/js/pwa_manifest_check.js"></script>
+  <!-- PWA + Alerts -->
   <script src="/static/js/pwa_install_prompt.js"></script>
   <script src="/static/js/local_alerts.js"></script>
-  <script src="/static/js/theme_toggle.js"></script>
-
-  <!-- ========================================================= -->
-  <!-- 🧩 Service Worker + Auto-Update -->
-  <!-- ========================================================= -->
-  <script>
-    window.addEventListener('load', () => {
-      const overlay = document.getElementById('loadingOverlay');
-      const app = document.querySelector('main');
-      setTimeout(() => {
-        overlay.style.opacity = 0;
-        setTimeout(() => overlay.remove(), 400);
-      }, 1000);
-      app.style.display = 'block';
-    });
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/static/js/service_worker.js')
-        .then(reg => console.log('✅ Service Worker registered:', reg.scope))
-        .catch(err => console.warn('❌ Service Worker failed:', err));
-
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'NEW_VERSION') showUpdateBanner();
-      });
-    }
-
-    function showUpdateBanner() {
-      if (document.getElementById('updateBanner')) return;
-      const banner = document.createElement('div');
-      banner.id = 'updateBanner';
-      banner.innerHTML = `
-        <div style="
-          position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
-          background:#1e88e5;color:#fff;padding:10px 20px;
-          border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.3);
-          font-family:sans-serif;font-size:14px;z-index:9999;">
-          🔄 New version available — tap to refresh
-        </div>`;
-      banner.onclick = () => {
-        banner.innerHTML = '⏳ Updating...';
-        navigator.serviceWorker.getRegistration().then(reg => {
-          if (reg && reg.waiting) reg.waiting.postMessage('skipWaiting');
-        });
-        setTimeout(() => location.reload(), 1500);
-      };
-      document.body.appendChild(banner);
-    }
-  </script>
 </body>
 </html>
