@@ -1,5 +1,5 @@
 # ============================================================
-# EURO_GOALS v9.5.2 PRO+ Smart Monitor
+# EURO_GOALS v9.5.3 PRO+ Smart Monitor
 # Main Application File (FastAPI)
 # ============================================================
 
