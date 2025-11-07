@@ -1,73 +1,79 @@
-// =======================================================
-// EURO_GOALS v9.5.4 PRO+ — Unified Service Worker (Push + PWA)
-// =======================================================
+// =====================================================
+// EURO_GOALS v9.5.0 PRO+
+// Service Worker for PWA Offline + Cache Control
+// =====================================================
 
-const CACHE_NAME = "eurogoals-v954";
-const urlsToCache = ["/", "/static/manifest.json"];
+const CACHE_NAME = 'euro_goals_v950_proplus_v1';
+const APP_SHELL = [
+  '/',
+  '/static/css/style.css',
+  '/static/js/ui_controls.js',
+  '/static/js/ui_alerts.js',
+  '/static/js/pwa_manifest_check.js',
+  '/static/icons/icon-192.png',
+  '/static/icons/icon-512.png',
+  '/static/icons/splash_720x1280.png',
+  '/static/icons/splash_1080x1920.png',
+  '/static/manifest.json'
+];
 
-// -------------------------------------------------------
-// INSTALL & ACTIVATE
-// -------------------------------------------------------
-self.addEventListener("install", (e) => {
-  console.log("[SW] Installing...");
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+// =====================================================
+// 🧱 Install – Precache core files
+// =====================================================
+self.addEventListener('install', (event) => {
+  console.log('[ServiceWorker] Installing…');
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('[ServiceWorker] Precaching app shell');
+        return cache.addAll(APP_SHELL);
+      })
   );
   self.skipWaiting();
 });
 
-self.addEventListener("activate", (e) => {
-  console.log("[SW] Activated.");
-  e.waitUntil(self.clients.claim());
+// =====================================================
+// 🔁 Activate – Cleanup old caches
+// =====================================================
+self.addEventListener('activate', (event) => {
+  console.log('[ServiceWorker] Activating new version…');
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+    ))
+  );
+  self.clients.claim();
 });
 
-// -------------------------------------------------------
-// FETCH (Offline cache fallback)
-// -------------------------------------------------------
-self.addEventListener("fetch", (e) => {
-  e.respondWith(
-    caches.match(e.request).then((res) => res || fetch(e.request))
+// =====================================================
+// ⚙️ Fetch – Serve from cache, fallback to network
+// =====================================================
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  event.respondWith(
+    caches.match(req).then(cached => {
+      return cached || fetch(req).then(res => {
+        // Dynamic caching for new assets
+        return caches.open(CACHE_NAME).then(cache => {
+          cache.put(req, res.clone());
+          return res;
+        });
+      }).catch(() => {
+        // Offline fallback page (if any)
+        return caches.match('/static/icons/icon-192.png');
+      });
+    })
   );
 });
 
-// -------------------------------------------------------
-// PUSH NOTIFICATIONS
-// -------------------------------------------------------
-self.addEventListener("push", (event) => {
-  console.log("[SW] Push received:", event.data ? event.data.text() : "(no data)");
-  let data = {};
-  try {
-    data = event.data ? event.data.json() : {};
-  } catch (err) {
-    console.error("[SW] Invalid push data:", err);
+// =====================================================
+// 🧭 Message – Manual cache refresh
+// =====================================================
+self.addEventListener('message', (event) => {
+  if (event.data === 'force-update') {
+    console.log('[ServiceWorker] Manual cache refresh triggered');
+    self.skipWaiting();
   }
-
-  const title = data.title || "EURO_GOALS Alert";
-  const body = data.body || "Νέα ειδοποίηση SmartMoney.";
-  const url = data.url || "/";
-
-  event.waitUntil(
-    self.registration.showNotification(title, {
-      body: body,
-      icon: "/static/icons/icon_red.png",
-      data: { url: url },
-      tag: "eurogoals-push",
-    })
-  );
-});
-
-// -------------------------------------------------------
-// NOTIFICATION CLICK HANDLER
-// -------------------------------------------------------
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const url = event.notification.data.url || "/";
-  event.waitUntil(
-    clients.matchAll({ type: "window" }).then((clientsArr) => {
-      for (const client of clientsArr) {
-        if (client.url.includes(url) && "focus" in client) return client.focus();
-      }
-      if (clients.openWindow) return clients.openWindow(url);
-    })
-  );
 });

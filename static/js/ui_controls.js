@@ -1,45 +1,84 @@
-(function(){
-  const $=s=>document.querySelector(s);
-  const led={render:$("#led-render"),db:$("#led-db"),flash:$("#led-flashscore"),sofa:$("#led-sofascore"),asian:$("#led-asianconnect"),net:$("#led-network")};
-  const info={cpu:$("#summaryCPU"),ram:$("#summaryRAM"),disk:$("#summaryDISK"),last:$("#summaryLast"),next:$("#summaryNext")};
-  const kv={ver:$("#kvVersion"),upt:$("#kvUptime"),auto:$("#kvAuto")};
-  const REFBASE=window.__EG__?.initialRefreshSecs||15;
-  let REFSECS=REFBASE,timer=null,counter=0;
+// =====================================================
+// EURO_GOALS v9.5.0 PRO+
+// UI Controls — Buttons, Refresh, Menu, Sound & Tooltip
+// =====================================================
 
-  function setLED(el,st){el.classList.remove("ok","warn","bad");el.classList.add(st);}
-  function formatUptime(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);return `${h}h ${m}m`;}
+document.addEventListener("DOMContentLoaded", () => {
+  const refreshBtn = document.getElementById("refreshNowBtn");
+  const menuBtn = document.getElementById("menuBtn");
 
-  async function api(p){const r=await fetch(p,{cache:"no-store"});return await r.json();}
+  // Load sounds
+  const clickSound = new Audio("/static/sounds/refresh_click.mp3");
 
-  async function refresh(){
-    try{
-      const s=await api("/api/status");
-      kv.ver.textContent=s.version;
-      kv.upt.textContent=formatUptime(s.uptime_sec);
-      kv.auto.textContent=s.state.auto_refresh_on?`ON (${s.state.refresh_secs}s)`:"OFF";
-      info.cpu.textContent=`CPU: ${s.cpu}%`;
-      info.ram.textContent=`RAM: ${s.ram}%`;
-      info.disk.textContent=`Disk: ${s.disk}%`;
-      info.last.textContent=`Last: ${s.last_refresh}`;
-      counter=REFSECS;
-      setLED(led.render,"ok");setLED(led.db,"ok");setLED(led.flash,"ok");setLED(led.sofa,"ok");setLED(led.asian,"ok");
-      setLED(led.net,navigator.onLine?"ok":"bad");
-    }catch(e){
-      console.error("refresh fail",e);
-      Object.values(led).forEach(l=>setLED(l,"warn"));
-    }
+  // Refresh animation + sound
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", () => {
+      playClickSound(clickSound);
+      startRefreshAnimation(refreshBtn);
+      manualRefreshAction();
+    });
   }
 
-  function tick(){
-    if(counter>0){counter--;info.next.textContent=`Next: ${counter}s`;}
-    else{refresh();}
+  // Menu drawer toggle
+  if (menuBtn) {
+    menuBtn.addEventListener("click", () => {
+      const drawer = document.querySelector(".drawer");
+      if (drawer) drawer.classList.toggle("open");
+    });
   }
+});
 
-  window.addEventListener("online",()=>setLED(led.net,"ok"));
-  window.addEventListener("offline",()=>setLED(led.net,"bad"));
+// =====================================================
+// 🎵 Click Sound
+// =====================================================
+function playClickSound(audio) {
+  try {
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  } catch (err) {
+    console.warn("[EURO_GOALS] Click sound error:", err);
+  }
+}
 
-  console.log("%cEURO_GOALS v9.5.0 PRO+ UI Loaded ✅","color:#5aa9ff;font-weight:bold;");
+// =====================================================
+// 🔄 Refresh Animation with Tooltip
+// =====================================================
+function startRefreshAnimation(btn) {
+  btn.disabled = true;
+  const originalHTML = btn.innerHTML;
 
-  refresh();setInterval(tick,1000);
-})();
-<script src="/static/js/ui_alerts.js"></script>
+  // Tooltip
+  const tooltip = document.createElement("div");
+  tooltip.textContent = "Refreshing data…";
+  tooltip.style.cssText = `
+    position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+    background:#1e88e5;color:#fff;padding:8px 14px;border-radius:10px;
+    font-family:sans-serif;font-size:13px;
+    box-shadow:0 4px 16px rgba(0,0,0,.3);
+    z-index:9999;opacity:0;transition:opacity .3s ease;
+  `;
+  document.body.appendChild(tooltip);
+  setTimeout(() => tooltip.style.opacity = 1, 50);
+
+  // Spinner animation
+  btn.innerHTML = `<span class="spinner"></span>`;
+  setTimeout(() => {
+    btn.innerHTML = originalHTML;
+    btn.disabled = false;
+    tooltip.style.opacity = 0;
+    setTimeout(() => tooltip.remove(), 400);
+  }, 1200);
+}
+
+// =====================================================
+// ⚙️ Manual Refresh Action
+// =====================================================
+function manualRefreshAction() {
+  console.log("[EURO_GOALS] Manual refresh triggered.");
+  try {
+    if (typeof fetchAlertsFeed === "function") fetchAlertsFeed();
+    if (typeof checkServerHealth === "function") checkServerHealth();
+  } catch (err) {
+    console.warn("[EURO_GOALS] Refresh error:", err);
+  }
+}

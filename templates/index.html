@@ -5,29 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>EURO_GOALS {{ APP_VERSION }}</title>
 
-  <!-- ============================================== -->
-  <!-- 🌐 Progressive Web App / Meta Tags -->
-  <!-- ============================================== -->
+  <!-- Manifest & Meta -->
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#0b0f17">
-  <meta name="background-color" content="#0b0f17">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="EURO_GOALS PRO+">
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
-  <link rel="apple-touch-startup-image" href="/static/icons/splash_1080x1920.png">
-  <link rel="icon" href="/static/icons/eurogoals_192.png">
-
-  <!-- ============================================== -->
-  <!-- 🎨 Ενιαίο Dark UI CSS -->
-  <!-- ============================================== -->
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
 <body>
-  <!-- ============================================== -->
-  <!-- 🔝 Mobile Top Bar -->
-  <!-- ============================================== -->
+  <!-- ========================================================= -->
+  <!-- 🌀 LOADING OVERLAY -->
+  <!-- ========================================================= -->
+  <div id="loadingOverlay" style="
+      position:fixed;inset:0;background:#0b0f17;color:#90caf9;
+      display:flex;flex-direction:column;justify-content:center;align-items:center;
+      font-family:sans-serif;z-index:9999;">
+    <img src="/static/icons/icon-192.png" alt="EURO_GOALS" style="width:72px;margin-bottom:16px;">
+    <h2>EURO_GOALS v9.5.0 PRO+</h2>
+    <p style="font-size:14px;color:#ccc;margin-top:8px;">Connecting to Render servers...</p>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 🔝 Top Bar -->
+  <!-- ========================================================= -->
   <header class="eg-topbar">
     <button id="menuBtn" class="eg-btn icon only" aria-label="Menu">☰</button>
     <div class="eg-topbar-title">
@@ -35,30 +34,14 @@
     </div>
     <div class="eg-topbar-actions">
       <button id="refreshNowBtn" class="eg-btn sm">Refresh</button>
-      <span id="pwaStatus" title="PWA status indicator" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#444;margin-left:8px;"></span>
+      <button id="themeToggleBtn" class="btn-small" title="Toggle Theme">🌙</button>
+      <span id="pwaStatus" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#444;margin-left:8px;" title="PWA status"></span>
     </div>
   </header>
 
-  <!-- ============================================== -->
-  <!-- 📱 Mobile Drawer -->
-  <!-- ============================================== -->
-  <nav id="mobileDrawer" class="drawer">
-    <div class="drawer-inner">
-      <button id="drawerClose" class="eg-btn icon only" aria-label="Close">✕</button>
-      <h3>Μενού</h3>
-      <ul class="drawer-menu">
-        <li><a href="#summary">System Summary</a></li>
-        <li><a href="#smartmoney">SmartMoney</a></li>
-        <li><a href="#goalmatrix">GoalMatrix</a></li>
-        <li><a href="#alerts">Alert History</a></li>
-        <li><a href="#status">System Status</a></li>
-      </ul>
-    </div>
-  </nav>
-
-  <!-- ============================================== -->
+  <!-- ========================================================= -->
   <!-- 🧠 Κύριο Περιεχόμενο -->
-  <!-- ============================================== -->
+  <!-- ========================================================= -->
   <main class="eg-container">
 
     <!-- ===== System Summary Bar ===== -->
@@ -66,10 +49,8 @@
       {% include 'partials/system_summary_bar.html' %}
     </section>
 
-    <!-- ===== Περιεχόμενο ===== -->
+    <!-- ===== SmartMoney + GoalMatrix + Alerts + Status ===== -->
     <section class="eg-grid">
-
-      <!-- SmartMoney -->
       <div id="smartmoney" class="eg-card">
         <div class="eg-card-header">
           <h2>SmartMoney Monitor</h2>
@@ -86,7 +67,6 @@
         </div>
       </div>
 
-      <!-- GoalMatrix -->
       <div id="goalmatrix" class="eg-card">
         <div class="eg-card-header">
           <h2>GoalMatrix</h2>
@@ -103,7 +83,6 @@
         </div>
       </div>
 
-      <!-- Alert History -->
       <div id="alerts" class="eg-card full">
         <div class="eg-card-header">
           <h2>Alert History</h2>
@@ -116,26 +95,22 @@
         </div>
       </div>
 
-      <!-- System Status -->
       <div id="status" class="eg-card">
-        <div class="eg-card-header">
-          <h2>System Status</h2>
-        </div>
+        <div class="eg-card-header"><h2>System Status</h2></div>
         <div class="eg-card-body">
           <ul class="kv">
-            <li><span>Version</span><b id="kvVersion">—</b></li>
+            <li><span>Version</span><b id="kvVersion">{{ APP_VERSION }}</b></li>
             <li><span>Uptime</span><b id="kvUptime">—</b></li>
-            <li><span>Auto-refresh</span><b id="kvAuto">—</b></li>
+            <li><span>Auto-refresh</span><b id="kvAuto">{{ refresh_secs }}s</b></li>
           </ul>
         </div>
       </div>
-
     </section>
   </main>
 
-  <!-- ============================================== -->
-  <!-- ⚙️ JS -->
-  <!-- ============================================== -->
+  <!-- ========================================================= -->
+  <!-- ⚙️ JS MODULES -->
+  <!-- ========================================================= -->
   <script>
     window.__EG__ = { initialRefreshSecs: {{ refresh_secs|int }} };
   </script>
@@ -143,35 +118,55 @@
   <script src="/static/js/ui_controls.js"></script>
   <script src="/static/js/ui_alerts.js"></script>
   <script src="/static/js/pwa_manifest_check.js"></script>
+  <script src="/static/js/pwa_install_prompt.js"></script>
+  <script src="/static/js/local_alerts.js"></script>
+  <script src="/static/js/theme_toggle.js"></script>
 
-  <!-- ============================================== -->
-  <!-- 🧩 Service Worker Registration (PWA) -->
-  <!-- ============================================== -->
+  <!-- ========================================================= -->
+  <!-- 🧩 Service Worker + Auto-Update -->
+  <!-- ========================================================= -->
   <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/static/js/service_worker.js")
-          .then(reg => console.log("✅ Service Worker registered:", reg.scope))
-          .catch(err => console.warn("Service Worker failed:", err));
+    window.addEventListener('load', () => {
+      const overlay = document.getElementById('loadingOverlay');
+      const app = document.querySelector('main');
+      setTimeout(() => {
+        overlay.style.opacity = 0;
+        setTimeout(() => overlay.remove(), 400);
+      }, 1000);
+      app.style.display = 'block';
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/static/js/service_worker.js')
+        .then(reg => console.log('✅ Service Worker registered:', reg.scope))
+        .catch(err => console.warn('❌ Service Worker failed:', err));
+
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'NEW_VERSION') showUpdateBanner();
       });
     }
-  </script>
 
-  <!-- ============================================== -->
-  <!-- 📱 PWA Visual Status Indicator -->
-  <!-- ============================================== -->
-  <script>
-    const led = document.getElementById("pwaStatus");
-    function updatePWALed(){
-      if(window.matchMedia("(display-mode: standalone)").matches){
-        led.style.background = "#00c853"; // green = installed
-        led.title = "Running as installed PWA";
-      }else{
-        led.style.background = "#ffb300"; // amber = browser
-        led.title = "Running in browser tab mode";
-      }
+    function showUpdateBanner() {
+      if (document.getElementById('updateBanner')) return;
+      const banner = document.createElement('div');
+      banner.id = 'updateBanner';
+      banner.innerHTML = `
+        <div style="
+          position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
+          background:#1e88e5;color:#fff;padding:10px 20px;
+          border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.3);
+          font-family:sans-serif;font-size:14px;z-index:9999;">
+          🔄 New version available — tap to refresh
+        </div>`;
+      banner.onclick = () => {
+        banner.innerHTML = '⏳ Updating...';
+        navigator.serviceWorker.getRegistration().then(reg => {
+          if (reg && reg.waiting) reg.waiting.postMessage('skipWaiting');
+        });
+        setTimeout(() => location.reload(), 1500);
+      };
+      document.body.appendChild(banner);
     }
-    updatePWALed();
   </script>
 </body>
 </html>

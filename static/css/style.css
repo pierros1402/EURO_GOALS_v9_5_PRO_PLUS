@@ -1,8 +1,11 @@
 /* ==========================================================
-   EURO_GOALS v9.5.0 PRO+ — Dark Unified UI Theme
+   EURO_GOALS v9.5.0 PRO+ — Adaptive Unified UI Theme
    ========================================================== */
 
-:root{
+/* -------------------------- */
+/* THEME ROOT VARIABLES */
+/* -------------------------- */
+:root {
   --bg:#0b0f17;
   --card:#111829;
   --elev:#0e1422;
@@ -17,14 +20,32 @@
   --radius:16px;
 }
 
-/* Base */
+/* LIGHT THEME VARIABLES */
+[data-theme="light"] {
+  --bg:#f6f8fc;
+  --card:#ffffff;
+  --elev:#e7ebf3;
+  --text:#1b1c20;
+  --muted:#60738b;
+  --primary:#1976d2;
+  --green:#1e8c60;
+  --red:#e53935;
+  --amber:#f9a825;
+  --border:#d0d6e0;
+  --shadow:0 4px 14px rgba(0,0,0,.08);
+}
+
+/* -------------------------- */
+/* BASE */
+/* -------------------------- */
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0;
-  background:linear-gradient(180deg,#0a1020 0%, #0b0f17 100%);
+  background:var(--bg);
   color:var(--text);
   font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial;
+  transition:background .3s ease,color .3s ease;
 }
 
 /* ===================================== */
@@ -37,10 +58,14 @@ body{
   display:flex;align-items:center;gap:12px;
   padding:8px 12px;
 }
+[data-theme="light"] .eg-topbar{
+  background:rgba(255,255,255,.8);
+  border-bottom:1px solid var(--border);
+}
 .eg-topbar-title{font-weight:700}
 .eg-topbar .muted{color:var(--muted);font-weight:500;margin-left:6px}
 .eg-btn{
-  background:var(--primary);color:#001;border:0;
+  background:var(--primary);color:#fff;border:0;
   padding:8px 12px;border-radius:10px;cursor:pointer;
   box-shadow:var(--shadow);font-weight:700;
 }
@@ -49,6 +74,12 @@ body{
 .eg-btn.sm{padding:6px 10px;font-size:12px}
 .eg-btn.icon.only{width:36px;height:36px;padding:0;
   display:grid;place-items:center;}
+.btn-small {
+  border:none;background:var(--primary);color:#fff;
+  border-radius:8px;padding:6px 10px;cursor:pointer;
+  font-size:14px;margin-left:6px;transition:opacity .2s ease;
+}
+.btn-small:hover{opacity:.85}
 
 /* ===================================== */
 /* Drawer (mobile menu) */
@@ -89,11 +120,17 @@ body{
   padding:12px 14px;border-bottom:1px solid var(--border);
   background:linear-gradient(180deg,#121a30,#0f1628);
 }
+[data-theme="light"] .eg-card-header{
+  background:linear-gradient(180deg,#ffffff,#f2f4f9);
+}
 .eg-card-body{padding:14px}
 .placeholder{
   height:180px;border:1px dashed #2a3553;
   display:grid;place-items:center;color:var(--muted);
   border-radius:12px;background:#0c1324;
+}
+[data-theme="light"] .placeholder{
+  border-color:#ccd5e2;background:#f7f8fc;
 }
 #smartmoney{grid-column:span 6}
 #goalmatrix{grid-column:span 6}
@@ -107,7 +144,7 @@ body{
 }
 
 /* ===================================== */
-/* System Summary Bar (Dynamic) */
+/* System Summary Bar */
 /* ===================================== */
 .summarybar{
   display:flex;justify-content:space-between;align-items:center;
@@ -116,23 +153,21 @@ body{
   border-radius:var(--radius);
   padding:10px;gap:8px;
 }
+[data-theme="light"] .summarybar{
+  background:linear-gradient(180deg,#ffffff,#f4f6fa);
+}
 .brand{display:flex;align-items:center;gap:10px}
 .brand-icon{width:32px;height:32px}
 .brand-title{font-weight:800}
 .brand-sub{color:var(--muted);font-size:12px}
 .led-group{display:flex;flex-wrap:wrap;gap:12px}
 .led{display:flex;align-items:center;gap:6px}
-.dot{
-  width:12px;height:12px;border-radius:50%;
-  background:#53607a;box-shadow:0 0 0 2px #1b2642 inset,0 0 8px rgba(0,0,0,.25)
-}
-.dot.ok{background:var(--green);box-shadow:0 0 0 2px #103a2a inset,0 0 12px rgba(40,209,124,.55)}
-.dot.bad{background:var(--red);box-shadow:0 0 0 2px #3a1012 inset,0 0 12px rgba(255,94,106,.55)}
-.dot.warn{background:var(--amber);box-shadow:0 0 0 2px #3a2b10 inset,0 0 12px rgba(255,176,32,.55)}
+.dot{width:12px;height:12px;border-radius:50%;background:#53607a;}
+.dot.ok{background:var(--green);}
+.dot.bad{background:var(--red);}
+.dot.warn{background:var(--amber);}
 .label{color:var(--muted);font-size:12px}
-.status-text{
-  color:var(--muted);font-size:13px;text-align:right;
-}
+.status-text{color:var(--muted);font-size:13px;text-align:right;}
 .status-text span{margin-right:6px;}
 @media(max-width:700px){
   .summarybar{flex-direction:column;align-items:flex-start;gap:6px;}
@@ -158,45 +193,23 @@ body{
 .switch input:checked + .slider:before{transform:translate(22px,-50%)}
 
 /* ===================================== */
-/* Utility & Info Blocks */
-/* ===================================== */
-.kv{list-style:none;padding:0;margin:0;display:grid;gap:8px}
-.kv li{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:8px 10px;background:#0d1427;
-  border:1px solid var(--border);border-radius:10px;
-}
-.muted{color:var(--muted)}
-.text-green{color:var(--green)}
-.text-red{color:var(--red)}
-.text-amber{color:var(--amber)}
-
-/* ===================================== */
-/* Spinner animation (for auto-refresh) */
-/* ===================================== */
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{
-  width:14px;height:14px;border:2px solid var(--muted);
-  border-top-color:var(--primary);
-  border-radius:50%;animation:spin 1s linear infinite;
-  display:inline-block;margin-left:4px;
-}
-/* ===================================== */
 /* Alerts Feed Styling */
 /* ===================================== */
 .alert-item{
   padding:8px 10px;margin-bottom:6px;border-radius:10px;
-  background:#101830;border:1px solid var(--border);
+  background:var(--card);border:1px solid var(--border);
   box-shadow:0 2px 6px rgba(0,0,0,.25);
   animation:fadein .4s ease;
 }
 .alert-item .alert-time{font-size:12px;color:var(--muted)}
-.alert-item .alert-type{font-weight:700;margin-top:2px}
-.alert-item .alert-msg{font-size:13px;margin-top:2px}
+.alert-item .alert-type{font-weight:700;margin-top:2px;color:var(--primary)}
+.alert-item .alert-msg{font-size:13px;margin-top:2px;color:var(--text)}
 .alert-item.level-high{border-left:4px solid var(--red);}
 .alert-item.level-medium{border-left:4px solid var(--amber);}
 .alert-item.level-low{border-left:4px solid var(--green);}
 @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#alerts.blink{animation:blinkFlash 0.4s ease;}
+@keyframes blinkFlash{from{box-shadow:0 0 8px var(--primary);}to{box-shadow:none;}}
 
 /* ===================================== */
 /* Scrollbar styling */
@@ -206,22 +219,26 @@ body{
   background:var(--border);border-radius:10px;
 }
 ::-webkit-scrollbar-thumb:hover{background:#2d3a5c}
-/* ===================================== */
-/* Alert types: custom colors */
-/* ===================================== */
-.alert-item .alert-type{
-  font-weight:700;
-  text-transform:uppercase;
-  font-size:13px;
-}
-.alert-item .alert-type::before{
-  content:"";
-  display:inline-block;
-  width:8px;height:8px;
-  border-radius:50%;
-  margin-right:6px;
-}
-.alert-item .alert-type:contains("SmartMoney")::before{background:var(--red);}
-.alert-item .alert-type:contains("GoalMatrix")::before{background:var(--green);}
-.alert-item .alert-type:contains("System")::before{background:var(--amber);}
 
+/* ===================================== */
+/* Animations / Utility */
+/* ===================================== */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{
+  width:14px;height:14px;border:2px solid var(--muted);
+  border-top-color:var(--primary);
+  border-radius:50%;animation:spin 1s linear infinite;
+  display:inline-block;margin-left:4px;
+}
+/* ===================================== */
+/* Spinner animation */
+/* ===================================== */
+.spinner {
+  width:14px;height:14px;
+  border:2px solid var(--muted);
+  border-top-color:var(--primary);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  display:inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
