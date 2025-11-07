@@ -1,57 +1,21 @@
-<!-- ============================================================
-     EURO_GOALS v9.5.0 PRO+
-     System Summary Bar – LED Status Monitor
-     ============================================================ -->
-
-<div class="summarybar">
-  <div class="sb-left">
-    <div class="brand">
-      <img src="/static/icons/eurogoals_192.png" alt="EURO_GOALS" class="brand-icon">
-      <div>
-        <div class="brand-title">EURO_GOALS PRO+</div>
-        <div class="brand-sub">System Summary</div>
-      </div>
-    </div>
+<div id="system-summary-bar" class="summary-bar">
+  <div class="logo-section">
+    <img src="/static/icons/icon-192.png" alt="EURO_GOALS" class="logo-icon">
+    <span class="logo-text">EURO_GOALS</span>
+    <span class="version">v9.5.1 PRO+</span>
   </div>
 
-  <div class="sb-center">
-    <div class="led-group">
-      <div class="led" title="Render Server">
-        <span class="dot" data-id="render"></span>
-        <span class="label">Render</span>
-      </div>
-      <div class="led" title="Database Connection">
-        <span class="dot" data-id="db"></span>
-        <span class="label">DB</span>
-      </div>
-      <div class="led" title="Flashscore Feed">
-        <span class="dot" data-id="flashscore"></span>
-        <span class="label">Flashscore</span>
-      </div>
-      <div class="led" title="Sofascore Feed">
-        <span class="dot" data-id="sofascore"></span>
-        <span class="label">Sofascore</span>
-      </div>
-      <div class="led" title="AsianConnect Feed">
-        <span class="dot" data-id="asianconnect"></span>
-        <span class="label">AsianConnect</span>
-      </div>
-      <div class="led" title="Network Connection">
-        <span class="dot" data-id="network"></span>
-        <span class="label">Network</span>
-      </div>
-    </div>
+  <div class="led-section">
+    <div class="led" id="led-render" data-label="Render"></div>
+    <div class="led" id="led-db" data-label="DB"></div>
+    <div class="led" id="led-flashscore" data-label="Flashscore"></div>
+    <div class="led" id="led-sofascore" data-label="Sofascore"></div>
+    <div class="led" id="led-asianconnect" data-label="AsianConnect"></div>
   </div>
 
-  <div class="sb-right">
-    <div class="status-text">
-      <span id="summaryCPU">CPU: —%</span> |
-      <span id="summaryRAM">RAM: —%</span> |
-      <span id="summaryDISK">Disk: —%</span> |
-      <span id="summaryLast">Last: —</span> |
-      <span id="summaryNext">Next: —</span>
-    </div>
+  <div class="toggles">
+    <label>SmartMoney <input type="checkbox" id="smartmoneyToggle"></label>
+    <label>GoalMatrix <input type="checkbox" id="goalMatrixToggle"></label>
+    <label>Auto-refresh <input type="checkbox" id="autoRefreshToggle" checked></label>
   </div>
 </div>
-
-<script src="/static/js/system_status.js"></script>

@@ -1,84 +1,43 @@
 // =====================================================
-// EURO_GOALS v9.5.0 PRO+
-// UI Controls — Buttons, Refresh, Menu, Sound & Tooltip
+// Smart Auto-Stop + Idle Timer (EURO_GOALS v9.5.1 PRO+)
 // =====================================================
+let autoRefreshEnabled = true;
+let idleTimer;
 
-document.addEventListener("DOMContentLoaded", () => {
-  const refreshBtn = document.getElementById("refreshNowBtn");
-  const menuBtn = document.getElementById("menuBtn");
+// Stop/start refresh
+function stopAutoRefresh() {
+  autoRefreshEnabled = false;
+  console.log("🔴 Auto-refresh paused (idle/tab hidden)");
+}
+function startAutoRefresh() {
+  if (!autoRefreshEnabled) console.log("🟢 Auto-refresh resumed");
+  autoRefreshEnabled = true;
+}
 
-  // Load sounds
-  const clickSound = new Audio("/static/sounds/refresh_click.mp3");
-
-  // Refresh animation + sound
-  if (refreshBtn) {
-    refreshBtn.addEventListener("click", () => {
-      playClickSound(clickSound);
-      startRefreshAnimation(refreshBtn);
-      manualRefreshAction();
-    });
+// Simulated auto-refresh loop
+async function autoRefreshLoop() {
+  while (true) {
+    if (autoRefreshEnabled) {
+      fetch("/api/alerts_feed").catch(() => {});
+    }
+    await new Promise(r => setTimeout(r, 15000));
   }
+}
+autoRefreshLoop();
 
-  // Menu drawer toggle
-  if (menuBtn) {
-    menuBtn.addEventListener("click", () => {
-      const drawer = document.querySelector(".drawer");
-      if (drawer) drawer.classList.toggle("open");
-    });
-  }
+// Smart auto-stop if tab hidden
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopAutoRefresh();
+  else startAutoRefresh();
 });
 
-// =====================================================
-// 🎵 Click Sound
-// =====================================================
-function playClickSound(audio) {
-  try {
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
-  } catch (err) {
-    console.warn("[EURO_GOALS] Click sound error:", err);
-  }
+// Idle timer 10 min
+function resetIdleTimer() {
+  clearTimeout(idleTimer);
+  startAutoRefresh();
+  idleTimer = setTimeout(stopAutoRefresh, 10 * 60 * 1000);
 }
-
-// =====================================================
-// 🔄 Refresh Animation with Tooltip
-// =====================================================
-function startRefreshAnimation(btn) {
-  btn.disabled = true;
-  const originalHTML = btn.innerHTML;
-
-  // Tooltip
-  const tooltip = document.createElement("div");
-  tooltip.textContent = "Refreshing data…";
-  tooltip.style.cssText = `
-    position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
-    background:#1e88e5;color:#fff;padding:8px 14px;border-radius:10px;
-    font-family:sans-serif;font-size:13px;
-    box-shadow:0 4px 16px rgba(0,0,0,.3);
-    z-index:9999;opacity:0;transition:opacity .3s ease;
-  `;
-  document.body.appendChild(tooltip);
-  setTimeout(() => tooltip.style.opacity = 1, 50);
-
-  // Spinner animation
-  btn.innerHTML = `<span class="spinner"></span>`;
-  setTimeout(() => {
-    btn.innerHTML = originalHTML;
-    btn.disabled = false;
-    tooltip.style.opacity = 0;
-    setTimeout(() => tooltip.remove(), 400);
-  }, 1200);
-}
-
-// =====================================================
-// ⚙️ Manual Refresh Action
-// =====================================================
-function manualRefreshAction() {
-  console.log("[EURO_GOALS] Manual refresh triggered.");
-  try {
-    if (typeof fetchAlertsFeed === "function") fetchAlertsFeed();
-    if (typeof checkServerHealth === "function") checkServerHealth();
-  } catch (err) {
-    console.warn("[EURO_GOALS] Refresh error:", err);
-  }
-}
+["mousemove", "keydown", "touchstart"].forEach(ev =>
+  window.addEventListener(ev, resetIdleTimer)
+);
+resetIdleTimer();

@@ -7,16 +7,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const html = document.documentElement;
   const savedTheme = localStorage.getItem("eg_theme");
 
-  // 1️⃣ Εφαρμόζουμε το αποθηκευμένο theme αν υπάρχει
+  // Apply saved or system preference
   if (savedTheme) {
     html.setAttribute("data-theme", savedTheme);
   } else {
-    // 2️⃣ Αλλιώς ανιχνεύουμε από system preference
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     html.setAttribute("data-theme", prefersDark ? "dark" : "light");
   }
 
-  // 3️⃣ Προσθέτουμε κουμπί toggle
+  // Create floating toggle button
   const btn = document.createElement("button");
   btn.className = "theme-toggle-btn";
   btn.title = "Toggle Dark/Light mode";
