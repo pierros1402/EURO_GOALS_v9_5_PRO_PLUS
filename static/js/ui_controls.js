@@ -1,160 +1,45 @@
-(function () {
-  const $ = (sel) => document.querySelector(sel);
+(function(){
+  const $=s=>document.querySelector(s);
+  const led={render:$("#led-render"),db:$("#led-db"),flash:$("#led-flashscore"),sofa:$("#led-sofascore"),asian:$("#led-asianconnect"),net:$("#led-network")};
+  const info={cpu:$("#summaryCPU"),ram:$("#summaryRAM"),disk:$("#summaryDISK"),last:$("#summaryLast"),next:$("#summaryNext")};
+  const kv={ver:$("#kvVersion"),upt:$("#kvUptime"),auto:$("#kvAuto")};
+  const REFBASE=window.__EG__?.initialRefreshSecs||15;
+  let REFSECS=REFBASE,timer=null,counter=0;
 
-  // Elements
-  const led = {
-    render: $("#led-render"),
-    db: $("#led-db"),
-    flashscore: $("#led-flashscore"),
-    sofascore: $("#led-sofascore"),
-    asianconnect: $("#led-asianconnect"),
-  };
+  function setLED(el,st){el.classList.remove("ok","warn","bad");el.classList.add(st);}
+  function formatUptime(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);return `${h}h ${m}m`;}
 
-  const kv = {
-    version: $("#kvVersion"),
-    uptime: $("#kvUptime"),
-    auto: $("#kvAuto"),
-  };
+  async function api(p){const r=await fetch(p,{cache:"no-store"});return await r.json();}
 
-  const topRefresh = $("#refreshNowBtn");
-  const menuBtn = $("#menuBtn");
-  const drawer = $("#mobileDrawer");
-  const drawerClose = $("#drawerClose");
-
-  // Toggles (SummaryBar)
-  const sb = {
-    smart: $("#sbSmartMoney"),
-    goal: $("#sbGoalMatrix"),
-    auto: $("#sbAutoRefresh"),
-    interval: $("#sbInterval"),
-  };
-
-  // Toggles (Cards)
-  const tgSmart = $("#toggleSmartMoney");
-  const tgGoal = $("#toggleGoalMatrix");
-
-  // Local state synced with server
-  let REFRESH_SECS = parseInt(window.__EG__?.initialRefreshSecs ?? 15, 10);
-  let timer = null;
-
-  // -----------------------------
-  // Helpers
-  // -----------------------------
-  function setLED(el, status) {
-    el.classList.remove("ok", "bad", "warn");
-    if (status === "ok") el.classList.add("ok");
-    else if (status === "warn") el.classList.add("warn");
-    else el.classList.add("bad");
-  }
-
-  async function api(path) {
-    const res = await fetch(path, { cache: "no-store" });
-    return await res.json();
-  }
-
-  async function postToggle(name, query) {
-    const res = await fetch(`/api/toggle/${name}${query}`, { method: "POST" });
-    return await res.json();
-  }
-
-  function formatUptime(sec) {
-    const h = Math.floor(sec / 3600);
-    const m = Math.floor((sec % 3600) / 60);
-    const s = Math.floor(sec % 60);
-    return `${h}h ${m}m ${s}s`;
-  }
-
-  function startLoop() {
-    stopLoop();
-    timer = setInterval(refresh, REFRESH_SECS * 1000);
-  }
-  function stopLoop() {
-    if (timer) clearInterval(timer);
-    timer = null;
-  }
-
-  // -----------------------------
-  // Refresh cycle
-  // -----------------------------
-  async function refresh() {
-    try {
-      const st = await api("/api/status");
-
-      kv.version.textContent = st.version ?? "—";
-      kv.uptime.textContent = formatUptime(st.uptime_sec ?? 0);
-      kv.auto.textContent = st.state?.auto_refresh_on ? `ON (${st.state.refresh_secs}s)` : "OFF";
-
-      setLED(led.render, st.services?.render_health ?? "warn");
-      setLED(led.db, st.services?.db ?? "warn");
-      setLED(led.flashscore, st.services?.apis?.flashscore ?? "warn");
-      setLED(led.sofascore, st.services?.apis?.sofascore ?? "warn");
-      setLED(led.asianconnect, st.services?.apis?.asianconnect ?? "warn");
-
-      // keep UI toggles in sync
-      const tg = await api("/api/toggles");
-      [sb.smart, tgSmart].forEach(el => el.checked = !!tg.smartmoney_on);
-      [sb.goal, tgGoal].forEach(el => el.checked = !!tg.goalmatrix_on);
-      sb.auto.checked = !!tg.auto_refresh_on;
-      REFRESH_SECS = parseInt(tg.refresh_secs ?? REFRESH_SECS, 10);
-      sb.interval.value = REFRESH_SECS;
-
-      if (tg.auto_refresh_on && !timer) startLoop();
-      if (!tg.auto_refresh_on && timer) stopLoop();
-
-    } catch (e) {
-      console.error("Refresh failed", e);
-      // degrade LEDs to warn
-      Object.values(led).forEach(el => setLED(el, "warn"));
+  async function refresh(){
+    try{
+      const s=await api("/api/status");
+      kv.ver.textContent=s.version;
+      kv.upt.textContent=formatUptime(s.uptime_sec);
+      kv.auto.textContent=s.state.auto_refresh_on?`ON (${s.state.refresh_secs}s)`:"OFF";
+      info.cpu.textContent=`CPU: ${s.cpu}%`;
+      info.ram.textContent=`RAM: ${s.ram}%`;
+      info.disk.textContent=`Disk: ${s.disk}%`;
+      info.last.textContent=`Last: ${s.last_refresh}`;
+      counter=REFSECS;
+      setLED(led.render,"ok");setLED(led.db,"ok");setLED(led.flash,"ok");setLED(led.sofa,"ok");setLED(led.asian,"ok");
+      setLED(led.net,navigator.onLine?"ok":"bad");
+    }catch(e){
+      console.error("refresh fail",e);
+      Object.values(led).forEach(l=>setLED(l,"warn"));
     }
   }
 
-  // -----------------------------
-  // Event wiring
-  // -----------------------------
-  topRefresh?.addEventListener("click", refresh);
+  function tick(){
+    if(counter>0){counter--;info.next.textContent=`Next: ${counter}s`;}
+    else{refresh();}
+  }
 
-  sb.smart?.addEventListener("change", async (e) => {
-    await postToggle("smartmoney_on", `?value=${e.target.checked}`);
-    refresh();
-  });
-  sb.goal?.addEventListener("change", async (e) => {
-    await postToggle("goalmatrix_on", `?value=${e.target.checked}`);
-    refresh();
-  });
-  sb.auto?.addEventListener("change", async (e) => {
-    await postToggle("auto_refresh_on", `?value=${e.target.checked}`);
-    refresh();
-  });
-  sb.interval?.addEventListener("change", async (e) => {
-    const v = parseInt(e.target.value, 10);
-    if (isNaN(v) || v < 5 || v > 300) return;
-    await postToggle("refresh_secs", `?secs=${v}`);
-    REFRESH_SECS = v;
-    if (sb.auto.checked) startLoop();
-    refresh();
-  });
+  window.addEventListener("online",()=>setLED(led.net,"ok"));
+  window.addEventListener("offline",()=>setLED(led.net,"bad"));
 
-  tgSmart?.addEventListener("change", async (e) => {
-    await postToggle("smartmoney_on", `?value=${e.target.checked}`);
-    refresh();
-  });
-  tgGoal?.addEventListener("change", async (e) => {
-    await postToggle("goalmatrix_on", `?value=${e.target.checked}`);
-    refresh();
-  });
+  console.log("%cEURO_GOALS v9.5.0 PRO+ UI Loaded ✅","color:#5aa9ff;font-weight:bold;");
 
-  // Drawer
-  menuBtn?.addEventListener("click", () => drawer.classList.add("open"));
-  drawerClose?.addEventListener("click", () => drawer.classList.remove("open"));
-  drawer?.addEventListener("click", (e) => {
-    if (e.target === drawer) drawer.classList.remove("open");
-  });
-
-  // First load
-  (async function init() {
-    await refresh();
-    // Enable loop if server says so
-    const tg = await api("/api/toggles");
-    if (tg.auto_refresh_on) startLoop();
-  })();
+  refresh();setInterval(tick,1000);
 })();
+<script src="/static/js/ui_alerts.js"></script>
