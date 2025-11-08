@@ -3,9 +3,10 @@
 # ============================================================
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pathlib import Path
 import time, os, threading
 
 # ============================================================
@@ -94,6 +95,18 @@ async def shutdown_server():
     """Auto-stop Render process after inactivity or manual trigger."""
     print("[EURO_GOALS] 💤 Auto-shutdown triggered by inactivity.")
     os._exit(0)
+
+# ============================================================
+# SERVICE WORKER ROUTE
+# ============================================================
+
+@app.get("/service-worker.js", include_in_schema=False)
+def service_worker():
+    """Serve service worker from root"""
+    sw_path = Path("static/js/sw.js")
+    if sw_path.exists():
+        return FileResponse(sw_path, media_type="application/javascript")
+    return JSONResponse({"error": "service-worker.js not found"}, status_code=404)
 
 # ============================================================
 # STARTUP EVENT

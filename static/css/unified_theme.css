@@ -1,12 +1,12 @@
 /* ============================================================
-   EURO_GOALS PRO+ UNIFIED v9.5.x – Dark Blue Theme
+   EURO_GOALS PRO+ UNIFIED v9.5.x — Dark Blue Visual Edition
    Author: Pierros
    ============================================================ */
 
 :root {
   --color-bg-dark: #0a0f1a;
   --color-bg-darker: #111827;
-  --color-panel-bg: rgba(17, 24, 39, 0.8);
+  --color-panel-bg: rgba(17, 24, 39, 0.82);
   --color-border: rgba(255, 255, 255, 0.08);
   --color-accent: #3b82f6;
   --color-accent-hover: #2563eb;
@@ -14,13 +14,14 @@
   --color-placeholder: #6b7280;
 }
 
-/* Reset & Base */
+/* Reset */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* Base Body */
 body {
   font-family: "Inter", "Roboto", sans-serif;
   color: var(--color-text);
@@ -29,20 +30,48 @@ body {
   min-height: 100vh;
 }
 
-/* =======================================
+/* ============================================================
+   HEADER TOOLBAR
+   ============================================================ */
+header {
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 0.8rem 1.4rem;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+}
+
+header h1 {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* Toolbar Buttons */
+button {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================================
    PANEL DESIGN
-   ======================================= */
+   ============================================================ */
 .panel {
   background: var(--color-panel-bg);
   border: 1px solid var(--color-border);
   border-radius: 1rem;
   padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.35s ease;
 }
 
 .panel:hover {
-  border-color: var(--color-accent-hover);
+  border-color: var(--color-accent);
   box-shadow: 0 4px 25px rgba(37, 99, 235, 0.25);
   transform: translateY(-2px);
 }
@@ -58,8 +87,19 @@ body {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-accent);
+  transition: text-shadow 0.3s ease, color 0.3s ease;
 }
 
+/* Glow state: active/error via JS */
+.panel-header h2.glow-blue {
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+}
+
+.panel-header h2.glow-red {
+  text-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+}
+
+/* Panel body */
 .panel-body {
   min-height: 120px;
   font-size: 0.95rem;
@@ -67,16 +107,16 @@ body {
   color: var(--color-text);
 }
 
-/* =======================================
+/* ============================================================
    STATUS DOT
-   ======================================= */
+   ============================================================ */
 .status-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
   background: gray;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
-  transition: background 0.3s, box-shadow 0.3s;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
+  transition: background 0.4s, box-shadow 0.4s;
 }
 
 .status-dot.active {
@@ -89,9 +129,9 @@ body {
   box-shadow: 0 0 10px #ef4444;
 }
 
-/* =======================================
+/* ============================================================
    PLACEHOLDER TEXT
-   ======================================= */
+   ============================================================ */
 .placeholder {
   color: var(--color-placeholder);
   font-style: italic;
@@ -103,21 +143,35 @@ body {
   50% { opacity: 1; }
 }
 
-/* =======================================
+/* ============================================================
    ANIMATIONS
-   ======================================= */
+   ============================================================ */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(15px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 .animate-fadeIn {
   animation: fadeIn 0.7s ease-out forwards;
 }
 
-/* =======================================
+/* ============================================================
+   SCROLL-TO-TOP BUTTON
+   ============================================================ */
+#scrollTopBtn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  font-size: 1.5rem;
+  border: none;
+  outline: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* ============================================================
    RESPONSIVE DESIGN
-   ======================================= */
+   ============================================================ */
 @media (max-width: 1024px) {
   .panel {
     padding: 1.2rem;
@@ -125,37 +179,38 @@ body {
 }
 
 @media (max-width: 768px) {
-  .panel {
-    width: 95%;
-    margin: 0 auto;
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
   }
-
+  .panel {
+    width: 100%;
+  }
   .panel-header h2 {
     font-size: 1.1rem;
   }
-
   .panel-body {
     font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
-  .panel {
-    padding: 1rem;
+  body {
+    font-size: 0.9rem;
   }
-
   header h1 {
-    font-size: 1rem;
+    font-size: 1.2rem;
   }
-
-  .placeholder {
-    font-size: 0.85rem;
+  button#manual-refresh {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
   }
 }
 
-/* =======================================
-   SCROLLBAR (Custom look)
-   ======================================= */
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
 ::-webkit-scrollbar {
   width: 8px;
 }

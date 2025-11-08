@@ -1,53 +1,116 @@
 {% extends "base.html" %}
 {% block content %}
+<main class="min-h-screen flex flex-col items-center justify-start pt-6 pb-20 px-4 md:px-8">
 
-<!-- ================================
-     DASHBOARD LAYOUT
-================================ -->
-<section id="dashboard" class="space-y-8 animate-fadeIn">
+  <!-- ============================================================
+       DASHBOARD HEADER TOOLBAR
+  ============================================================ -->
+  <header class="w-full max-w-7xl flex items-center justify-between mb-6 animate-fadeIn">
+    <h1 class="text-2xl md:text-3xl font-bold text-blue-400 drop-shadow-sm tracking-wide">
+      ⚽ EURO_GOALS PRO+ <span class="text-gray-300">UNIFIED</span>
+    </h1>
+    <div class="flex items-center gap-3">
+      <button id="manual-refresh" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition">
+        🔁 Ανανεώση
+      </button>
+      <button id="theme-toggle" class="p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition">
+        <i id="theme-icon" class="fas fa-moon text-blue-400"></i>
+      </button>
+    </div>
+  </header>
 
-  <!-- SMARTMONEY PANEL -->
-  <div id="smartmoney-panel" class="panel">
-    <div class="panel-header">
-      <h2>💰 SmartMoney Monitor</h2>
-      <span class="status-dot" id="smartmoney-status"></span>
-    </div>
-    <div class="panel-body" id="smartmoney-content">
-      <p class="placeholder">Φόρτωση δεδομένων SmartMoney...</p>
-    </div>
-  </div>
+  <!-- ============================================================
+       PANELS WRAPPER
+  ============================================================ -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-7xl">
 
-  <!-- GOALMATRIX PANEL -->
-  <div id="goalmatrix-panel" class="panel">
-    <div class="panel-header">
-      <h2>🎯 GoalMatrix Engine</h2>
-      <span class="status-dot" id="goalmatrix-status"></span>
-    </div>
-    <div class="panel-body" id="goalmatrix-content">
-      <p class="placeholder">Ανάκτηση δεδομένων GoalMatrix...</p>
-    </div>
-  </div>
-
-  <!-- SYSTEM STATUS PANEL -->
-  <div id="system-status-panel" class="panel">
-    <div class="panel-header">
-      <h2>🩺 System Status</h2>
-      <span class="status-dot" id="system-status-dot"></span>
-    </div>
-    <div class="panel-body" id="system-status-content">
-      <div id="system-status-data">
-        <p class="placeholder">Έλεγχος υπηρεσιών EURO_GOALS...</p>
+    <!-- SMARTMONEY PANEL -->
+    <div class="panel animate-fadeIn">
+      <div class="panel-header">
+        <h2 id="smartmoney-title">💰 SmartMoney Monitor</h2>
+        <div id="smartmoney-status" class="status-dot"></div>
+      </div>
+      <div id="smartmoney-content" class="panel-body placeholder">
+        Φόρτωση SmartMoney Engine...
       </div>
     </div>
-  </div>
 
-</section>
+    <!-- GOALMATRIX PANEL -->
+    <div class="panel animate-fadeIn">
+      <div class="panel-header">
+        <h2 id="goalmatrix-title">🎯 GoalMatrix Engine</h2>
+        <div id="goalmatrix-status" class="status-dot"></div>
+      </div>
+      <div id="goalmatrix-content" class="panel-body placeholder">
+        Φόρτωση GoalMatrix δεδομένων...
+      </div>
+    </div>
 
-<!-- ================================
-     INFO / FOOTNOTE
-================================ -->
-<section id="info" class="mt-10 text-center text-gray-500 text-sm">
-  <p>Version 9.5.x PRO+ UNIFIED | Live Monitoring Mode Active</p>
-</section>
+    <!-- SYSTEM STATUS PANEL -->
+    <div class="panel animate-fadeIn">
+      <div class="panel-header">
+        <h2 id="system-status-title">🩺 System Status</h2>
+        <div id="system-status-dot" class="status-dot"></div>
+      </div>
+      <div id="system-status-content" class="panel-body placeholder">
+        Έλεγχος συστημάτων...
+      </div>
+    </div>
 
+  </section>
+
+  <!-- ============================================================
+       SCROLL TO TOP BUTTON
+  ============================================================ -->
+  <button id="scrollTopBtn"
+          class="hidden fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white text-xl p-3 rounded-full shadow-lg transition">
+    ⬆️
+  </button>
+</main>
+
+<!-- ============================================================
+     INLINE SCRIPTS
+============================================================ -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const refreshBtn = document.getElementById("manual-refresh");
+    const scrollBtn = document.getElementById("scrollTopBtn");
+
+    // Manual Refresh Action
+    refreshBtn?.addEventListener("click", () => {
+      refreshBtn.innerText = "⏳ Ανανεώνεται...";
+      refreshAllPanels();
+      setTimeout(() => (refreshBtn.innerText = "🔁 Ανανεώση"), 1500);
+    });
+
+    // Scroll-to-top Visibility
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 200) {
+        scrollBtn.classList.remove("hidden");
+      } else {
+        scrollBtn.classList.add("hidden");
+      }
+    });
+
+    // Scroll-to-top Action
+    scrollBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+
+  // Dynamic Glow Titles
+  const titles = document.querySelectorAll(".panel-header h2");
+  titles.forEach((title) => {
+    const observer = new MutationObserver(() => {
+      if (title.parentElement.querySelector(".status-dot.active")) {
+        title.style.textShadow = "0 0 10px rgba(59,130,246,0.7)";
+      } else if (title.parentElement.querySelector(".status-dot.error")) {
+        title.style.textShadow = "0 0 10px rgba(239,68,68,0.7)";
+      } else {
+        title.style.textShadow = "none";
+      }
+    });
+    observer.observe(title.parentElement, { attributes: true, subtree: true });
+  });
+</script>
 {% endblock %}
