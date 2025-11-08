@@ -1,40 +1,68 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="grid-container">
+<div class="eg-grid">
 
     <!-- SMARTMONEY -->
-    <section class="card">
-        <h2>SmartMoney Monitor</h2>
-        <div class="card-body">
-            SmartMoney feed placeholder
+    <section class="eg-card">
+        <h2 class="eg-card-title">SmartMoney Monitor</h2>
+        <div class="eg-card-body" id="smartmoney-monitor">
+            <div class="eg-card-dim">SmartMoney feed placeholder</div>
+        </div>
+        <div class="eg-footer-row">
+            <span class="eg-last">Live monitoring via SmartMoney Engine</span>
         </div>
     </section>
 
     <!-- GOALMATRIX -->
-    <section class="card">
-        <h2>GoalMatrix</h2>
-        <div class="card-body">
-            GoalMatrix heatmap placeholder
+    <section class="eg-card">
+        <h2 class="eg-card-title">GoalMatrix</h2>
+        <div class="eg-card-body" id="goalmatrix-heatmap">
+            <div class="eg-card-dim">GoalMatrix heatmap placeholder</div>
+        </div>
+        <div class="eg-footer-row">
+            <span class="eg-last">Goal analytics powered by GoalMatrix Engine</span>
         </div>
     </section>
 
-    <!-- ALERTS -->
-    <section class="card wide">
-        <h2>Alert History</h2>
-        <div class="card-body">
-            Alerts list placeholder
+    <!-- ALERT HISTORY -->
+    <section class="eg-card eg-warn" style="grid-column: span 2;">
+        <h2 class="eg-card-title">Alert History</h2>
+        <div class="eg-card-body" id="alerts-history">
+            <div class="eg-card-dim">Alerts list placeholder</div>
+        </div>
+        <div class="eg-footer-row">
+            <span class="eg-last">Historical and real-time alert logs</span>
         </div>
     </section>
 
     <!-- SYSTEM HEALTH -->
-    <section class="card wide">
-        <h2>System Health</h2>
-        <div class="card-body center">
-            <img src="/static/icons/eg_logo.png" alt="EURO_GOALS PRO+" class="main-logo">
+    <section class="eg-card eg-ok" style="grid-column: span 2; text-align:center;">
+        <h2 class="eg-card-title">System Health</h2>
+        <div class="eg-card-body center" id="system-health">
+            <img src="/static/icons/eg_logo.png" alt="EURO_GOALS PRO+" class="main-logo" style="width:120px; opacity:.95;">
+            <p style="opacity:.8;margin-top:10px;">System active – v9.5.2 PRO+</p>
+        </div>
+        <div class="eg-footer-row" style="justify-content:center;">
+            <span class="eg-last">Last updated: {{ timestamp if timestamp else '–' }}</span>
+        </div>
+    </section>
+
+    <!-- CONTROL PANEL (προαιρετικό πεδίο) -->
+    <section class="eg-card" style="grid-column: span 2;">
+        <h2 class="eg-card-title">Control Panel</h2>
+        <div class="eg-card-body">
+            <div class="eg-actions">
+                <a href="#" class="eg-btn eg-btn-primary">Refresh Data</a>
+                <a href="#" class="eg-btn eg-btn-secondary">View Reports</a>
+                <a href="#" class="eg-btn eg-btn-danger">Force Sync</a>
+                <a href="#" class="eg-btn eg-btn-secondary">Settings</a>
+            </div>
+            <p class="eg-note">Quick actions for EURO_GOALS engines</p>
         </div>
     </section>
 
 </div>
 
 {% endblock %}
+<script src="/static/js/system_status.js"></script>

@@ -1,0 +1,18 @@
+{
+  "name": "EURO_GOALS PRO+",
+  "short_name": "EURO_GOALS",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0b0f0c",
+  "theme_color": "#0b0f0c",
+  "description": "EURO_GOALS PRO+ football analytics and SmartMoney engine.",
+  "icons": [
+    { "src": "/public/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/public/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/public/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/public/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
