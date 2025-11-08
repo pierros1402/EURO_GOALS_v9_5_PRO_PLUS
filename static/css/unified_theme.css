@@ -1,226 +1,152 @@
 /* ============================================================
-   EURO_GOALS PRO+ UNIFIED v9.5.x — Dark Blue Visual Edition
-   Author: Pierros
+   EURO_GOALS PRO+ Unified Theme (v9.5.x)
    ============================================================ */
 
 :root {
-  --color-bg-dark: #0a0f1a;
-  --color-bg-darker: #111827;
-  --color-panel-bg: rgba(17, 24, 39, 0.82);
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-accent: #3b82f6;
-  --color-accent-hover: #2563eb;
-  --color-text: #e5e7eb;
-  --color-placeholder: #6b7280;
+  --bg: #0d1117;
+  --panel-bg: #161b22;
+  --text: #c9d1d9;
+  --accent: #0a84ff;
+  --shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
-/* Reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* Base Body */
 body {
-  font-family: "Inter", "Roboto", sans-serif;
-  color: var(--color-text);
-  background: linear-gradient(to bottom, var(--color-bg-dark), var(--color-bg-darker));
-  overflow-x: hidden;
-  min-height: 100vh;
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* ============================================================
-   HEADER TOOLBAR
+   HEADER
    ============================================================ */
 header {
-  background: rgba(17, 24, 39, 0.6);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 1rem;
-  padding: 0.8rem 1.4rem;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
-}
-
-header h1 {
-  font-weight: 700;
-  letter-spacing: 0.03em;
-}
-
-/* Toolbar Buttons */
-button {
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  background: linear-gradient(90deg, #0a84ff30, #0a84ff10);
+  text-align: center;
+  padding: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid #30363d;
+  backdrop-filter: blur(4px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 /* ============================================================
-   PANEL DESIGN
+   DASHBOARD GRID
    ============================================================ */
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 18px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
 .panel {
-  background: var(--color-panel-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-  transition: all 0.35s ease;
+  background-color: var(--panel-bg);
+  border-radius: 14px;
+  padding: 15px 18px;
+  box-shadow: var(--shadow);
+  transition: all 0.25s ease-in-out;
+  border: 1px solid #222;
 }
 
 .panel:hover {
-  border-color: var(--color-accent);
-  box-shadow: 0 4px 25px rgba(37, 99, 235, 0.25);
-  transform: translateY(-2px);
+  transform: scale(1.01);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(10, 132, 255, 0.4);
 }
 
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+.panel h3 {
+  color: var(--accent);
+  margin-top: 0;
+  font-size: 1.1rem;
 }
 
-.panel-header h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-accent);
-  transition: text-shadow 0.3s ease, color 0.3s ease;
-}
-
-/* Glow state: active/error via JS */
-.panel-header h2.glow-blue {
-  text-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
-}
-
-.panel-header h2.glow-red {
-  text-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
-}
-
-/* Panel body */
-.panel-body {
-  min-height: 120px;
+.panel p, .panel li {
+  line-height: 1.4;
   font-size: 0.95rem;
-  line-height: 1.6;
-  color: var(--color-text);
 }
 
 /* ============================================================
-   STATUS DOT
+   BUTTONS
    ============================================================ */
-.status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: gray;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.25);
-  transition: background 0.4s, box-shadow 0.4s;
+.button-bar {
+  text-align: center;
+  margin: 12px 0;
 }
 
-.status-dot.active {
-  background: var(--color-accent);
-  box-shadow: 0 0 10px var(--color-accent);
-}
-
-.status-dot.error {
-  background: #ef4444;
-  box-shadow: 0 0 10px #ef4444;
-}
-
-/* ============================================================
-   PLACEHOLDER TEXT
-   ============================================================ */
-.placeholder {
-  color: var(--color-placeholder);
-  font-style: italic;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
-
-/* ============================================================
-   ANIMATIONS
-   ============================================================ */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeIn {
-  animation: fadeIn 0.7s ease-out forwards;
-}
-
-/* ============================================================
-   SCROLL-TO-TOP BUTTON
-   ============================================================ */
-#scrollTopBtn {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  z-index: 9999;
-  font-size: 1.5rem;
+button {
+  background-color: var(--accent);
+  color: white;
   border: none;
-  outline: none;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  border-radius: 6px;
+  padding: 8px 15px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+button:hover {
+  background-color: #0070e0;
+  transform: scale(1.03);
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  text-align: center;
+  padding: 12px;
+  font-size: 0.85rem;
+  color: #7a818a;
+  border-top: 1px solid #30363d;
+  background-color: var(--panel-bg);
+}
+
+/* ============================================================
+   LIGHT THEME MODE
+   ============================================================ */
+body.light {
+  --bg: #f3f4f6;
+  --panel-bg: #ffffff;
+  --text: #1a1a1a;
+  --accent: #0078ff;
+  --shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+body.light header {
+  background: linear-gradient(90deg, #0078ff25, #0078ff05);
+  border-bottom: 1px solid #ccc;
 }
 
 /* ============================================================
    RESPONSIVE DESIGN
    ============================================================ */
 @media (max-width: 1024px) {
-  .panel {
-    padding: 1.2rem;
+  .dashboard {
+    padding: 15px;
   }
 }
 
 @media (max-width: 768px) {
   header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.6rem;
-  }
-  .panel {
-    width: 100%;
-  }
-  .panel-header h2 {
     font-size: 1.1rem;
   }
-  .panel-body {
-    font-size: 0.9rem;
+  .dashboard {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
-  body {
-    font-size: 0.9rem;
+  .panel {
+    padding: 12px;
   }
-  header h1 {
-    font-size: 1.2rem;
+  .panel h3 {
+    font-size: 1rem;
   }
-  button#manual-refresh {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
-  }
-}
-
-/* ============================================================
-   SCROLLBAR
-   ============================================================ */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-accent);
-  border-radius: 8px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent-hover);
-}
-::-webkit-scrollbar-track {
-  background: #0a0f1a;
 }

@@ -1,66 +1,99 @@
 # ============================================================
-# EURO_GOALS PRO+ UNIFIED – MAIN ENTRY
+# EURO_GOALS v9.5.0 PRO+ UNIFIED MAIN APP
 # ============================================================
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from dotenv import load_dotenv
-import os, time
+import time, os
+
+# ------------------------------------------------------------
+# Βασική ρύθμιση εφαρμογής
+# ------------------------------------------------------------
+APP_VERSION = "9.5.0 PRO+"
+app = FastAPI(title=f"EURO_GOALS v{APP_VERSION}")
+
+# ------------------------------------------------------------
+# Σύνδεση φακέλων στατικών & templates
+# ------------------------------------------------------------
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 # ============================================================
-# INITIAL SETUP
+# MAIN PAGE (Jinja2 template)
 # ============================================================
-load_dotenv()
-app = FastAPI(title="EURO_GOALS PRO+ Unified", version="9.5.0")
 
-# Paths
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
-static_path = os.path.join(BASE_DIR, "static")
-
-# Serve static files
-app.mount("/static", StaticFiles(directory=static_path), name="static")
-
-# ============================================================
-# MAIN PAGE (UI)
-# ============================================================
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    """Load main dashboard"""
+    """Main dashboard"""
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
-            "version": "v9.5.0 PRO+",
+            "version": APP_VERSION,
             "timestamp": time.strftime("%H:%M:%S")
         }
     )
 
 # ============================================================
-# HEALTH ENDPOINT (Render Health Check)
+# HEALTH ENDPOINT
 # ============================================================
-@app.get("/render_health")
+
+@app.get("/health")
 async def render_health():
-    return {"status": "OK", "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")}
+    """Render health check"""
+    return {"status": "ok", "timestamp": time.strftime("%H:%M:%S")}
 
 # ============================================================
-# API ENDPOINTS (Sample placeholders)
+# BACKUP STATUS ENDPOINT
 # ============================================================
+
+@app.get("/backup_status")
+async def backup_status():
+    """Backup readiness endpoint"""
+    return JSONResponse({
+        "backup_ready": True,
+        "last_checked": time.strftime("%Y-%m-%d %H:%M:%S")
+    })
+
+# ============================================================
+# SMARTMONEY MONITOR ENDPOINT
+# ============================================================
+
+@app.get("/smartmoney_monitor", response_class=HTMLResponse)
+async def smartmoney_monitor(request: Request):
+    """SmartMoney monitor page"""
+    return templates.TemplateResponse(
+        "smartmoney_monitor.html",
+        {"request": request, "version": APP_VERSION}
+    )
+
+# ============================================================
+# SYSTEM STATUS ENDPOINTS
+# ============================================================
+
 @app.get("/system_status_data")
 async def system_status_data():
-    return {"system": "EURO_GOALS", "status": "online"}
+    """JSON system status"""
+    return {
+        "version": APP_VERSION,
+        "status": "active",
+        "time": time.strftime("%Y-%m-%d %H:%M:%S")
+    }
 
 @app.get("/system_status_html", response_class=HTMLResponse)
 async def system_status_html(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    """HTML Unified Dashboard"""
+    return templates.TemplateResponse(
+        "system_status_html.html",
+        {"request": request, "version": APP_VERSION}
+    )
 
 # ============================================================
-# STARTUP LOG
+# Εκκίνηση εφαρμογής (Render)
 # ============================================================
-@app.on_event("startup")
-async def startup_event():
-    print("[EURO_GOALS] 🚀 Starting unified service...")
-    print("[EURO_GOALS] ✅ Templates & static routes active.")
 
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
