@@ -1,134 +1,196 @@
-/* EURO_GOALS PRO+ v9.5.2 – Fullscreen PWA Service Worker */
-const EG_VERSION = 'v9.5.2';
-const STATIC_CACHE = `eg-static-${EG_VERSION}`;
-const RUNTIME_CACHE = `eg-runtime-${EG_VERSION}`;
-const OFFLINE_URL = '/public/offline.html';
+/* ============================================================
+   EURO_GOALS PRO+ UNIFIED – Service Worker (v9.5.x)
+   Strategy:
+   - HTML: network-first with offline fallback
+   - Static (JS/CSS/Icons): cache-first with versioned precache
+   - Offline fallback: /public/offline.html (and /offline.html as backup)
+   ============================================================ */
 
-const PRECACHE_URLS = [
-  '/', // main entry
-  '/public/manifest.webmanifest',
-  '/public/offline.html',
-  '/public/icons/icon-192.png',
-  '/public/icons/icon-512.png',
-  '/static/css/style.css',
-  '/static/js/main.js'
+const SW_VERSION = "egpwa-v9.5.x-dblue-001";
+const PRECACHE = `eg-precache-${SW_VERSION}`;
+const RUNTIME = `eg-runtime-${SW_VERSION}`;
+
+// --- Core assets to precache (must be fast, small, stable)
+const CORE_ASSETS = [
+  "/",                            // main route
+  "/public/offline.html",         // preferred offline fallback
+  "/offline.html",                // backup path (in case of different mount)
+  "/static/css/unified_theme.css",
+  "/static/js/main_unified.js",
+  "/static/icons/icon-192.png",
+  "/static/icons/icon-512.png",
+
+  // manifest: try both paths to be safe
+  "/public/manifest.webmanifest",
+  "/manifest.webmanifest",
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
-  );
+// Optional: add API endpoints you want available offline as last-known
+const OPTIONAL_PREFETCH = [
+  "/system_status_html",
+  "/goalmatrix_summary",
+  "/smartmoney_monitor",
+];
+
+// Utility: cache a list of URLs (unique, ignore failures)
+async function addAllQuiet(cache, urls) {
+  for (const url of [...new Set(urls)]) {
+    try { await cache.add(new Request(url, { cache: "no-store" })); }
+    catch (_e) { /* ignore individual failures */ }
+  }
+}
+
+/* ---------------- Install ---------------- */
+self.addEventListener("install", (event) => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(PRECACHE);
+    await addAllQuiet(cache, CORE_ASSETS);
+    await addAllQuiet(cache, OPTIONAL_PREFETCH);
+    // Take control immediately on next load
+    await self.skipWaiting();
+  })());
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil((async () => {
-    const keys = await caches.keys();
+/* ---------------- Activate ---------------- */
+self.addEventListener("activate", (event) => {
+  event.waitUntil((async () => {
+    // Cleanup old caches
+    const names = await caches.keys();
     await Promise.all(
-      keys.filter(k => ![STATIC_CACHE, RUNTIME_CACHE].includes(k))
-          .map(k => caches.delete(k))
+      names
+        .filter((n) => ![PRECACHE, RUNTIME].includes(n))
+        .map((n) => caches.delete(n))
     );
     await self.clients.claim();
   })());
 });
 
-self.addEventListener('fetch', (e) => {
-  const { request } = e;
-  if (request.method !== 'GET') return;
-
+/* ---------------- Fetch ---------------- */
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
   const url = new URL(request.url);
 
-  // HTML
-  if (request.destination === 'document') {
-    e.respondWith((async () => {
+  // Only handle GET
+  if (request.method !== "GET") return;
+
+  // HTML navigation requests → network-first with offline fallback
+  const isHTML = request.mode === "navigate" ||
+                 (request.headers.get("accept") || "").includes("text/html");
+
+  if (isHTML) {
+    event.respondWith((async () => {
       try {
-        const net = fetch(request);
-        e.waitUntil((async () => {
-          const res = await net;
-          const cache = await caches.open(RUNTIME_CACHE);
-          cache.put(request, res.clone());
-        })());
-        const cached = await caches.match(request);
-        return cached || net;
-      } catch {
-        return (await caches.match(request)) || (await caches.match(OFFLINE_URL));
+        const fresh = await fetch(request, { cache: "no-store" });
+        // Optionally update runtime cache with latest HTML
+        const cache = await caches.open(RUNTIME);
+        cache.put(request, fresh.clone());
+        return fresh;
+      } catch (_err) {
+        // Try cache
+        const cache = await caches.open(PRECACHE);
+        const cached = await cache.match(request) || await cache.match("/");
+        if (cached) return cached;
+        // Offline fallback
+        return (await cache.match("/public/offline.html")) ||
+               (await cache.match("/offline.html")) ||
+               new Response("Offline", { status: 503, headers: { "Content-Type": "text/plain" }});
       }
     })());
     return;
   }
 
-  // Static assets
-  if (['style','script','image','font','audio'].includes(request.destination)) {
-    e.respondWith((async () => {
-      const cached = await caches.match(request);
+  // Static assets (CSS/JS/Icons/Manifest) → cache-first
+  const isStatic =
+    url.pathname.startsWith("/static/") ||
+    url.pathname.endsWith(".webmanifest") ||
+    url.pathname.endsWith(".json") ||
+    url.pathname.endsWith(".png") ||
+    url.pathname.endsWith(".ico") ||
+    url.pathname.endsWith(".svg") ||
+    url.pathname.endsWith(".jpg") ||
+    url.pathname.endsWith(".jpeg") ||
+    url.pathname.endsWith(".css") ||
+    url.pathname.endsWith(".js");
+
+  if (isStatic) {
+    event.respondWith((async () => {
+      const cache = await caches.open(PRECACHE);
+      const cached = await cache.match(request);
       if (cached) return cached;
       try {
-        const res = await fetch(request);
-        const cache = await caches.open(STATIC_CACHE);
-        cache.put(request, res.clone());
-        return res;
-      } catch {
-        return cached || Response.error();
+        const fresh = await fetch(request);
+        // Only cache successful, same-origin responses
+        if (fresh.ok && url.origin === self.location.origin) {
+          cache.put(request, fresh.clone());
+        }
+        return fresh;
+      } catch (_err) {
+        // last resort: any offline fallback
+        const off = await caches.match("/public/offline.html") ||
+                    await caches.match("/offline.html");
+        return off || new Response("", { status: 504 });
       }
     })());
     return;
   }
 
-  // API/JSON
-  if (url.pathname.startsWith('/api/') || url.pathname.endsWith('.json')) {
-    e.respondWith((async () => {
-      const cache = await caches.open(RUNTIME_CACHE);
-      try {
-        const res = await fetch(request);
-        cache.put(request, res.clone());
-        return res;
-      } catch {
-        const cached = await caches.match(request);
-        if (cached) return cached;
-        return new Response(JSON.stringify({ offline: true }), {
-          headers: { 'Content-Type': 'application/json' }
-        });
+  // Other GET (e.g., JSON APIs) → network-first with runtime cache fallback
+  event.respondWith((async () => {
+    const cache = await caches.open(RUNTIME);
+    try {
+      const fresh = await fetch(request, { cache: "no-store" });
+      if (fresh.ok && url.origin === self.location.origin) {
+        cache.put(request, fresh.clone());
       }
-    })());
-    return;
-  }
-
-  // Default
-  e.respondWith((async () => {
-    const cached = await caches.match(request);
-    return cached || fetch(request).catch(() => cached || Response.error());
+      return fresh;
+    } catch (_err) {
+      const cached = await cache.match(request);
+      if (cached) return cached;
+      // generic offline response
+      const off = await caches.match("/public/offline.html") ||
+                  await caches.match("/offline.html");
+      return off || new Response(JSON.stringify({ offline: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
   })());
 });
 
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+/* ---------------- Client Messages (for updates) ---------------- */
+self.addEventListener("message", (event) => {
+  const { type } = event.data || {};
+  if (type === "SKIP_WAITING") {
     self.skipWaiting();
   }
 });
 
-self.addEventListener('push', (event) => {
-  if (!event.data) return;
-  const data = (() => { try { return event.data.json(); } catch { return { title: 'EURO_GOALS', body: event.data.text() }; } })();
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'EURO_GOALS', {
-      body: data.body || '',
-      icon: '/public/icons/icon-192.png',
-      badge: '/public/icons/icon-192.png',
-      data: data.data || {}
-    })
-  );
+/* ---------------- Optional: Push Notifications ---------------- */
+self.addEventListener("push", (event) => {
+  try {
+    const data = event.data ? event.data.json() : {};
+    const title = data.title || "EURO_GOALS Alert";
+    const body  = data.body  || "New update available";
+    const icon  = data.icon  || "/static/icons/icon-192.png";
+    const tag   = data.tag   || "euro-goals";
+    event.waitUntil(self.registration.showNotification(title, { body, icon, tag }));
+  } catch (_e) {
+    // silent
+  }
 });
 
-self.addEventListener('notificationclick', (event) => {
+/* ---------------- Optional: Notification Click ---------------- */
+self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(clients => {
-        const open = clients.find(c => c.url.includes(location.origin));
-        if (open) { open.focus(); open.navigate(targetUrl); }
-        else { self.clients.openWindow(targetUrl); }
-      })
-  );
+  event.waitUntil((async () => {
+    const allClients = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    const targetUrl = "/"; // open dashboard
+    const opened = allClients.find((c) => (c.url || "").includes(self.location.origin));
+    if (opened) {
+      opened.focus();
+      opened.postMessage({ type: "FOCUS_FROM_NOTIFICATION" });
+      return;
+    }
+    await clients.openWindow(targetUrl);
+  })());
 });

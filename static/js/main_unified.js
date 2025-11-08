@@ -1,160 +1,134 @@
-// ============================================================
-// EURO_GOALS PRO+ v9.5.4 – MAIN UNIFIED CONTROLLER
-// ============================================================
-// Ενοποιεί όλο το frontend startup:
-// - Service Worker & PWA setup
-// - Push subscription (VAPID)
-// - SmartMoney, GoalMatrix, Alerts, System Health refresh
-// - Auto refresh, Idle Timer, Render auto-stop
-// ============================================================
+/* ============================================================
+   EURO_GOALS PRO+ UNIFIED v9.5.x – Main Controller
+   Author: Pierros
+   ============================================================ */
 
-// --- Imports ---
-import { registerServiceWorker } from "./register-sw.js";
-import "./system_status.js";
-import "./push_manager.js";
-import "./render_auto_stop.js";
-import "./pwa_install_prompt.js";
-import "./ui_controls.js";
+console.log("[EURO_GOALS] ✅ main_unified.js initialized");
 
-// ============================================================
-// PWA / Notifications
-// ============================================================
-registerServiceWorker();
+document.addEventListener("DOMContentLoaded", () => {
+  initDashboard();
+  initThemeToggle();
+  refreshAllPanels();
 
-const EG = {
-  notify: JSON.parse(localStorage.getItem("eg_notify") || "true"),
-  sound: JSON.parse(localStorage.getItem("eg_sound") || "true"),
-  audio: new Audio("/static/sounds/alert.mp3"),
-};
+  // Auto refresh κάθε 60 δευτερόλεπτα
+  setInterval(refreshAllPanels, 60000);
+});
 
-function ensureAudio() {
-  EG.audio.volume = 0.9;
-  EG.audio.preload = "auto";
-  return EG.audio;
-}
-
-function triggerNotification(title, body) {
-  if (EG.sound) {
-    const a = ensureAudio();
-    try { a.currentTime = 0; a.play().catch(()=>{}); } catch {}
-  }
-  if (EG.notify && "Notification" in window && Notification.permission === "granted") {
-    const n = new Notification(title, { body, icon: "/public/icons/icon-192.png" });
-    setTimeout(() => n.close(), 6000);
-  }
-}
-
-function injectNotifyToggle() {
-  if (document.getElementById("eg-toggles")) return;
-  const wrap = document.createElement("div");
-  wrap.id = "eg-toggles";
-  wrap.style.cssText = `
-    position:fixed;right:14px;bottom:14px;z-index:9999;
-    background:#101010b5;color:#fff;padding:8px 12px;
-    border-radius:12px;font:500 13px system-ui;display:flex;gap:10px;align-items:center;
-  `;
-  wrap.innerHTML = `
-    <label><input type="checkbox" id="eg-notify" ${EG.notify ? "checked" : ""}>🔔</label>
-    <label><input type="checkbox" id="eg-sound" ${EG.sound ? "checked" : ""}>🎵</label>
-  `;
-  document.body.appendChild(wrap);
-  wrap.querySelector("#eg-notify").addEventListener("change", (e) => {
-    EG.notify = e.target.checked;
-    localStorage.setItem("eg_notify", JSON.stringify(EG.notify));
-    if (EG.notify) Notification.requestPermission();
-  });
-  wrap.querySelector("#eg-sound").addEventListener("change", (e) => {
-    EG.sound = e.target.checked;
-    localStorage.setItem("eg_sound", JSON.stringify(EG.sound));
-    if (EG.sound) ensureAudio();
+/* ============================================================
+   INITIALIZATION
+   ============================================================ */
+function initDashboard() {
+  const panels = document.querySelectorAll(".panel");
+  panels.forEach((panel, index) => {
+    panel.style.opacity = 0;
+    setTimeout(() => {
+      panel.style.transition = "opacity 0.6s ease-out";
+      panel.style.opacity = 1;
+    }, 150 * index);
   });
 }
 
-// ============================================================
-// Data Refreshers
-// ============================================================
-async function refreshSmartMoney() {
-  const el = document.getElementById("smartmoney-monitor");
-  if (!el) return;
+/* ============================================================
+   THEME TOGGLE (Dark / Light)
+   ============================================================ */
+function initThemeToggle() {
+  const btn = document.getElementById("theme-toggle");
+  const html = document.documentElement;
+  const icon = document.getElementById("theme-icon");
+
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    html.classList.toggle("dark");
+    const isDark = html.classList.contains("dark");
+
+    if (isDark) {
+      icon.style.color = "#3b82f6";
+      localStorage.setItem("theme", "dark");
+    } else {
+      icon.style.color = "#2563eb";
+      localStorage.setItem("theme", "light");
+    }
+  });
+
+  // Φόρτωση αρχικής κατάστασης
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "light") html.classList.remove("dark");
+}
+
+/* ============================================================
+   PANEL REFRESH LOGIC
+   ============================================================ */
+function refreshAllPanels() {
+  updateSmartMoneyPanel();
+  updateGoalMatrixPanel();
+  updateSystemStatusPanel();
+}
+
+/* ---------------- SMARTMONEY PANEL ---------------- */
+async function updateSmartMoneyPanel() {
+  const container = document.getElementById("smartmoney-content");
+  const dot = document.getElementById("smartmoney-status");
+
   try {
-    const res = await fetch("/api/smartmoney/alerts", { cache: "no-store" });
-    const data = await res.json();
-    el.innerHTML = data.alerts
-      .slice(0, 5)
-      .map(
-        (a) => `<div class="eg-log eg-ok">💰 ${a.league}: ${a.match} – ${a.money_flow}%</div>`
-      )
-      .join("");
-  } catch {
-    el.innerHTML = `<div class="eg-card-dim">SmartMoney offline</div>`;
+    const res = await fetch("/smartmoney_monitor");
+    if (!res.ok) throw new Error("SmartMoney API error");
+    const html = await res.text();
+    container.innerHTML = html;
+    dot.classList.add("active");
+    dot.classList.remove("error");
+  } catch (err) {
+    container.innerHTML = `<p class="placeholder"⚠️ Σφάλμα SmartMoney Engine</p>`;
+    dot.classList.add("error");
+    dot.classList.remove("active");
+    console.error("[EURO_GOALS] SmartMoney panel error:", err);
   }
 }
 
-async function refreshGoalMatrix() {
-  const el = document.getElementById("goalmatrix-heatmap");
-  if (!el) return;
+/* ---------------- GOALMATRIX PANEL ---------------- */
+async function updateGoalMatrixPanel() {
+  const container = document.getElementById("goalmatrix-content");
+  const dot = document.getElementById("goalmatrix-status");
+
   try {
-    const res = await fetch("/api/goalmatrix/summary", { cache: "no-store" });
-    const data = await res.json();
-    el.innerHTML = `
-      <div>Matches: ${data.total_matches}</div>
-      <div>Avg xG: ${data.avg_goals}</div>
-      <div>Status: ${data.status}</div>`;
-  } catch {
-    el.innerHTML = `<div class="eg-card-dim">GoalMatrix offline</div>`;
+    const res = await fetch("/goalmatrix_summary");
+    if (!res.ok) throw new Error("GoalMatrix API error");
+    const html = await res.text();
+    container.innerHTML = html;
+    dot.classList.add("active");
+    dot.classList.remove("error");
+  } catch (err) {
+    container.innerHTML = `<p class="placeholder">⚠️ Σφάλμα GoalMatrix Engine</p>`;
+    dot.classList.add("error");
+    dot.classList.remove("active");
+    console.error("[EURO_GOALS] GoalMatrix panel error:", err);
   }
 }
 
-async function refreshAlerts() {
-  const el = document.getElementById("alerts-history");
-  if (!el) return;
+/* ---------------- SYSTEM STATUS PANEL ---------------- */
+async function updateSystemStatusPanel() {
+  const container = document.getElementById("system-status-content");
+  const dot = document.getElementById("system-status-dot");
+
   try {
-    const res = await fetch("/api/alerts_feed", { cache: "no-store" });
-    const data = await res.json();
-    el.innerHTML = data
-      .slice(0, 5)
-      .map(
-        (a) => `<div class="eg-log eg-ok">[${a.time}] ${a.type} – ${a.desc}</div>`
-      )
-      .join("");
-    if (data.length) triggerNotification("New EURO_GOALS Alert", data[0].desc);
-  } catch {
-    el.innerHTML = `<div class="eg-card-dim">Alerts feed offline</div>`;
+    const res = await fetch("/system_status_html");
+    if (!res.ok) throw new Error("Status endpoint error");
+    const html = await res.text();
+    container.innerHTML = html;
+    dot.classList.add("active");
+    dot.classList.remove("error");
+  } catch (err) {
+    container.innerHTML = `<p class="placeholder">⚠️ Το σύστημα δεν ανταποκρίνεται</p>`;
+    dot.classList.add("error");
+    dot.classList.remove("active");
+    console.error("[EURO_GOALS] System status error:", err);
   }
 }
 
-async function refreshSystemHealth() {
-  const el = document.getElementById("system-health");
-  if (!el) return;
-  try {
-    const res = await fetch("/health", { cache: "no-store" });
-    const data = await res.json();
-    el.innerHTML = `
-      <img src="/static/icons/eg_logo.png" style="width:100px;">
-      <p style="opacity:.8;">✅ ${data.service}<br><small>${new Date().toLocaleTimeString()}</small></p>`;
-  } catch {
-    el.innerHTML = `<p style="color:#ef4444;">❌ System Offline</p>`;
-  }
-}
-
-// ============================================================
-// Unified Loop
-// ============================================================
-async function unifiedRefresh() {
-  await Promise.all([
-    refreshSmartMoney(),
-    refreshGoalMatrix(),
-    refreshAlerts(),
-    refreshSystemHealth(),
-  ]);
-}
-setInterval(unifiedRefresh, 30000);
-
-// ============================================================
-// Startup
-// ============================================================
-window.addEventListener("load", async () => {
-  injectNotifyToggle();
-  await unifiedRefresh();
-  console.log("[EURO_GOALS] ✅ main_unified.js initialized (v9.5.4)");
+/* ============================================================
+   UTILS
+   ============================================================ */
+window.addEventListener("focus", () => {
+  // Ανανεώνει panels όταν ο χρήστης επιστρέφει στο tab
+  refreshAllPanels();
 });

@@ -1,78 +1,171 @@
-/* EURO_GOALS v9.5.0 PRO+ – Unified Responsive Theme */
+/* ============================================================
+   EURO_GOALS PRO+ UNIFIED v9.5.x – Dark Blue Theme
+   Author: Pierros
+   ============================================================ */
 
-/* Base */
-:root{
-  --bg:#0d1117; --card:#111827; --card2:#1f2937;
-  --text:#e5e7eb; --muted:#9ca3af;
-  --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --pri:#3b82f6;
-  --br:#334155;
+:root {
+  --color-bg-dark: #0a0f1a;
+  --color-bg-darker: #111827;
+  --color-panel-bg: rgba(17, 24, 39, 0.8);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+  --color-text: #e5e7eb;
+  --color-placeholder: #6b7280;
 }
-body{ background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji"; }
 
-/* Container & header */
-.eg-container{ max-width:1100px; margin:16px auto; padding:16px; }
-.eg-header h1{ margin:0 0 4px; font-size:1.35rem; color:#60a5fa; }
-.eg-sub{ margin:0 0 16px; color:var(--muted); font-size:.95rem; }
-
-/* Grid (responsive) */
-.eg-grid{
-  display:grid; gap:12px;
-  grid-template-columns: repeat(1, minmax(0,1fr));
+/* Reset & Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-@media (min-width:640px){ .eg-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
-@media (min-width:1024px){ .eg-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); } }
 
-/* Cards */
-.eg-card{
-  background:linear-gradient(180deg, rgba(31,41,55,.9), rgba(17,24,39,.9));
-  border:1px solid var(--br);
-  border-radius:14px; padding:14px;
-  box-shadow:0 6px 18px rgba(0,0,0,.25);
-  transition:.2s ease; min-height:92px;
+body {
+  font-family: "Inter", "Roboto", sans-serif;
+  color: var(--color-text);
+  background: linear-gradient(to bottom, var(--color-bg-dark), var(--color-bg-darker));
+  overflow-x: hidden;
+  min-height: 100vh;
 }
-.eg-card:hover{ transform:translateY(-1px); }
-.eg-card-dim{ opacity:.7; text-align:center; padding:18px; }
 
-.eg-card-title{ font-weight:700; color:#93c5fd; margin-bottom:6px; }
-.eg-card-body{ font-weight:600; word-break:break-word; }
-.eg-ok .eg-card-body{ color:var(--ok); }
-.eg-warn .eg-card-body{ color:var(--warn); }
-.eg-bad .eg-card-body{ color:var(--bad); }
-
-/* Footer row */
-.eg-footer-row{
-  display:flex; gap:10px; align-items:center; justify-content:space-between;
-  margin-top:14px; flex-wrap:wrap;
+/* =======================================
+   PANEL DESIGN
+   ======================================= */
+.panel {
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
 }
-.eg-last{ color:var(--muted); font-size:.9rem; }
 
-/* Buttons */
-.eg-btn{
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:10px 14px; border-radius:12px; border:1px solid var(--br);
-  text-decoration:none; color:var(--text); font-weight:600; transition:.2s ease;
+.panel:hover {
+  border-color: var(--color-accent-hover);
+  box-shadow: 0 4px 25px rgba(37, 99, 235, 0.25);
+  transform: translateY(-2px);
 }
-.eg-btn:hover{ transform:translateY(-1px); }
-.eg-btn-primary{ background:var(--pri); border-color:transparent; }
-.eg-btn-secondary{ background:var(--card2); }
-.eg-btn-danger{ background:#991b1b; }
 
-/* Log box */
-.eg-logbox{
-  background:var(--card); border:1px solid var(--br);
-  border-radius:14px; padding:12px; height:60vh; overflow:auto;
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 }
-.eg-log{ margin:4px 0; padding:4px 6px; border-radius:8px; }
-.eg-ok{ color:var(--ok); }
-.eg-warn{ color:var(--warn); }
-.eg-bad{ color:var(--bad); }
 
-/* Actions row (Control Panel) */
-.eg-actions{
-  display:grid; gap:10px;
-  grid-template-columns:repeat(2, minmax(0,1fr));
-  margin-bottom:12px;
+.panel-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-accent);
 }
-@media (min-width:768px){ .eg-actions{ grid-template-columns:repeat(4, minmax(0,1fr)); } }
 
-.eg-note{ margin-top:8px; color:var(--muted); }
+.panel-body {
+  min-height: 120px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+/* =======================================
+   STATUS DOT
+   ======================================= */
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: gray;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.status-dot.active {
+  background: var(--color-accent);
+  box-shadow: 0 0 10px var(--color-accent);
+}
+
+.status-dot.error {
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+/* =======================================
+   PLACEHOLDER TEXT
+   ======================================= */
+.placeholder {
+  color: var(--color-placeholder);
+  font-style: italic;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* =======================================
+   ANIMATIONS
+   ======================================= */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.7s ease-out forwards;
+}
+
+/* =======================================
+   RESPONSIVE DESIGN
+   ======================================= */
+@media (max-width: 1024px) {
+  .panel {
+    padding: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .panel {
+    width: 95%;
+    margin: 0 auto;
+  }
+
+  .panel-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .panel-body {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .panel {
+    padding: 1rem;
+  }
+
+  header h1 {
+    font-size: 1rem;
+  }
+
+  .placeholder {
+    font-size: 0.85rem;
+  }
+}
+
+/* =======================================
+   SCROLLBAR (Custom look)
+   ======================================= */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-accent);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-hover);
+}
+::-webkit-scrollbar-track {
+  background: #0a0f1a;
+}

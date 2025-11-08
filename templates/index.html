@@ -1,68 +1,53 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="eg-grid">
+<!-- ================================
+     DASHBOARD LAYOUT
+================================ -->
+<section id="dashboard" class="space-y-8 animate-fadeIn">
 
-    <!-- SMARTMONEY -->
-    <section class="eg-card">
-        <h2 class="eg-card-title">SmartMoney Monitor</h2>
-        <div class="eg-card-body" id="smartmoney-monitor">
-            <div class="eg-card-dim">SmartMoney feed placeholder</div>
-        </div>
-        <div class="eg-footer-row">
-            <span class="eg-last">Live monitoring via SmartMoney Engine</span>
-        </div>
-    </section>
+  <!-- SMARTMONEY PANEL -->
+  <div id="smartmoney-panel" class="panel">
+    <div class="panel-header">
+      <h2>💰 SmartMoney Monitor</h2>
+      <span class="status-dot" id="smartmoney-status"></span>
+    </div>
+    <div class="panel-body" id="smartmoney-content">
+      <p class="placeholder">Φόρτωση δεδομένων SmartMoney...</p>
+    </div>
+  </div>
 
-    <!-- GOALMATRIX -->
-    <section class="eg-card">
-        <h2 class="eg-card-title">GoalMatrix</h2>
-        <div class="eg-card-body" id="goalmatrix-heatmap">
-            <div class="eg-card-dim">GoalMatrix heatmap placeholder</div>
-        </div>
-        <div class="eg-footer-row">
-            <span class="eg-last">Goal analytics powered by GoalMatrix Engine</span>
-        </div>
-    </section>
+  <!-- GOALMATRIX PANEL -->
+  <div id="goalmatrix-panel" class="panel">
+    <div class="panel-header">
+      <h2>🎯 GoalMatrix Engine</h2>
+      <span class="status-dot" id="goalmatrix-status"></span>
+    </div>
+    <div class="panel-body" id="goalmatrix-content">
+      <p class="placeholder">Ανάκτηση δεδομένων GoalMatrix...</p>
+    </div>
+  </div>
 
-    <!-- ALERT HISTORY -->
-    <section class="eg-card eg-warn" style="grid-column: span 2;">
-        <h2 class="eg-card-title">Alert History</h2>
-        <div class="eg-card-body" id="alerts-history">
-            <div class="eg-card-dim">Alerts list placeholder</div>
-        </div>
-        <div class="eg-footer-row">
-            <span class="eg-last">Historical and real-time alert logs</span>
-        </div>
-    </section>
+  <!-- SYSTEM STATUS PANEL -->
+  <div id="system-status-panel" class="panel">
+    <div class="panel-header">
+      <h2>🩺 System Status</h2>
+      <span class="status-dot" id="system-status-dot"></span>
+    </div>
+    <div class="panel-body" id="system-status-content">
+      <div id="system-status-data">
+        <p class="placeholder">Έλεγχος υπηρεσιών EURO_GOALS...</p>
+      </div>
+    </div>
+  </div>
 
-    <!-- SYSTEM HEALTH -->
-    <section class="eg-card eg-ok" style="grid-column: span 2; text-align:center;">
-        <h2 class="eg-card-title">System Health</h2>
-        <div class="eg-card-body center" id="system-health">
-            <img src="/static/icons/eg_logo.png" alt="EURO_GOALS PRO+" class="main-logo" style="width:120px; opacity:.95;">
-            <p style="opacity:.8;margin-top:10px;">System active – v9.5.2 PRO+</p>
-        </div>
-        <div class="eg-footer-row" style="justify-content:center;">
-            <span class="eg-last">Last updated: {{ timestamp if timestamp else '–' }}</span>
-        </div>
-    </section>
+</section>
 
-    <!-- CONTROL PANEL (προαιρετικό πεδίο) -->
-    <section class="eg-card" style="grid-column: span 2;">
-        <h2 class="eg-card-title">Control Panel</h2>
-        <div class="eg-card-body">
-            <div class="eg-actions">
-                <a href="#" class="eg-btn eg-btn-primary">Refresh Data</a>
-                <a href="#" class="eg-btn eg-btn-secondary">View Reports</a>
-                <a href="#" class="eg-btn eg-btn-danger">Force Sync</a>
-                <a href="#" class="eg-btn eg-btn-secondary">Settings</a>
-            </div>
-            <p class="eg-note">Quick actions for EURO_GOALS engines</p>
-        </div>
-    </section>
-
-</div>
+<!-- ================================
+     INFO / FOOTNOTE
+================================ -->
+<section id="info" class="mt-10 text-center text-gray-500 text-sm">
+  <p>Version 9.5.x PRO+ UNIFIED | Live Monitoring Mode Active</p>
+</section>
 
 {% endblock %}
-
