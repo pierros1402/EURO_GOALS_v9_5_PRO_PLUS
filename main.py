@@ -105,6 +105,19 @@ async def startup_event():
         print(f"[EURO_GOALS] ⚠️ Background init error: {e}")
 
 # ============================================================
+# DEBUG ROUTE — to verify correct instance
+# ============================================================
+@app.get("/__whoami")
+def whoami():
+    import os
+    return {
+        "version": APP_VERSION,
+        "cwd": os.getcwd(),
+        "templates_dir": os.path.abspath("templates"),
+        "index_exists": os.path.exists("templates/index.html")
+    }
+
+# ============================================================
 # LOCAL STARTUP
 # ============================================================
 if __name__ == "__main__":
