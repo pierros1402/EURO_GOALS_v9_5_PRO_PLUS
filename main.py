@@ -28,8 +28,17 @@ app = FastAPI(title=f"EURO_GOALS {APP_VERSION}")
 # ------------------------------------------------------------
 # Στατικά αρχεία & templates
 # ------------------------------------------------------------
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+
+print(f"[EURO_GOALS] Static Dir: {STATIC_DIR}")
+print(f"[EURO_GOALS] Templates Dir: {TEMPLATES_DIR}")
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # ============================================================
 # MAIN DASHBOARD
