@@ -9,6 +9,7 @@ from fastapi.templating import Jinja2Templates
 import asyncio
 import time
 import os
+print("=== [EURO_GOALS] Unified App 9.5.4 PRO+ — FULL DEPLOY ACTIVE ===")
 
 # ------------------------------------------------------------
 # Εσωτερικές υπηρεσίες (Render + Local compatibility)
