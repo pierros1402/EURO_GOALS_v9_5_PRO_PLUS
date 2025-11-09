@@ -1,153 +1,118 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0d1117" />
-  <title>EURO_GOALS PRO+ Unified Dashboard</title>
+  <!-- =========================
+       BASIC META / SEO
+  ========================== -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>EURO_GOALS PRO+ v9.5.4 Unified</title>
+  <meta name="description" content="EURO_GOALS PRO+ Unified Platform v9.5.4 — SmartMoney Engine & GoalMatrix Analytics" />
 
-  <link rel="manifest" href="/static/manifest.json">
-  <link rel="icon" href="/static/icons/eg_logo.png" type="image/png">
-  <link rel="apple-touch-icon" href="/static/icons/eurogoals_512.png">
+  <!-- =========================
+       THEME & PWA
+  ========================== -->
+  <meta name="theme-color" content="#0a84ff" />
+  <meta name="application-name" content="EURO_GOALS PRO+ Unified" />
+  <meta name="apple-mobile-web-app-title" content="EURO_GOALS PRO+" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <link rel="stylesheet" href="/static/css/unified_theme.css">
-  <script src="/static/js/theme_toggle.js"></script>
+  <!-- =========================
+       ICONS / MANIFEST
+  ========================== -->
+  <link rel="icon" href="/static/icons/eurogoals_512.png" sizes="512x512" />
+  <link rel="apple-touch-icon" href="/static/icons/eurogoals_512.png" />
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="shortcut icon" href="/static/icons/favicon.ico" type="image/x-icon" />
 
-  <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      transition: background 0.3s ease, color 0.3s ease;
-    }
-    :root {
-      --bg: #0d1117;
-      --panel-bg: #161b22;
-      --text: #c9d1d9;
-      --accent: #0a84ff;
-    }
-    .dashboard {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 16px;
-      padding: 20px;
-    }
-    header {
-      background: linear-gradient(90deg, #0a84ff40, #0a84ff10);
-      text-align: center;
-      padding: 15px;
-      color: var(--accent);
-      border-bottom: 1px solid #30363d;
-      font-size: 1.3rem;
-      font-weight: 600;
-    }
-    .panel {
-      background: var(--panel-bg);
-      border-radius: 12px;
-      padding: 15px;
-      box-shadow: 0 0 8px #0006;
-      transition: transform 0.2s ease;
-    }
-    .panel:hover {
-      transform: scale(1.01);
-    }
-    footer {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #6e7681;
-      border-top: 1px solid #30363d;
-      padding: 10px 0;
-      margin-top: 20px;
-    }
-    .accent {
-      color: var(--accent);
-    }
-    .button-bar {
-      text-align: center;
-      margin: 10px 0;
-    }
-    button {
-      background-color: var(--accent);
-      border: none;
-      color: white;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 500;
-    }
-    button:hover {
-      opacity: 0.85;
-    }
-    @media(max-width: 480px) {
-      header {
-        font-size: 1.1rem;
-      }
-      .dashboard {
-        grid-template-columns: 1fr;
-        padding: 10px;
-      }
-    }
-  </style>
+  <!-- =========================
+       FONTS & STYLES
+  ========================== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/unified_theme.css" />
+  <link rel="stylesheet" href="/static/css/panels.css" />
+  <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 
-<body>
-  <header>⚽ EURO_GOALS PRO+ Unified v9.5.x | SmartMoney + GoalMatrix</header>
-
-  <div class="button-bar">
-    <button onclick="toggleTheme()">🌓 Εναλλαγή Θέματος</button>
-  </div>
-
-  <main class="dashboard">
-    <div class="panel" id="system-summary">
-      <h3>🧠 System Summary</h3>
-      <p>Επισκόπηση λειτουργίας EURO_GOALS, API endpoints και real-time health.</p>
-      <p><strong>Version:</strong> {{ version }}</p>
-      <p><strong>Last Update:</strong> {{ timestamp }}</p>
+<body data-theme="dark">
+  <!-- =========================
+       HEADER
+  ========================== -->
+  <header class="system-header top-bar">
+    <div class="header-left">
+      <img src="/static/icons/eurogoals_512.png" alt="EURO_GOALS Logo" class="logo" />
+      <h1 class="app-title">EURO_GOALS PRO+ v9.5.4 Unified</h1>
     </div>
-
-    <div class="panel" id="goal-matrix">
-      <h3>🎯 GoalMatrix Panel</h3>
-      <p>Δείκτες απόδοσης και δυναμική ομάδων.</p>
-      <ul id="goal-data"><li>Φόρτωση δεδομένων...</li></ul>
+    <div class="header-right">
+      <button id="themeToggle" class="header-btn theme-btn">🌗 Θέμα</button>
+      <button id="openControlsBtn" class="header-btn">🩺 Έλεγχος</button>
+      <button id="quickRefresh" class="header-btn header-primary">⟳ Ανανέωση</button>
     </div>
+  </header>
 
-    <div class="panel" id="smartmoney">
-      <h3>💰 SmartMoney Monitor</h3>
-      <p>Παρακολούθηση αλλαγών odds και betting flows.</p>
-      <div id="smartmoney-data">Ενεργοποίηση feed...</div>
-    </div>
+  <hr class="header-divider" />
 
-    <div class="panel" id="heatmap">
-      <h3>🔥 Goal Heatmap</h3>
-      <canvas id="heatmapCanvas" width="300" height="200"></canvas>
-    </div>
+  <!-- =========================
+       SYSTEM SUMMARY
+  ========================== -->
+  <section class="system-summary">
+    {% include "partials/system_summary_bar.html" %}
+  </section>
+
+  <!-- =========================
+       DASHBOARD PANELS
+  ========================== -->
+  <main>
+    <section class="grid-panels">
+      <article class="card col-4">{% include "partials/system_status_panel.html" %}</article>
+      <article class="card col-4">{% include "partials/goal_matrix_panel.html" %}</article>
+      <article class="card col-4">{% include "partials/smartmoney_panel.html" %}</article>
+      <article class="card col-6">{% include "partials/alert_center.html" %}</article>
+      <article class="card col-6">
+        <h3>🔥 Goal Heatmap</h3>
+        <div id="heatmap_container" style="height:380px"></div>
+      </article>
+    </section>
   </main>
 
-  <footer>
-    © 2025 <strong>EURO_GOALS PRO+</strong> | Adaptive Dark UI • Smart Unified Engine v9.5.x
-  </footer>
+  <!-- =========================
+       QUICK LINKS
+  ========================== -->
+  <section style="text-align:center;margin:25px 0;">
+    <a href="/goal_matrix" class="link">🩺 Source Monitor</a> |
+    <a href="/goalmatrix" class="link">📊 Historical Dashboard</a> |
+    <a href="/goalmatrix_pro" class="link">⚙️ GoalMatrix PRO</a> |
+    <a href="/smartmoney_monitor" class="link">💰 SmartMoney Monitor</a>
+  </section>
+
+  {% include "partials/system_controls_modal.html" %}
+  <footer class="footer">© 2025 EURO_GOALS PRO+ | Unified Interface</footer>
+
+  <!-- =========================
+       SCRIPTS
+  ========================== -->
+  <script src="/static/js/ui_animations.js"></script>
+  <script src="/static/js/ui_controls.js"></script>
+  <script src="/static/js/system_summary.js"></script>
+  <script src="/static/js/goalmatrix_panel.js"></script>
+  <script src="/static/js/smartmoney_panel.js"></script>
+  <script src="/static/js/heatmap.js"></script>
+
+  <!-- NEW: Adaptive Theme Toggle (auto sync between tabs) -->
+  <script src="/static/js/theme_toggle.js"></script>
 
   <script>
-    function toggleTheme() {
-      document.body.classList.toggle('light');
-      if (document.body.classList.contains('light')) {
-        document.documentElement.style.setProperty('--bg', '#f3f4f6');
-        document.documentElement.style.setProperty('--panel-bg', '#ffffff');
-        document.documentElement.style.setProperty('--text', '#1a1a1a');
-        document.documentElement.style.setProperty('--accent', '#0078ff');
-      } else {
-        document.documentElement.style.setProperty('--bg', '#0d1117');
-        document.documentElement.style.setProperty('--panel-bg', '#161b22');
-        document.documentElement.style.setProperty('--text', '#c9d1d9');
-        document.documentElement.style.setProperty('--accent', '#0a84ff');
-      }
-    }
+    // Modal Controls
+    document.getElementById('openControlsBtn')?.addEventListener('click', () => {
+      document.getElementById('systemControlsModal')?.classList.add('open');
+    });
 
-    window.onload = () => {
-      console.log("✅ EURO_GOALS PRO+ Unified Dashboard Loaded");
-    };
+    // Refresh
+    document.getElementById('quickRefresh')?.addEventListener('click', () => location.reload(true));
   </script>
 </body>
 </html>

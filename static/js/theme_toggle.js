@@ -1,36 +1,66 @@
 // ============================================================
-// EURO_GOALS v9.5.0 PRO+
-// Adaptive Dark/Light Theme + Manual Toggle
+// EURO_GOALS PRO+ v9.5.4 – Adaptive Theme Controller
+// Auto Sync across Tabs + System Preference + Manual Toggle
 // ============================================================
 
-document.addEventListener("DOMContentLoaded", () => {
-  const html = document.documentElement;
-  const savedTheme = localStorage.getItem("eg_theme");
+(function () {
+  const STORAGE_KEY = "eg_theme";
+  const body = document.body;
+  const btn = document.getElementById("themeToggle");
 
-  // Apply saved or system preference
-  if (savedTheme) {
-    html.setAttribute("data-theme", savedTheme);
-  } else {
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    html.setAttribute("data-theme", prefersDark ? "dark" : "light");
+  // --- Detect current or system preference
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const savedTheme = localStorage.getItem(STORAGE_KEY);
+  const currentTheme = savedTheme || (prefersDark ? "dark" : "light");
+
+  body.dataset.theme = currentTheme;
+  localStorage.setItem(STORAGE_KEY, currentTheme);
+
+  // --- Update button label/icon
+  function updateButton(theme) {
+    if (!btn) return;
+    btn.textContent = theme === "dark" ? "☀️ Φωτεινό" : "🌙 Σκοτεινό";
+  }
+  updateButton(currentTheme);
+
+  // --- Manual toggle
+  if (btn) {
+    btn.addEventListener("click", () => {
+      const newTheme = body.dataset.theme === "dark" ? "light" : "dark";
+      applyTheme(newTheme, true);
+    });
   }
 
-  // Create floating toggle button
-  const btn = document.createElement("button");
-  btn.className = "theme-toggle-btn";
-  btn.title = "Toggle Dark/Light mode";
-  btn.innerHTML = getIcon(html.getAttribute("data-theme"));
-  document.body.appendChild(btn);
+  // --- Apply theme + broadcast to other tabs
+  function applyTheme(theme, broadcast = false) {
+    body.dataset.theme = theme;
+    localStorage.setItem(STORAGE_KEY, theme);
+    updateButton(theme);
+    if (broadcast) {
+      try {
+        localStorage.setItem("eg_theme_sync", JSON.stringify({ theme, time: Date.now() }));
+      } catch {}
+    }
+  }
 
-  btn.addEventListener("click", () => {
-    const current = html.getAttribute("data-theme");
-    const next = current === "dark" ? "light" : "dark";
-    html.setAttribute("data-theme", next);
-    localStorage.setItem("eg_theme", next);
-    btn.innerHTML = getIcon(next);
+  // --- Sync across tabs (listen for localStorage events)
+  window.addEventListener("storage", (e) => {
+    if (e.key === "eg_theme_sync" && e.newValue) {
+      try {
+        const data = JSON.parse(e.newValue);
+        if (data && data.theme && data.theme !== body.dataset.theme) {
+          applyTheme(data.theme, false);
+        }
+      } catch {}
+    }
   });
 
-  function getIcon(mode) {
-    return mode === "dark" ? "☀️" : "🌙";
-  }
-});
+  // --- React to system theme changes
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+    const systemTheme = e.matches ? "dark" : "light";
+    const userPref = localStorage.getItem(STORAGE_KEY);
+    if (!userPref) {
+      applyTheme(systemTheme, true);
+    }
+  });
+})();

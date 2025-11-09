@@ -1,0 +1,67 @@
+<!-- ==========================================================
+     EURO_GOALS PRO+ v9.5.4 — SMARTMONEY PRO ANALYTICS
+     ========================================================== -->
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartMoney PRO+ — EURO_GOALS v9.5.4</title>
+  <link rel="icon" href="/static/icons/eurogoals_512.png" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body data-theme="dark">
+  <header class="header-bar">
+    <div class="logo-section">
+      <img src="/static/icons/eurogoals_512.png" alt="Logo" class="logo-icon" />
+      <div>
+        <div class="logo-text">SMARTMONEY PRO+</div>
+        <div class="version">v9.5.4 | EURO_GOALS</div>
+      </div>
+    </div>
+    <div class="status-indicators">
+      <div id="led-odds" class="led gray"></div>
+      <div id="led-depth" class="led gray"></div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="grid-container">
+      <div class="card wide">
+        <h2>💰 SmartMoney Active Alerts</h2>
+        <div class="card-body">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th>Match</th><th>League</th><th>Movement</th><th>Money Flow</th><th>Last 5m</th><th>Score</th><th>Signal</th>
+              </tr>
+            </thead>
+            <tbody id="sm-alerts"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>System Summary</h2>
+        <div class="card-body">
+          <p id="sm-status">Status: --</p>
+          <p id="sm-last">Last Update: --</p>
+          <p id="sm-count">Alerts: --</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Provider Health</h2>
+        <div class="card-body">
+          <p>Odds Provider: <span id="odds_health">--</span></p>
+          <p>Depth Provider: <span id="depth_health">--</span></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer-bar">© 2025 EURO_GOALS PRO+ | SmartMoney PRO Analytics</footer>
+  <script src="/static/js/smartmoney_panel.js"></script>
+</body>
+</html>

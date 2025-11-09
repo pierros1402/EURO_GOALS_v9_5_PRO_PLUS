@@ -1,5 +1,5 @@
 # =====================================================
-# EURO_GOALS v9.5.4 PRO+ — Clean Requirements for Render
+# EURO_GOALS v9.5.4 PRO+ — Clean UTF-8 Requirements
 # =====================================================
 
 # --- Core Framework ---

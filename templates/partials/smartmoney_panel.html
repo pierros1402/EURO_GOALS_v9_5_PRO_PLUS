@@ -1,21 +1,49 @@
-<div id="smartmoney-panel" class="card mt-4 shadow-md rounded-2xl p-4 bg-white">
-  <div class="flex justify-between items-center mb-2">
-    <h2 class="font-semibold text-lg">💰 SmartMoney Alerts</h2>
-    <span id="smartmoney-status" class="text-sm text-gray-500">Loading...</span>
+<!-- ============================================================
+     EURO_GOALS PRO+ v9.5.4 – SmartMoney Panel
+     Παρακολουθεί Bet365 / Stoiximan / OPAP odds movements
+     ============================================================ -->
+
+<section class="card smartmoney-panel">
+  <header class="flex justify-between items-center mb-2">
+    <h3 class="text-lg font-semibold text-green-400">💰 SmartMoney Monitor</h3>
+    <span id="smartmoney-status-pill" class="px-2 py-1 rounded text-xs bg-gray-600 text-white">...</span>
+  </header>
+
+  <div class="flex justify-between text-sm mb-2 text-gray-300">
+    <span id="smartmoney-count">Alerts: 0</span>
+    <span id="smartmoney-last">Last update: --:--:--</span>
   </div>
-  <div class="overflow-x-auto">
-    <table class="table-auto w-full text-sm text-left border-t">
-      <thead>
-        <tr class="border-b text-gray-700">
-          <th class="py-2 px-3">League</th>
-          <th class="py-2 px-3">Match</th>
-          <th class="py-2 px-3">Money Flow %</th>
-          <th class="py-2 px-3">Odds</th>
+
+  <div class="table-container" style="overflow-x:auto; max-height:420px;">
+    <table class="w-full text-sm border-collapse">
+      <thead class="bg-gray-800 text-green-400 sticky top-0">
+        <tr>
+          <th class="p-2 text-left">Bookmaker</th>
+          <th class="p-2 text-left">League</th>
+          <th class="p-2 text-left">Match</th>
+          <th class="p-2 text-left">Type</th>
+          <th class="p-2 text-right">Open</th>
+          <th class="p-2 text-right">Current</th>
+          <th class="p-2 text-right">Δ</th>
         </tr>
       </thead>
-      <tbody id="smartmoney-data">
-        <tr><td colspan="4" class="text-center py-3 text-gray-400">Loading data...</td></tr>
+      <tbody id="smartmoney-body" class="divide-y divide-gray-700 text-gray-200">
+        <tr>
+          <td colspan="7" class="p-2 text-center text-gray-400">Loading SmartMoney data...</td>
+        </tr>
       </tbody>
     </table>
   </div>
-</div>
+
+  <footer class="text-xs text-gray-500 mt-2">
+    * Εμφανίζονται αγώνες με μεταβολή ≥ ±0.20 στις αποδόσεις.
+  </footer>
+
+  <!-- Include alert sound -->
+  <audio id="smartmoney-audio" preload="auto">
+    <source src="/static/audio/alert.mp3" type="audio/mpeg">
+  </audio>
+</section>
+
+<!-- Attach JS -->
+<script src="/static/js/smartmoney_panel.js"></script>

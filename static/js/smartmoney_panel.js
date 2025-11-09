@@ -1,92 +1,121 @@
-// static/js/smartmoney_panel.js
-(function () {
-  const elBody = document.getElementById("smn-body");
-  const elStatus = document.getElementById("smn-status-pill");
-  const elProvOdds = document.getElementById("smn-provider-odds");
-  const elProvDepth = document.getElementById("smn-provider-depth");
-  const elLast = document.getElementById("smn-last-updated");
-  const elBtn = document.getElementById("smn-refresh");
-  const elSearch = document.getElementById("smn-search");
+// ============================================================
+// SMARTMONEY PANEL JS v3.0.0 — EURO_GOALS PRO+ Unified
+// Multi-source Odds Tracker (Bet365 / Stoiximan / OPAP)
+// Alert >= 0.20 (visual blink + sound)
+// ============================================================
 
-  async function fetchJSON(url) {
-    const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) throw new Error(r.statusText);
-    return await r.json();
+(async function () {
+  const elBody = document.getElementById("smartmoney-body");
+  const elStatus = document.getElementById("smartmoney-status-pill");
+  const elCount = document.getElementById("smartmoney-count");
+  const elLast = document.getElementById("smartmoney-last");
+  const audioAlert = new Audio("/static/sounds/alert.mp3");
+  audioAlert.volume = 0.7;
+
+  let lastAlerts = {};
+
+  async function getJSON(url) {
+    try {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error(r.statusText);
+      return await r.json();
+    } catch (e) {
+      console.error("[SmartMoney] Fetch error:", e);
+      return null;
+    }
   }
 
-  function renderRows(items, q) {
-    const ql = (q || "").trim().toLowerCase();
-    const filtered = items.filter(x => {
-      if (!ql) return true;
-      const txt = `${x.home} ${x.away} ${x.league}`.toLowerCase();
-      return txt.includes(ql);
-    });
+  function blinkRow(row) {
+    row.classList.add("blink");
+    setTimeout(() => row.classList.remove("blink"), 2500);
+  }
 
-    if (filtered.length === 0) {
-      elBody.innerHTML = `<tr><td class="p-2" colspan="8">No results</td></tr>`;
+  async function refreshPanel() {
+    const summary = await getJSON("/api/smartmoney/summary");
+    const data = await getJSON("/api/smartmoney/alerts");
+
+    if (!summary || !data) {
+      elStatus.textContent = "Failing";
+      elStatus.className = "px-2 py-1 rounded text-xs bg-red-700 text-white";
+      elBody.innerHTML = `<tr><td colspan="8" class="p-2 text-center text-red-300">⚠️ SmartMoney feed unavailable</td></tr>`;
       return;
     }
 
-    elBody.innerHTML = filtered.map(x => `
-      <tr>
-        <td class="p-2 whitespace-nowrap">${x.kickoff ?? "—"}</td>
-        <td class="p-2">${x.home ?? "—"} – ${x.away ?? "—"}</td>
-        <td class="p-2">${x.league ?? "—"}</td>
-        <td class="p-2">${x.movement ?? 0}</td>
-        <td class="p-2">${x.money_flow ?? 0}</td>
-        <td class="p-2">${x.last5m ?? 0}</td>
-        <td class="p-2 font-semibold">${x.score ?? 0}</td>
-        <td class="p-2">
-          <span class="px-2 py-1 rounded text-xs ${x.signal === "STRONG" ? "bg-red-200" : "bg-amber-200"}">
-            ${x.signal}
-          </span>
+    elStatus.textContent = summary.status;
+    elStatus.className =
+      "px-2 py-1 rounded text-xs " +
+      (summary.status === "OK"
+        ? "bg-green-700 text-white"
+        : summary.status === "Degraded"
+        ? "bg-amber-600 text-white"
+        : "bg-red-700 text-white");
+
+    elCount.textContent = `Alerts: ${summary.count ?? 0}`;
+    elLast.textContent = `Last update: ${new Date(
+      (summary.last_updated_ts ?? 0) * 1000
+    ).toLocaleTimeString("el-GR")}`;
+
+    const alerts = data.alerts || [];
+    if (!alerts.length) {
+      elBody.innerHTML = `<tr><td colspan="8" class="p-2 text-center text-gray-400">No active SmartMoney alerts</td></tr>`;
+      return;
+    }
+
+    elBody.innerHTML = "";
+    for (const a of alerts) {
+      const diff = a.movement ?? 0;
+      const diffAbs = Math.abs(diff);
+      const isUp = diff > 0;
+      const diffClass =
+        diffAbs >= 0.2
+          ? isUp
+            ? "text-green-400 font-bold"
+            : "text-red-500 font-bold"
+          : "text-gray-300";
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td class="p-2">${a.source || "—"}</td>
+        <td class="p-2">${a.league || "-"}</td>
+        <td class="p-2">${a.match || "-"}</td>
+        <td class="p-2">${a.market || a.type || "—"}</td>
+        <td class="p-2">${a.open?.toFixed?.(2) ?? "-"}</td>
+        <td class="p-2">${a.current?.toFixed?.(2) ?? "-"}</td>
+        <td class="p-2 ${diffClass}">
+          ${isUp ? "▲" : "▼"} ${diffAbs.toFixed(2)}
         </td>
-      </tr>
-    `).join("");
-  }
+        <td class="p-2 text-xs text-gray-400">${a.timestamp || ""}</td>
+      `;
 
-  async function refreshAll() {
-    try {
-      const [summary, alerts] = await Promise.all([
-        fetchJSON("/api/smartmoney/summary"),
-        fetchJSON("/api/smartmoney/alerts"),
-      ]);
+      const prev = lastAlerts[a.match + a.source];
+      const changed =
+        !prev || Math.abs(prev - diff) >= 0.2 || prev * diff < 0;
 
-      // Header info
-      elStatus.textContent = summary.status ?? "—";
-      elStatus.className = "px-2 py-1 rounded text-xs " + (
-        summary.status === "OK" ? "bg-green-200" :
-        summary.status === "Degraded" ? "bg-amber-200" : "bg-red-200"
-      );
+      if (changed && diffAbs >= 0.2) {
+        blinkRow(row);
+        try {
+          audioAlert.currentTime = 0;
+          await audioAlert.play();
+        } catch (e) {
+          console.warn("[SmartMoney] Audio blocked:", e);
+        }
+      }
 
-      elProvOdds.textContent = `Odds Provider: ${summary.provider_health?.odds ? "OK" : "Failing"}`;
-      elProvDepth.textContent = `Depth Provider: ${summary.provider_health?.depth ? "OK" : "Failing"}`;
-      elLast.textContent = "Last Updated: " + new Date((summary.last_updated_ts ?? 0) * 1000).toLocaleTimeString();
-
-      // Table
-      renderRows(alerts.items || [], elSearch.value);
-    } catch (e) {
-      elBody.innerHTML = `<tr><td class="p-2" colspan="8">Error loading data</td></tr>`;
-      elStatus.textContent = "Failing";
-      elStatus.className = "px-2 py-1 rounded text-xs bg-red-200";
-      elProvOdds.textContent = "Odds Provider: —";
-      elProvDepth.textContent = "Depth Provider: —";
-      elLast.textContent = "Last Updated: —";
+      elBody.appendChild(row);
+      lastAlerts[a.match + a.source] = diff;
     }
   }
 
-  elBtn?.addEventListener("click", refreshAll);
-  elSearch?.addEventListener("input", () => {
-    // re-filter existing rows without re-fetch
-    const rows = Array.from(elBody.querySelectorAll("tr"));
-    if (rows.length && rows[0].querySelectorAll("td").length === 8) {
-      // cheap re-render: keep cached items? For now re-fetch to keep simple.
-      refreshAll();
-    } else {
-      refreshAll();
-    }
-  });
+  await refreshPanel();
+  setInterval(refreshPanel, 30000);
 
-  refreshAll();
-  setInterval(refreshAll, 30000); // 30s
+  const style = document.createElement("style");
+  style.textContent = `
+    .blink { animation: blinkEffect 1s ease-in-out 3; }
+    @keyframes blinkEffect {
+      0%, 100% { background-color: transparent; }
+      50% { background-color: rgba(255, 0, 0, 0.25); }
+    }
+  `;
+  document.head.appendChild(style);
 })();

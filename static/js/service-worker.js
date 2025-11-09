@@ -1,42 +1,41 @@
 /* ============================================================
-   EURO_GOALS PRO+ UNIFIED – Service Worker (v9.5.x)
+   EURO_GOALS PRO+ UNIFIED – Service Worker (Stable v9.5.x)
    Strategy:
    - HTML: network-first with offline fallback
    - Static (JS/CSS/Icons): cache-first with versioned precache
-   - Offline fallback: /public/offline.html (and /offline.html as backup)
+   - APIs: network-first with runtime cache
+   - Push & Notification click handling
    ============================================================ */
 
-const SW_VERSION = "egpwa-v9.5.x-dblue-001";
+const SW_VERSION = "egpwa-v9.5.x-unified-002";
 const PRECACHE = `eg-precache-${SW_VERSION}`;
-const RUNTIME = `eg-runtime-${SW_VERSION}`;
+const RUNTIME  = `eg-runtime-${SW_VERSION}`;
 
-// --- Core assets to precache (must be fast, small, stable)
+// --- Core assets to precache (must exist & be lightweight)
 const CORE_ASSETS = [
-  "/",                            // main route
-  "/public/offline.html",         // preferred offline fallback
-  "/offline.html",                // backup path (in case of different mount)
+  "/",                             // main route
+  "/offline.html",                 // backup offline
+  "/static/css/style.css",
   "/static/css/unified_theme.css",
+  "/static/js/system_status.js",
   "/static/js/main_unified.js",
-  "/static/icons/icon-192.png",
-  "/static/icons/icon-512.png",
-
-  // manifest: try both paths to be safe
-  "/public/manifest.webmanifest",
-  "/manifest.webmanifest",
+  "/static/icons/eg_logo.png",
+  "/static/icons/eurogoals_512.png",
+  "/static/manifest.json"
 ];
 
-// Optional: add API endpoints you want available offline as last-known
+// --- Optional: frequently used endpoints for offline cache
 const OPTIONAL_PREFETCH = [
   "/system_status_html",
   "/goalmatrix_summary",
-  "/smartmoney_monitor",
+  "/smartmoney_monitor"
 ];
 
-// Utility: cache a list of URLs (unique, ignore failures)
+// Utility helper
 async function addAllQuiet(cache, urls) {
   for (const url of [...new Set(urls)]) {
     try { await cache.add(new Request(url, { cache: "no-store" })); }
-    catch (_e) { /* ignore individual failures */ }
+    catch (_e) { /* skip errors */ }
   }
 }
 
@@ -46,7 +45,6 @@ self.addEventListener("install", (event) => {
     const cache = await caches.open(PRECACHE);
     await addAllQuiet(cache, CORE_ASSETS);
     await addAllQuiet(cache, OPTIONAL_PREFETCH);
-    // Take control immediately on next load
     await self.skipWaiting();
   })());
 });
@@ -54,7 +52,6 @@ self.addEventListener("install", (event) => {
 /* ---------------- Activate ---------------- */
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
-    // Cleanup old caches
     const names = await caches.keys();
     await Promise.all(
       names
@@ -70,10 +67,9 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Only handle GET
   if (request.method !== "GET") return;
 
-  // HTML navigation requests → network-first with offline fallback
+  // ---------- HTML navigation (network-first)
   const isHTML = request.mode === "navigate" ||
                  (request.headers.get("accept") || "").includes("text/html");
 
@@ -81,17 +77,13 @@ self.addEventListener("fetch", (event) => {
     event.respondWith((async () => {
       try {
         const fresh = await fetch(request, { cache: "no-store" });
-        // Optionally update runtime cache with latest HTML
         const cache = await caches.open(RUNTIME);
         cache.put(request, fresh.clone());
         return fresh;
-      } catch (_err) {
-        // Try cache
+      } catch {
         const cache = await caches.open(PRECACHE);
-        const cached = await cache.match(request) || await cache.match("/");
-        if (cached) return cached;
-        // Offline fallback
-        return (await cache.match("/public/offline.html")) ||
+        return (await cache.match(request)) ||
+               (await cache.match("/")) ||
                (await cache.match("/offline.html")) ||
                new Response("Offline", { status: 503, headers: { "Content-Type": "text/plain" }});
       }
@@ -99,18 +91,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets (CSS/JS/Icons/Manifest) → cache-first
+  // ---------- Static assets (cache-first)
   const isStatic =
     url.pathname.startsWith("/static/") ||
-    url.pathname.endsWith(".webmanifest") ||
-    url.pathname.endsWith(".json") ||
-    url.pathname.endsWith(".png") ||
-    url.pathname.endsWith(".ico") ||
-    url.pathname.endsWith(".svg") ||
-    url.pathname.endsWith(".jpg") ||
-    url.pathname.endsWith(".jpeg") ||
-    url.pathname.endsWith(".css") ||
-    url.pathname.endsWith(".js");
+    [".webmanifest", ".json", ".png", ".ico", ".svg", ".jpg", ".jpeg", ".css", ".js"]
+      .some(ext => url.pathname.endsWith(ext));
 
   if (isStatic) {
     event.respondWith((async () => {
@@ -119,78 +104,64 @@ self.addEventListener("fetch", (event) => {
       if (cached) return cached;
       try {
         const fresh = await fetch(request);
-        // Only cache successful, same-origin responses
-        if (fresh.ok && url.origin === self.location.origin) {
-          cache.put(request, fresh.clone());
-        }
+        if (fresh.ok && url.origin === self.location.origin) cache.put(request, fresh.clone());
         return fresh;
-      } catch (_err) {
-        // last resort: any offline fallback
-        const off = await caches.match("/public/offline.html") ||
-                    await caches.match("/offline.html");
-        return off || new Response("", { status: 504 });
+      } catch {
+        return (await caches.match("/offline.html")) ||
+               new Response("", { status: 504 });
       }
     })());
     return;
   }
 
-  // Other GET (e.g., JSON APIs) → network-first with runtime cache fallback
+  // ---------- Other GET (APIs etc.): network-first
   event.respondWith((async () => {
     const cache = await caches.open(RUNTIME);
     try {
       const fresh = await fetch(request, { cache: "no-store" });
-      if (fresh.ok && url.origin === self.location.origin) {
-        cache.put(request, fresh.clone());
-      }
+      if (fresh.ok && url.origin === self.location.origin) cache.put(request, fresh.clone());
       return fresh;
-    } catch (_err) {
+    } catch {
       const cached = await cache.match(request);
       if (cached) return cached;
-      // generic offline response
-      const off = await caches.match("/public/offline.html") ||
-                  await caches.match("/offline.html");
-      return off || new Response(JSON.stringify({ offline: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-      });
+      return (await caches.match("/offline.html")) ||
+             new Response(JSON.stringify({ offline: true }), {
+               status: 200,
+               headers: { "Content-Type": "application/json" }
+             });
     }
   })());
 });
 
-/* ---------------- Client Messages (for updates) ---------------- */
+/* ---------------- Messages ---------------- */
 self.addEventListener("message", (event) => {
-  const { type } = event.data || {};
-  if (type === "SKIP_WAITING") {
-    self.skipWaiting();
-  }
+  if ((event.data || {}).type === "SKIP_WAITING") self.skipWaiting();
 });
 
-/* ---------------- Optional: Push Notifications ---------------- */
+/* ---------------- Push Notifications ---------------- */
 self.addEventListener("push", (event) => {
   try {
     const data = event.data ? event.data.json() : {};
     const title = data.title || "EURO_GOALS Alert";
     const body  = data.body  || "New update available";
-    const icon  = data.icon  || "/static/icons/icon-192.png";
+    const icon  = data.icon  || "/static/icons/eg_logo.png";
     const tag   = data.tag   || "euro-goals";
     event.waitUntil(self.registration.showNotification(title, { body, icon, tag }));
-  } catch (_e) {
-    // silent
-  }
+  } catch {}
 });
 
-/* ---------------- Optional: Notification Click ---------------- */
+/* ---------------- Notification Click ---------------- */
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil((async () => {
-    const allClients = await clients.matchAll({ type: "window", includeUncontrolled: true });
-    const targetUrl = "/"; // open dashboard
-    const opened = allClients.find((c) => (c.url || "").includes(self.location.origin));
+    const all = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    const targetUrl = "/";
+    const opened = all.find((c) => (c.url || "").includes(self.location.origin));
     if (opened) {
       opened.focus();
       opened.postMessage({ type: "FOCUS_FROM_NOTIFICATION" });
-      return;
+    } else {
+      await clients.openWindow(targetUrl);
     }
-    await clients.openWindow(targetUrl);
   })());
 });

@@ -1,152 +1,246 @@
 /* ============================================================
-   EURO_GOALS PRO+ Unified Theme (v9.5.x)
+   EURO_GOALS PRO+ Unified Theme v9.5.4 PRO+
+   Adaptive Dark/Light + Unified Panels Integration
    ============================================================ */
 
 :root {
-  --bg: #0d1117;
-  --panel-bg: #161b22;
-  --text: #c9d1d9;
-  --accent: #0a84ff;
-  --shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  --bg-dark: #0b1420;
+  --bg-light: #f3f6fa;
+  --bg-panel-dark: rgba(15, 25, 40, 0.85);
+  --bg-panel-light: #ffffff;
+  --text-dark: #d8e2ef;
+  --text-light: #1a1a1a;
+  --accent: #1162ff;
+  --card-radius: 16px;
+  --border-light: rgba(255, 255, 255, 0.05);
+  --border-dark: rgba(0, 0, 0, 0.1);
+  --shadow-dark: 0 10px 25px rgba(0, 0, 0, 0.35);
+  --shadow-light: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================================
+   BODY & GLOBAL
+============================================================ */
+body[data-theme="dark"] {
+  background: radial-gradient(circle at top left, #071018 0%, #0a1724 100%);
+  color: var(--text-dark);
+}
+body[data-theme="light"] {
+  background: linear-gradient(180deg, #e9eef5 0%, #fefefe 100%);
+  color: var(--text-light);
 }
 
 body {
+  font-family: "Inter", "Segoe UI", Roboto, sans-serif;
   margin: 0;
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: "Segoe UI", Roboto, Arial, sans-serif;
-  transition: background 0.3s ease, color 0.3s ease;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: 0.2s;
+}
+a:hover {
+  color: #00b7ff;
 }
 
 /* ============================================================
-   HEADER
-   ============================================================ */
-header {
-  background: linear-gradient(90deg, #0a84ff30, #0a84ff10);
-  text-align: center;
-  padding: 16px;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 0.3px;
-  border-bottom: 1px solid #30363d;
-  backdrop-filter: blur(4px);
+   HEADER / TOOLBAR
+============================================================ */
+.system-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: linear-gradient(90deg, #08101f, #0a1830);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 10;
 }
 
-/* ============================================================
-   DASHBOARD GRID
-   ============================================================ */
-.dashboard {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 18px;
-  padding: 20px;
-  transition: all 0.3s ease;
+body[data-theme="light"] .system-header {
+  background: linear-gradient(90deg, #f9fbff, #dfe7f3);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
 
-.panel {
-  background-color: var(--panel-bg);
-  border-radius: 14px;
-  padding: 15px 18px;
-  box-shadow: var(--shadow);
-  transition: all 0.25s ease-in-out;
-  border: 1px solid #222;
+.system-header .logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
 }
 
-.panel:hover {
-  transform: scale(1.01);
-  border-color: var(--accent);
-  box-shadow: 0 0 12px rgba(10, 132, 255, 0.4);
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.panel h3 {
-  color: var(--accent);
-  margin-top: 0;
-  font-size: 1.1rem;
+.app-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #d3e0ff;
+  white-space: nowrap;
 }
 
-.panel p, .panel li {
-  line-height: 1.4;
-  font-size: 0.95rem;
+body[data-theme="light"] .app-title {
+  color: #0b1830;
 }
 
-/* ============================================================
-   BUTTONS
-   ============================================================ */
-.button-bar {
-  text-align: center;
-  margin: 12px 0;
+.header-right {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-button {
-  background-color: var(--accent);
-  color: white;
-  border: none;
+.header-btn {
+  background: #1d2b45;
+  color: #d0e0ff;
+  border: 1px solid #2c3e63;
   border-radius: 6px;
-  padding: 8px 15px;
+  padding: 6px 14px;
+  font-size: 0.9rem;
   cursor: pointer;
-  font-weight: 500;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: all 0.25s ease;
+}
+.header-btn:hover {
+  background: #243b61;
+  transform: translateY(-1px);
 }
 
-button:hover {
-  background-color: #0070e0;
-  transform: scale(1.03);
+body[data-theme="light"] .header-btn {
+  background: #e8edf6;
+  color: #222;
+  border: 1px solid #bfcfe8;
+}
+body[data-theme="light"] .header-btn:hover {
+  background: #dce7f9;
+}
+
+/* Divider */
+.header-divider {
+  border: none;
+  border-top: 1px solid #2c3e63;
+  margin: 0;
+}
+body[data-theme="light"] .header-divider {
+  border-top: 1px solid #cfd8e8;
+}
+
+/* ============================================================
+   GRID / PANELS
+============================================================ */
+.grid-panels {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  grid-template-columns: repeat(12, 1fr);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.col-4 {
+  grid-column: span 4;
+}
+.col-6 {
+  grid-column: span 6;
+}
+.col-12 {
+  grid-column: span 12;
+}
+
+@media (max-width: 1200px) {
+  .col-4 {
+    grid-column: span 6;
+  }
+  .col-6 {
+    grid-column: span 12;
+  }
+}
+@media (max-width: 820px) {
+  .col-4,
+  .col-6 {
+    grid-column: span 12;
+  }
+}
+
+/* Panel base */
+.card {
+  border-radius: var(--card-radius);
+  padding: 16px;
+  transition: 0.2s;
+  box-shadow: var(--shadow-dark);
+  background: var(--bg-panel-dark);
+  border: 1px solid var(--border-light);
+}
+body[data-theme="light"] .card {
+  background: var(--bg-panel-light);
+  border: 1px solid var(--border-dark);
+  box-shadow: var(--shadow-light);
+}
+.card:hover {
+  transform: scale(1.01);
+}
+
+/* ============================================================
+   SYSTEM SUMMARY
+============================================================ */
+.system-summary {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  background: rgba(20, 30, 50, 0.6);
+  border-radius: 10px;
+  color: var(--text-dark);
+}
+body[data-theme="light"] .system-summary {
+  background: #edf3ff;
+  color: #222;
 }
 
 /* ============================================================
    FOOTER
-   ============================================================ */
-footer {
+============================================================ */
+footer.footer {
   text-align: center;
-  padding: 12px;
-  font-size: 0.85rem;
-  color: #7a818a;
-  border-top: 1px solid #30363d;
-  background-color: var(--panel-bg);
+  font-size: 0.8rem;
+  padding: 15px;
+  color: #aaa;
+  margin-top: 30px;
+}
+body[data-theme="light"] footer.footer {
+  color: #666;
 }
 
 /* ============================================================
-   LIGHT THEME MODE
-   ============================================================ */
-body.light {
-  --bg: #f3f4f6;
-  --panel-bg: #ffffff;
-  --text: #1a1a1a;
-  --accent: #0078ff;
-  --shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+   SCROLLBARS
+============================================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
-
-body.light header {
-  background: linear-gradient(90deg, #0078ff25, #0078ff05);
-  border-bottom: 1px solid #ccc;
+::-webkit-scrollbar-track {
+  background: #0b1420;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+body[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #eef2f8;
+}
+body[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #ccd5e2;
 }
 
 /* ============================================================
-   RESPONSIVE DESIGN
-   ============================================================ */
-@media (max-width: 1024px) {
-  .dashboard {
-    padding: 15px;
-  }
-}
-
-@media (max-width: 768px) {
-  header {
-    font-size: 1.1rem;
-  }
-  .dashboard {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .panel {
-    padding: 12px;
-  }
-  .panel h3 {
-    font-size: 1rem;
-  }
+   TRANSITIONS
+============================================================ */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }

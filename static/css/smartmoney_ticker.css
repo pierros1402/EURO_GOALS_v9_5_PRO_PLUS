@@ -1,0 +1,22 @@
+#ticker-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  height: 110px;
+  overflow-y: hidden;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+.ticker-item {
+  width: 100%;
+  font-size: 15px;
+  padding: 4px 0;
+  animation: slideIn 0.5s ease;
+  font-weight: 600;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
