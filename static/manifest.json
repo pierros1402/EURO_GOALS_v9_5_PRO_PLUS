@@ -1,19 +1,25 @@
 {
   "name": "EURO_GOALS PRO+ Unified",
   "short_name": "EURO_GOALS",
-  "description": "EURO_GOALS PRO+ Unified v9.5.x — SmartMoney Engine, GoalMatrix Analytics & Alerts Dashboard",
+  "description": "EURO_GOALS PRO+ Unified Expansion v9.5.5 — SmartMoney Engine, GoalMatrix Analytics, Heatmap & Historical System.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0b0f17",
+  "background_color": "#0a0f1a",
   "theme_color": "#0a84ff",
   "categories": ["sports", "analytics", "dashboard"],
 
   "icons": [
     {
-      "src": "/static/icons/eg_logo.png",
+      "src": "/static/icons/icon-192.png",
       "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
@@ -21,7 +27,7 @@
       "src": "/static/icons/eurogoals_512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
 
@@ -44,26 +50,26 @@
     {
       "name": "SmartMoney Monitor",
       "short_name": "SmartMoney",
-      "url": "/#smartmoney",
-      "icons": [{ "src": "/static/icons/eg_logo.png", "sizes": "192x192" }]
+      "url": "/smartmoney_monitor",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "GoalMatrix",
+      "name": "GoalMatrix Panel",
       "short_name": "GoalMatrix",
       "url": "/#goalmatrix",
-      "icons": [{ "src": "/static/icons/eg_logo.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Alerts",
-      "short_name": "Alerts",
-      "url": "/#alerts",
-      "icons": [{ "src": "/static/icons/eg_logo.png", "sizes": "192x192" }]
+      "name": "Heatmap View",
+      "short_name": "Heatmap",
+      "url": "/heatmap",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "System Status",
-      "short_name": "Status",
-      "url": "/#status",
-      "icons": [{ "src": "/static/icons/eg_logo.png", "sizes": "192x192" }]
+      "name": "Historical Data",
+      "short_name": "History",
+      "url": "/history_unified",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

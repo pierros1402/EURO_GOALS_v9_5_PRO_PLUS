@@ -1,6 +1,6 @@
 // ============================================================
-// EURO_GOALS PRO+ v9.5.4 – Adaptive Theme Controller
-// Auto Sync across Tabs + System Preference + Manual Toggle
+// EURO_GOALS v9.5.5 PRO+ — Adaptive Theme Controller (Unified)
+// Auto sync μεταξύ tabs + System Preference + Manual Toggle
 // ============================================================
 
 (function () {
@@ -8,20 +8,40 @@
   const body = document.body;
   const btn = document.getElementById("themeToggle");
 
-  // --- Detect current or system preference
+  // --- Ανάγνωση αποθηκευμένου ή συστήματος
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const savedTheme = localStorage.getItem(STORAGE_KEY);
   const currentTheme = savedTheme || (prefersDark ? "dark" : "light");
 
-  body.dataset.theme = currentTheme;
-  localStorage.setItem(STORAGE_KEY, currentTheme);
+  applyTheme(currentTheme);
 
-  // --- Update button label/icon
+  // --- Ενημέρωση κουμπιού
   function updateButton(theme) {
     if (!btn) return;
     btn.textContent = theme === "dark" ? "☀️ Φωτεινό" : "🌙 Σκοτεινό";
   }
-  updateButton(currentTheme);
+
+  // --- Εφαρμογή θέματος
+  function applyTheme(theme, broadcast = false) {
+    body.dataset.theme = theme;
+    localStorage.setItem(STORAGE_KEY, theme);
+    updateButton(theme);
+
+    // Εφαρμόζουμε και σε όλη τη σελίδα (header, panels, sections)
+    document.querySelectorAll("*").forEach((el) => {
+      el.classList.remove("dark-mode", "light-mode");
+      el.classList.add(theme === "dark" ? "dark-mode" : "light-mode");
+    });
+
+    if (broadcast) {
+      try {
+        localStorage.setItem(
+          "eg_theme_sync",
+          JSON.stringify({ theme, time: Date.now() })
+        );
+      } catch {}
+    }
+  }
 
   // --- Manual toggle
   if (btn) {
@@ -31,19 +51,7 @@
     });
   }
 
-  // --- Apply theme + broadcast to other tabs
-  function applyTheme(theme, broadcast = false) {
-    body.dataset.theme = theme;
-    localStorage.setItem(STORAGE_KEY, theme);
-    updateButton(theme);
-    if (broadcast) {
-      try {
-        localStorage.setItem("eg_theme_sync", JSON.stringify({ theme, time: Date.now() }));
-      } catch {}
-    }
-  }
-
-  // --- Sync across tabs (listen for localStorage events)
+  // --- Sync across tabs
   window.addEventListener("storage", (e) => {
     if (e.key === "eg_theme_sync" && e.newValue) {
       try {
@@ -55,7 +63,7 @@
     }
   });
 
-  // --- React to system theme changes
+  // --- React to system preference change
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
     const systemTheme = e.matches ? "dark" : "light";
     const userPref = localStorage.getItem(STORAGE_KEY);

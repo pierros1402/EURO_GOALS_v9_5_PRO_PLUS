@@ -1,15 +1,14 @@
 <!-- ============================================================
-     EURO_GOALS PRO+ v9.5.4 – GoalMatrix Panel
+     EURO_GOALS PRO+ v9.5.5 – GoalMatrix Panel (Unified Expansion)
      Ενοποιημένο dashboard για GoalMatrix Engine
-     ============================================================ -->
-
-<section class="card goalmatrix-panel">
+============================================================ -->
+<section class="card goalmatrix-panel bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md transition-all">
   <header class="flex justify-between items-center mb-2">
     <h3 class="text-lg font-semibold text-sky-400">⚽ GoalMatrix Engine</h3>
-    <span id="gm-status-pill" class="px-2 py-1 rounded text-xs bg-gray-600 text-white">...</span>
+    <span id="gm-status-pill" class="px-2 py-1 rounded text-xs bg-gray-600 text-white">Loading...</span>
   </header>
 
-  <div class="flex justify-between text-sm mb-2 text-gray-300">
+  <div class="flex flex-wrap justify-between text-sm mb-2 text-gray-300">
     <span id="gm-summary-total">Matches: 0</span>
     <span id="gm-summary-avg">Avg xG: 0.00</span>
     <span id="gm-summary-time">Last update: --:--:--</span>
@@ -18,9 +17,9 @@
     </button>
   </div>
 
-  <div class="table-container" style="overflow-x:auto; max-height:420px;">
+  <div class="table-container overflow-x-auto max-h-[420px]">
     <table class="w-full text-sm border-collapse">
-      <thead class="bg-gray-800 text-sky-400 sticky top-0">
+      <thead class="bg-gray-800 text-sky-400 sticky top-0 z-10">
         <tr>
           <th class="p-2 text-left">League</th>
           <th class="p-2 text-left">Match</th>
@@ -32,16 +31,77 @@
       </thead>
       <tbody id="gm-body" class="divide-y divide-gray-700 text-gray-200">
         <tr>
-          <td colspan="6" class="p-2 text-center text-gray-400">Loading GoalMatrix data...</td>
+          <td colspan="6" class="p-2 text-center text-gray-400">Φόρτωση δεδομένων GoalMatrix...</td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <footer class="text-xs text-gray-500 mt-2">
-    * Ενημέρωση κάθε 30s – Βασισμένο σε GoalMatrix Engine API feed.
+    * Αυτόματη ενημέρωση κάθε 30 s – GoalMatrix Unified API Feed
   </footer>
 </section>
 
-<!-- Attach JS -->
-<script src="/static/js/goalmatrix_panel.js"></script>
+<script>
+  // ============================================================
+  // GOALMATRIX PANEL SCRIPT – EURO_GOALS v9.5.5 PRO+ Unified Expansion
+  // ============================================================
+
+  async function loadGoalMatrixData() {
+    const body = document.getElementById("gm-body");
+    const pill = document.getElementById("gm-status-pill");
+    try {
+      const resp = await fetch("/api/goalmatrix/summary");
+      const data = await resp.json();
+
+      // Ανταπόκριση / δεδομένα
+      const items = data?.summary || [];
+      pill.textContent = "ON";
+      pill.className = "px-2 py-1 rounded text-xs bg-green-500 text-black font-semibold";
+
+      if (items.length === 0) {
+        body.innerHTML = `<tr><td colspan="6" class="p-2 text-center text-gray-400">No GoalMatrix data available.</td></tr>`;
+      } else {
+        body.innerHTML = items
+          .map(
+            (m) => `
+          <tr class="hover:bg-neutral-800/60 transition">
+            <td class="p-2">${m.league || "-"}</td>
+            <td class="p-2">${m.match || "-"}</td>
+            <td class="p-2 text-right">${m.xg_home?.toFixed?.(2) ?? "–"}</td>
+            <td class="p-2 text-right">${m.xg_away?.toFixed?.(2) ?? "–"}</td>
+            <td class="p-2 text-right">${m.expected_goals?.toFixed?.(2) ?? "–"}</td>
+            <td class="p-2 text-center ${
+              m.tendency === "Home"
+                ? "text-green-400"
+                : m.tendency === "Away"
+                ? "text-red-400"
+                : "text-yellow-300"
+            }">${m.tendency || "–"}</td>
+          </tr>`
+          )
+          .join("");
+      }
+
+      // summary
+      const avgXG =
+        items.length > 0
+          ? (items.reduce((acc, m) => acc + (m.expected_goals || 0), 0) / items.length).toFixed(2)
+          : "0.00";
+
+      document.getElementById("gm-summary-total").textContent = `Matches: ${items.length}`;
+      document.getElementById("gm-summary-avg").textContent = `Avg xG: ${avgXG}`;
+      document.getElementById("gm-summary-time").textContent =
+        "Last update: " + new Date().toLocaleTimeString("el-GR", { hour12: false });
+    } catch (err) {
+      console.warn("[EURO_GOALS] GoalMatrix fetch error:", err);
+      pill.textContent = "OFF";
+      pill.className = "px-2 py-1 rounded text-xs bg-red-600 text-white";
+      body.innerHTML = `<tr><td colspan="6" class="p-2 text-center text-gray-400">⚠ Σφάλμα φόρτωσης δεδομένων.</td></tr>`;
+    }
+  }
+
+  document.getElementById("gm-refresh")?.addEventListener("click", loadGoalMatrixData);
+  window.addEventListener("load", loadGoalMatrixData);
+  setInterval(loadGoalMatrixData, 30000);
+</script>

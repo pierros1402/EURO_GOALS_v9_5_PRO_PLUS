@@ -1,63 +1,170 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="el">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EURO_GOALS v9.5.4 PRO+ – System Status</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚙️ EURO_GOALS PRO+ v9.5.5 — System Status</title>
 
-  <!-- Tailwind & Custom CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-  <link rel="stylesheet" href="/static/css/system_summary.css">
+  <!-- ===== STYLES ===== -->
+  <link rel="icon" href="/static/icons/eurogoals_512.png" />
+  <link rel="stylesheet" href="/static/css/unified_theme.css" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body {
+      font-family: "Inter", system-ui, sans-serif;
+      background: #0d1117;
+      color: #e6e6e6;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #111827;
+      border-bottom: 1px solid #1f2937;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .logo { height: 36px; vertical-align: middle; }
+    h1 { font-size: 1.1rem; color: #00b0ff; font-weight: 600; margin-left: 8px; }
+    .header-right button {
+      background: #1f2937; color: #e6e6e6;
+      border: none; border-radius: 6px; padding: 6px 12px;
+      cursor: pointer; transition: background .3s ease;
+    }
+    .header-right button:hover { background: #2563eb; }
+
+    main { max-width: 960px; margin: 20px auto; padding: 10px; }
+
+    .status-card {
+      background: #161b22;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 0 10px rgba(0,0,0,.25);
+    }
+
+    .status-title {
+      font-size: 1rem;
+      color: #00b0ff;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 8px; border-bottom: 1px solid #222; text-align: left; }
+    th { color: #9ecbff; font-weight: 500; }
+    tr:hover { background: rgba(255,255,255,0.05); }
+
+    .ok { color: #00ff88; font-weight: 600; }
+    .warn { color: #ffb400; font-weight: 600; }
+    .err { color: #ff4444; font-weight: 600; }
+
+    footer {
+      text-align: center; color: #888;
+      padding: 15px; font-size: 0.8rem;
+      border-top: 1px solid #222;
+      margin-top: 30px;
+    }
+
+    @media (max-width: 700px) {
+      th, td { font-size: 0.82rem; padding: 6px; }
+    }
+  </style>
 </head>
 
-<body class="bg-gray-900 text-gray-100 min-h-screen">
-  <div class="max-w-6xl mx-auto p-4">
-
-    <!-- === Include Dynamic Summary Bar === -->
-    {% include 'partials/system_summary_bar.html' %}
-
-    <!-- === Unified Dashboard Section === -->
-    <div class="p-4 bg-gray-800/70 rounded-xl shadow-lg border border-gray-700">
-      <h2 class="text-xl font-bold mb-3 text-green-400">
-        ⚙️ Unified System Status Dashboard
-      </h2>
-      <div id="status-content" class="text-gray-200 text-sm">
-        <p>Loading system data...</p>
-      </div>
+<body>
+  <header>
+    <div class="header-left">
+      <img src="/static/icons/eurogoals_512.png" class="logo" alt="logo">
+      <h1>EURO_GOALS PRO+ v9.5.5 — System Status Monitor</h1>
     </div>
+    <div class="header-right">
+      <button id="themeToggle">🌗 Θέμα</button>
+      <button onclick="location.href='/'">← Πίσω</button>
+    </div>
+  </header>
 
-    <!-- === Footer Info === -->
-    <footer class="mt-6 text-center text-gray-500 text-xs">
-      EURO_GOALS v9.5.4 PRO+ © {{ year if year else '2025' }} – Render Unified Monitor
-    </footer>
-  </div>
+  <main>
+    <div class="status-card">
+      <div class="status-title">🔄 System Overview</div>
+      <table id="systemTable">
+        <thead>
+          <tr>
+            <th>Engine</th>
+            <th>Status</th>
+            <th>Active Items</th>
+            <th>Alerts</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4">Φόρτωση δεδομένων...</td></tr>
+        </tbody>
+      </table>
+      <p id="statusTime" style="text-align:right;color:#999;margin-top:8px;font-size:0.85rem;">
+        Τελευταία ενημέρωση: --
+      </p>
+    </div>
+  </main>
 
-  <!-- === System Status Auto-Refresh Script === -->
+  <footer>© 2025 EURO_GOALS PRO+ Unified Expansion | System Diagnostics Interface</footer>
+
+  <!-- ===== SCRIPTS ===== -->
+  <script src="/static/js/theme_toggle.js"></script>
   <script>
-  async function loadSystemStatus() {
-    try {
-      const res = await fetch("/system_status_data");
-      const data = await res.json();
-
-      let html = "<ul class='list-disc pl-6 space-y-1'>";
-      for (const [key, value] of Object.entries(data)) {
-        let color = "text-yellow-400";
-        if (value.includes("OK") || value.includes("Active") || value.includes("Connected")) color = "text-green-400";
-        if (value.includes("Fail") || value.includes("Error") || value.includes("Offline")) color = "text-red-400";
-
-        html += `<li class="${color}"><b>${key}:</b> ${value}</li>`;
+    // ============================================================
+    // AUTO-REFRESH SYSTEM STATUS (v9.5.5 PRO+)
+    // ============================================================
+    async function getJSON(url) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(res.statusText);
+        return await res.json();
+      } catch {
+        return null;
       }
-      html += "</ul>";
-      document.getElementById("status-content").innerHTML = html;
-    } catch (err) {
-      console.error("[SystemStatus][Error]", err);
-      document.getElementById("status-content").innerHTML =
-        "<p class='text-red-400'>Error fetching system status data.</p>";
     }
-  }
 
-  loadSystemStatus();
-  setInterval(loadSystemStatus, 30000);
+    async function refreshSystemStatus() {
+      const table = document.querySelector("#systemTable tbody");
+      const ts = document.getElementById("statusTime");
+      const data = await getJSON("/system_status");
+
+      if (!data) {
+        table.innerHTML = `<tr><td colspan="4" class="err">⚠️ Αδυναμία επικοινωνίας</td></tr>`;
+        return;
+      }
+
+      const engines = data.engines || {};
+      const rows = Object.entries(engines)
+        .map(([key, eng]) => {
+          const active = eng.active ? "ok" : "err";
+          const items =
+            eng.history_items ?? eng.items ?? eng.alerts ?? 0;
+          const alerts = eng.alerts ?? 0;
+
+          return `
+            <tr>
+              <td>${key}</td>
+              <td class="${active}">${eng.active ? "Active" : "Offline"}</td>
+              <td>${items}</td>
+              <td>${alerts}</td>
+            </tr>`;
+        })
+        .join("");
+
+      table.innerHTML = rows;
+      ts.textContent =
+        "Τελευταία ενημέρωση: " +
+        new Date(data.ts * 1000).toLocaleTimeString("el-GR", { hour12: false });
+    }
+
+    refreshSystemStatus();
+    setInterval(refreshSystemStatus, 10000);
   </script>
 </body>
 </html>

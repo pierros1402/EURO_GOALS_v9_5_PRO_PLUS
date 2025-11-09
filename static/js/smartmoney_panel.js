@@ -1,121 +1,79 @@
 // ============================================================
-// SMARTMONEY PANEL JS v3.0.0 — EURO_GOALS PRO+ Unified
-// Multi-source Odds Tracker (Bet365 / Stoiximan / OPAP)
-// Alert >= 0.20 (visual blink + sound)
+// SMARTMONEY PANEL JS v1.3 (Unified PRO+ v9.5.5)
 // ============================================================
-
 (async function () {
-  const elBody = document.getElementById("smartmoney-body");
-  const elStatus = document.getElementById("smartmoney-status-pill");
-  const elCount = document.getElementById("smartmoney-count");
-  const elLast = document.getElementById("smartmoney-last");
-  const audioAlert = new Audio("/static/sounds/alert.mp3");
-  audioAlert.volume = 0.7;
-
-  let lastAlerts = {};
+  const elBody = document.getElementById("sm-body");
+  const elStatus = document.getElementById("sm-status-pill");
+  const elBtn = document.getElementById("sm-refresh");
+  const elTotal = document.getElementById("sm-summary-total");
+  const elAvg = document.getElementById("sm-summary-avg");
+  const elTime = document.getElementById("sm-summary-time");
 
   async function getJSON(url) {
     try {
       const r = await fetch(url, { cache: "no-store" });
       if (!r.ok) throw new Error(r.statusText);
       return await r.json();
-    } catch (e) {
-      console.error("[SmartMoney] Fetch error:", e);
+    } catch {
       return null;
     }
   }
 
-  function blinkRow(row) {
-    row.classList.add("blink");
-    setTimeout(() => row.classList.remove("blink"), 2500);
-  }
-
-  async function refreshPanel() {
+  async function refreshAll() {
     const summary = await getJSON("/api/smartmoney/summary");
-    const data = await getJSON("/api/smartmoney/alerts");
+    const alerts = await getJSON("/api/smartmoney/alerts");
 
-    if (!summary || !data) {
+    if (!summary) {
       elStatus.textContent = "Failing";
-      elStatus.className = "px-2 py-1 rounded text-xs bg-red-700 text-white";
-      elBody.innerHTML = `<tr><td colspan="8" class="p-2 text-center text-red-300">⚠️ SmartMoney feed unavailable</td></tr>`;
+      elStatus.className = "status-pill bg-red";
+      elBody.innerHTML = `<tr><td colspan="6">⚠️ Error loading SmartMoney</td></tr>`;
       return;
     }
 
-    elStatus.textContent = summary.status;
+    // --- Συνοπτικά στοιχεία SmartMoney ---
+    elStatus.textContent = summary.status ?? "Active";
     elStatus.className =
-      "px-2 py-1 rounded text-xs " +
+      "status-pill " +
       (summary.status === "OK"
-        ? "bg-green-700 text-white"
-        : summary.status === "Degraded"
-        ? "bg-amber-600 text-white"
-        : "bg-red-700 text-white");
+        ? "bg-green"
+        : summary.status === "No Data"
+        ? "bg-yellow"
+        : "bg-blue");
 
-    elCount.textContent = `Alerts: ${summary.count ?? 0}`;
-    elLast.textContent = `Last update: ${new Date(
-      (summary.last_updated_ts ?? 0) * 1000
-    ).toLocaleTimeString("el-GR")}`;
+    elTotal.textContent = "Signals: " + (summary.total_signals ?? 0);
+    elAvg.textContent = "Avg Δ%: " + (summary.avg_change ?? "0.00");
+    elTime.textContent =
+      "Last Update: " +
+      new Date((summary.last_updated_ts ?? Date.now() / 1000) * 1000).toLocaleTimeString();
 
-    const alerts = data.alerts || [];
-    if (!alerts.length) {
-      elBody.innerHTML = `<tr><td colspan="8" class="p-2 text-center text-gray-400">No active SmartMoney alerts</td></tr>`;
+    // --- Ανάλυση δεδομένων SmartMoney (ενότητα πίνακα) ---
+    const items = summary.items ?? summary.data ?? [];
+    if (!items.length) {
+      elBody.innerHTML = `<tr><td colspan="6">No SmartMoney data available</td></tr>`;
       return;
     }
 
-    elBody.innerHTML = "";
-    for (const a of alerts) {
-      const diff = a.movement ?? 0;
-      const diffAbs = Math.abs(diff);
-      const isUp = diff > 0;
-      const diffClass =
-        diffAbs >= 0.2
-          ? isUp
-            ? "text-green-400 font-bold"
-            : "text-red-500 font-bold"
-          : "text-gray-300";
+    elBody.innerHTML = items
+      .map(
+        (x) => `
+      <tr>
+        <td>${x.league ?? "-"}</td>
+        <td>${x.match ?? "-"}</td>
+        <td>${x.open_odds ?? "-"}</td>
+        <td>${x.current_odds ?? "-"}</td>
+        <td>${x.delta ?? "0.00"}%</td>
+        <td>${x.signal ?? "-"}</td>
+      </tr>`
+      )
+      .join("");
 
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td class="p-2">${a.source || "—"}</td>
-        <td class="p-2">${a.league || "-"}</td>
-        <td class="p-2">${a.match || "-"}</td>
-        <td class="p-2">${a.market || a.type || "—"}</td>
-        <td class="p-2">${a.open?.toFixed?.(2) ?? "-"}</td>
-        <td class="p-2">${a.current?.toFixed?.(2) ?? "-"}</td>
-        <td class="p-2 ${diffClass}">
-          ${isUp ? "▲" : "▼"} ${diffAbs.toFixed(2)}
-        </td>
-        <td class="p-2 text-xs text-gray-400">${a.timestamp || ""}</td>
-      `;
-
-      const prev = lastAlerts[a.match + a.source];
-      const changed =
-        !prev || Math.abs(prev - diff) >= 0.2 || prev * diff < 0;
-
-      if (changed && diffAbs >= 0.2) {
-        blinkRow(row);
-        try {
-          audioAlert.currentTime = 0;
-          await audioAlert.play();
-        } catch (e) {
-          console.warn("[SmartMoney] Audio blocked:", e);
-        }
-      }
-
-      elBody.appendChild(row);
-      lastAlerts[a.match + a.source] = diff;
+    // --- Προαιρετικά Alerts ---
+    if (alerts?.alerts?.length) {
+      console.log("[SmartMoney Alerts]", alerts.alerts.length, "active alerts");
     }
   }
 
-  await refreshPanel();
-  setInterval(refreshPanel, 30000);
-
-  const style = document.createElement("style");
-  style.textContent = `
-    .blink { animation: blinkEffect 1s ease-in-out 3; }
-    @keyframes blinkEffect {
-      0%, 100% { background-color: transparent; }
-      50% { background-color: rgba(255, 0, 0, 0.25); }
-    }
-  `;
-  document.head.appendChild(style);
+  elBtn?.addEventListener("click", refreshAll);
+  await refreshAll();
+  setInterval(refreshAll, 30000);
 })();

@@ -1,43 +1,75 @@
 <!-- ========================================================= -->
-<!-- SYSTEM STATUS PANEL – EURO_GOALS v9.5.4 PRO+ -->
+<!-- SYSTEM STATUS PANEL – EURO_GOALS v9.5.5 PRO+ Unified Expansion -->
 <!-- ========================================================= -->
-<div id="system-status-panel" class="bg-white/80 backdrop-blur-md rounded-xl shadow p-4 mb-4">
-  <h2 class="text-lg font-semibold mb-3">🩺 System Health Monitor</h2>
+<div id="system-status-panel" class="bg-white/80 dark:bg-neutral-900/70 backdrop-blur-md rounded-xl shadow p-4 mb-4 transition-all">
+  <h2 class="text-lg font-semibold mb-3">🩺 System Health Monitor — Unified Expansion</h2>
 
-  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-gray-800">
-    <div>🌐 Render: <span id="status-render">Loading...</span></div>
-    <div>💾 Database: <span id="status-db">Loading...</span></div>
-    <div>💰 SmartMoney: <span id="status-sm">Loading...</span></div>
-    <div>⚽ GoalMatrix: <span id="status-gm">Loading...</span></div>
-    <div>🧠 CPU: <span id="status-cpu">Loading...</span></div>
-    <div>💻 RAM: <span id="status-ram">Loading...</span></div>
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+    <div>💰 SmartMoney: <span id="status-sm" class="status-tag">–</span></div>
+    <div>🎯 GoalMatrix: <span id="status-gm" class="status-tag">–</span></div>
+    <div>🔥 Heatmap: <span id="status-hm" class="status-tag">–</span></div>
+    <div>🕓 BeSoccer: <span id="status-bs" class="status-tag">–</span></div>
+    <div>🧠 CPU: <span id="status-cpu" class="status-tag">–</span></div>
+    <div>💻 RAM: <span id="status-ram" class="status-tag">–</span></div>
   </div>
 
-  <div class="text-xs text-gray-500 mt-3">Auto-refreshes every 60s</div>
+  <div class="text-xs opacity-70 mt-3 flex justify-between">
+    <span id="status-timestamp">Auto-refreshes every 30 s</span>
+    <span>EURO_GOALS v9.5.5</span>
+  </div>
 </div>
+
+<style>
+  .status-tag {
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: #000;
+    background: #ccc;
+  }
+  .status-ok { background: #00e676; color: #000; }
+  .status-fail { background: #ff1744; color: #fff; }
+  .status-warn { background: #ffb300; color: #000; }
+</style>
 
 <script>
   // ============================================================
-  // SYSTEM MONITOR SCRIPT – EURO_GOALS v9.5.4 PRO+
+  // SYSTEM STATUS SCRIPT – EURO_GOALS v9.5.5 PRO+ Unified Expansion
   // ============================================================
-
-  async function loadSystemHealth() {
+  async function loadSystemStatus() {
     try {
-      const resp = await fetch("/api/system/health");
+      const resp = await fetch("/system_status");
       const data = await resp.json();
+      const e = data.engines || {};
 
-      document.getElementById("status-render").innerText = data.render_status;
-      document.getElementById("status-db").innerText = data.db_status;
-      document.getElementById("status-sm").innerText = data.smartmoney;
-      document.getElementById("status-gm").innerText = data.goalmatrix;
-      document.getElementById("status-cpu").innerText = data.cpu;
-      document.getElementById("status-ram").innerText = data.ram;
+      const setStatus = (id, active, value) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className = "status-tag";
+        if (active) el.classList.add("status-ok");
+        else el.classList.add("status-fail");
+        el.textContent = active ? (value ? `ON (${value})` : "ON") : "OFF";
+      };
+
+      setStatus("status-sm", e.smartmoney?.active, e.smartmoney?.alerts);
+      setStatus("status-gm", e.goalmatrix?.active, e.goalmatrix?.alerts);
+      setStatus("status-hm", e.heatmap?.active, e.heatmap?.items);
+      setStatus("status-bs", e.besoccer?.active, e.besoccer?.history_items);
+
+      // Προσωρινά dummy metrics — μπορεί να επεκταθεί αργότερα
+      document.getElementById("status-cpu").textContent = "OK";
+      document.getElementById("status-cpu").className = "status-tag status-ok";
+      document.getElementById("status-ram").textContent = "OK";
+      document.getElementById("status-ram").className = "status-tag status-ok";
+
+      document.getElementById("status-timestamp").textContent =
+        "Τελευταία ενημέρωση: " +
+        new Date().toLocaleTimeString("el-GR", { hour12: false });
     } catch (err) {
-      console.error("Health fetch error:", err);
+      console.error("[EURO_GOALS] System status fetch error:", err);
     }
   }
 
-  // Auto refresh every 60s
-  setInterval(loadSystemHealth, 60000);
-  window.addEventListener("load", loadSystemHealth);
+  window.addEventListener("load", loadSystemStatus);
+  setInterval(loadSystemStatus, 30000);
 </script>

@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>💰 EURO_GOALS SmartMoney Monitor v2.6 PRO+</title>
+  <title>💰 EURO_GOALS SmartMoney Monitor — v9.5.5 PRO+ Unified</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="/static/icons/eurogoals_512.png">
   <link rel="stylesheet" href="/static/css/smartmoney_ticker.css">
@@ -36,7 +36,9 @@
     .pill.flat { background:#444; color:#ddd; }
   </style>
 </head>
-<body>
+
+<body data-theme="dark">
+  {% include "partials/unified_header.html" %}
 
   <!-- Live ticker -->
   <div id="ticker-container"></div>
@@ -74,9 +76,10 @@
   <!-- JS -->
   <script src="/static/js/smartmoney_ticker.js"></script>
   <script src="/static/js/smartmoney_aggregate.js"></script>
+  <script src="/static/js/theme_toggle.js"></script>
 
-  <div class="footer" style="text-align:center;color:#777;margin:25px 0;">
-    EURO_GOALS SmartMoney Monitor v2.6 PRO+ © 2025
-  </div>
+  <footer class="text-center text-xs text-gray-500 mt-8 mb-4">
+    © 2025 EURO_GOALS PRO+ | Unified Expansion
+  </footer>
 </body>
 </html>

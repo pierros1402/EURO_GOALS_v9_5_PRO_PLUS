@@ -1,26 +1,13 @@
 <!-- ============================================================
-     EURO_GOALS v9.5.2 PRO+ Smart Monitor
-     Adaptive Summary Bar with Live Status
-     ============================================================ -->
-
-<div id="system-summary-bar" class="summary-bar">
-  <div class="logo-section">
-    <img src="/static/icons/icon-192.png" alt="EURO_GOALS" class="logo-icon">
-    <span class="logo-text">EURO_GOALS</span>
-    <span class="version">{{ version }}</span>
-  </div>
-
-  <div class="led-section">
-    <div class="led" id="led-render" data-label="Render"></div>
-    <div class="led" id="led-db" data-label="DB"></div>
-    <div class="led" id="led-flashscore" data-label="Flashscore"></div>
-    <div class="led" id="led-sofascore" data-label="Sofascore"></div>
-    <div class="led" id="led-asianconnect" data-label="AsianConnect"></div>
-  </div>
-
-  <div class="status-panel">
-    <span id="status-refresh" class="status-pill">🔄 Refresh: <b>ON</b></span>
-    <span id="status-latency" class="status-pill">⏱ 0 ms</span>
-    <span id="status-uptime" class="status-pill">🕒 0:00:00</span>
+     EURO_GOALS v9.5.5 PRO+ — Unified System Summary Bar
+============================================================ -->
+<div id="system-summary"
+     class="p-3 rounded-xl shadow bg-neutral-900/70 backdrop-blur-md
+            text-gray-100 text-sm flex flex-wrap justify-between gap-3 transition-all">
+  <div class="text-sm text-gray-400 w-full text-center">
+    Φόρτωση κατάστασης συστήματος...
   </div>
 </div>
+
+<!-- Εξωτερικός Controller -->
+<script src="/static/js/system_summary.js"></script>
