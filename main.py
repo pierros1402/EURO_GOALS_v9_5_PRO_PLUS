@@ -107,6 +107,8 @@ async def startup_event():
 # LOCAL STARTUP
 # ============================================================
 if __name__ == "__main__":
-    import uvicorn
-    print("🏁 Running EURO_GOALS locally on http://127.0.0.1:8000")
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    import uvicorn, os
+    port = int(os.getenv("PORT", 8000))
+    print(f"🏁 Running EURO_GOALS on 0.0.0.0:{port}")
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
+
