@@ -166,6 +166,10 @@ async def api_odds_summary():
         return await odds_unified_engine.get_summary()
     except TypeError:
         return odds_unified_engine.get_summary()
+@app.get("/api/livefeed")
+async def api_livefeed():
+    """Unified Live Feed από τον Cloudflare Worker"""
+    return live_feed_cache.data
 
 # ============================================================
 # SYSTEM CHECK
@@ -213,6 +217,29 @@ async def startup_event():
     await _safe("HEATMAP",    heatmap_engine.background_refresher)
     await _safe("HISTORY",    history_engine.background_refresher)
     await _safe("ODDS",       odds_unified_engine.background_refresher)
+
+# ============================================================
+# LIVE PROXY REFRESHER
+# ============================================================
+from services.live_proxy_refresher import live_feed_cache
+
+@app.on_event("startup")
+async def startup_event():
+    print(f"[EURO_GOALS] 🚀 Εκκίνηση v{APP_VERSION}")
+
+    async def _safe(name, func):
+        try:
+            asyncio.create_task(func())
+            print(f"✅ {name} background task started.")
+        except Exception as e:
+            print(f"⚠️ {name} init error: {e}")
+
+    # υπήρχαν ήδη άλλοι engines, κράτα τους
+    await _safe("SMARTMONEY", smartmoney_engine.background_refresher)
+    await _safe("GOALMATRIX", goal_matrix_engine.background_refresher)
+    await _safe("HISTORY", history_engine.background_refresher)
+    await _safe("ODDS", odds_unified_engine.background_refresher)
+    await _safe("LIVE_PROXY", live_feed_cache.loop_refresh)
 
 # ============================================================
 # LOCAL RUN
