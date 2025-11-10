@@ -7,9 +7,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>EURO_GOALS PRO+ v9.6.1 — Unified Mobile Expansion</title>
+  <title>EURO_GOALS PRO+ v9.6.2 — Unified Live Expansion</title>
   <meta name="description"
-        content="EURO_GOALS PRO+ v9.6.1 — Unified Mobile Expansion Platform integrating SmartMoney, GoalMatrix, Heatmap & Historical Engines" />
+        content="EURO_GOALS PRO+ v9.6.2 — Unified Expansion Platform integrating SmartMoney, GoalMatrix, Heatmap & History Engines" />
   <meta name="theme-color" content="#0a84ff" />
 
   <link rel="manifest" href="/static/manifest.json" />
@@ -28,14 +28,7 @@
 </head>
 
 <body data-theme="dark">
-  <!-- ========================================================= -->
-  <!-- UNIFIED HEADER                                             -->
-  <!-- ========================================================= -->
   {% include "partials/unified_header.html" %}
-
-  <!-- ========================================================= -->
-  <!-- SYSTEM SUMMARY BAR                                         -->
-  <!-- ========================================================= -->
   <section class="system-summary mt-2">
     {% include "partials/system_summary_bar_unified.html" %}
   </section>
@@ -45,6 +38,7 @@
   <!-- ========================================================= -->
   <main class="p-4">
     <section class="grid-panels">
+
       <!-- System Status -->
       <article class="card col-4">
         {% include "partials/system_status_panel.html" %}
@@ -71,16 +65,27 @@
                 style="width:100%;height:380px;border:0;border-radius:12px;"></iframe>
       </article>
 
-      <!-- Historical Data -->
-      <article class="card col-12 bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md">
-        <h3 class="text-lg font-semibold text-sky-400 mb-2">📜 Ιστορικά Δεδομένα</h3>
+      <!-- ========================================================= -->
+      <!-- 📜 Compact History Overview (Mini Stats + Button)          -->
+      <!-- ========================================================= -->
+      <article class="card col-12 bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md" id="historyCompact">
+        <h3 class="text-lg font-semibold text-sky-400 mb-2">📜 Ιστορικά Δεδομένα (Σύνοψη)</h3>
         <p class="text-gray-400 text-sm mb-3">
-          Ενοποιημένα ιστορικά αγώνων από το σύστημα EURO_GOALS PRO+.
+          Τελευταίες ενημερώσεις από το ενοποιημένο σύστημα ιστορικών EURO_GOALS PRO+.
         </p>
-        <div id="history_preview" style="max-height:380px;overflow-y:auto;">
-          <p>Φόρτωση ιστορικών δεδομένων...</p>
+        <div id="history_mini" style="max-height:280px;overflow-y:auto;">
+          <p>Φόρτωση δεδομένων...</p>
+        </div>
+        <div class="text-center mt-3">
+          <button onclick="window.location.href='/history_unified'"
+                  style="background:#00b7ff;color:#fff;border:none;padding:8px 18px;
+                         border-radius:10px;font-weight:600;cursor:pointer;
+                         transition:all .25s ease;">
+            🔍 Προβολή Πλήρους Ιστορικού
+          </button>
         </div>
       </article>
+
     </section>
   </main>
 
@@ -97,7 +102,7 @@
   {% include "partials/system_controls_modal.html" %}
 
   <footer class="footer text-center text-xs text-gray-500 py-4">
-    © 2025 EURO_GOALS PRO+ | Unified Expansion Interface v9.6.1
+    © 2025 EURO_GOALS PRO+ | Unified Expansion Interface v9.6.2
   </footer>
 
   <!-- ========================================================= -->
@@ -113,24 +118,18 @@
   <script src="/static/js/theme_toggle.js"></script>
 
   <!-- ========================================================= -->
-  <!-- INLINE HELPERS / FETCHERS                                  -->
+  <!-- INLINE FETCHERS                                            -->
   <!-- ========================================================= -->
   <script>
-    // Modal Controls
-    document.getElementById('openControlsBtn')?.addEventListener('click', () => {
-      document.getElementById('systemControlsModal')?.classList.add('open');
-    });
-
-    document.getElementById('quickRefresh')?.addEventListener('click', () => location.reload(true));
-
-    // Unified History Preview Fetcher
-    async function loadHistoryPreview() {
-      const el = document.getElementById("history_preview");
+    async function loadMiniHistory() {
+      const el = document.getElementById("history_mini");
       try {
         const resp = await fetch("/api/history");
         const data = await resp.json();
-        const items = data.history.slice(0, 25);
+        const items = data.history.slice(0, 10); // μόνο 10 για compact view
+        const total = data.history.length || 0;
         el.innerHTML = `
+          <p class="text-xs text-gray-400 mb-2">Σύνολο διαθέσιμων: ${total} αγώνες</p>
           <table class="w-full text-sm border-collapse">
             <thead class="bg-gray-800 text-sky-400 sticky top-0">
               <tr>
@@ -149,21 +148,21 @@
             </tbody>
           </table>`;
       } catch (err) {
-        el.innerHTML = `<p style="color:#f66;">⚠ Σφάλμα φόρτωσης ιστορικών δεδομένων.</p>`;
+        el.innerHTML = `<p style="color:#f66;">⚠ Σφάλμα φόρτωσης δεδομένων ιστορικού.</p>`;
       }
     }
-    window.addEventListener("load", loadHistoryPreview);
+    window.addEventListener("load", loadMiniHistory);
   </script>
 
   <!-- ========================================================= -->
-  <!-- SERVICE WORKER REGISTRATION (with offline fallback)        -->
+  <!-- SERVICE WORKER REGISTRATION                                -->
   <!-- ========================================================= -->
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("/static/service-worker.js")
-          .then(reg => console.log("[EURO_GOALS] ✅ Service Worker registered:", reg.scope))
+          .then(reg => console.log("[EURO_GOALS] ✅ Service Worker:", reg.scope))
           .catch(err => console.warn("[EURO_GOALS] ⚠️ SW registration failed:", err));
       });
     }

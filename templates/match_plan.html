@@ -1,0 +1,119 @@
+<!-- ============================================================
+     EURO_GOALS PRO+ v9.6.5 — Match Plan (15 Days Unified)
+     ============================================================ -->
+<section class="match-plan bg-neutral-900/70 text-gray-100 rounded-xl shadow p-4 backdrop-blur-md">
+  <header class="flex flex-col sm:flex-row justify-between sm:items-center mb-3 gap-2">
+    <div>
+      <h2 class="text-xl font-semibold text-sky-400 mb-1">📅 Πλάνο Αγώνων (15 Ημερών)</h2>
+      <p class="text-gray-400 text-sm">
+        Εμφάνιση 7 ημερών πριν, σήμερα και 7 ημερών μετά από τις διαθέσιμες λίγκες EURO_GOALS PRO+.
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <select id="countrySelect" class="bg-gray-800 text-white rounded px-2 py-1 text-sm"></select>
+      <select id="leagueSelect" class="bg-gray-800 text-white rounded px-2 py-1 text-sm"></select>
+      <button id="refreshPlan" class="text-xs px-3 py-1 bg-sky-700 text-white rounded hover:bg-sky-600 transition">
+        🔄 Ανανέωση
+      </button>
+    </div>
+  </header>
+
+  <div id="plan-container" class="overflow-y-auto max-h-[650px] border-t border-gray-800">
+    <p class="text-center text-gray-400 p-3">Φόρτωση προγράμματος...</p>
+  </div>
+
+  <footer class="text-xs text-gray-500 mt-3">
+    * Αυτόματη ανανέωση κάθε 90 δευτερόλεπτα.
+  </footer>
+</section>
+
+<script>
+  // ============================================================
+  // EURO_GOALS — MATCH PLAN FETCHER
+  // ============================================================
+  const countrySelect = document.getElementById("countrySelect");
+  const leagueSelect = document.getElementById("leagueSelect");
+  const planContainer = document.getElementById("plan-container");
+
+  async function loadLeagues() {
+    try {
+      const resp = await fetch("/api/leagues");
+      const data = await resp.json();
+      const countries = data.countries || {};
+      countrySelect.innerHTML = `<option value="">Όλες οι Χώρες</option>`;
+      for (const [country, leagues] of Object.entries(countries)) {
+        const opt = document.createElement("option");
+        opt.value = country;
+        opt.textContent = country;
+        countrySelect.appendChild(opt);
+      }
+      countrySelect.addEventListener("change", () => {
+        const selected = countries[countrySelect.value] || [];
+        leagueSelect.innerHTML = `<option value="">Όλες οι Διοργανώσεις</option>`;
+        selected.forEach(l => {
+          const opt = document.createElement("option");
+          opt.value = l.id;
+          opt.textContent = l.name;
+          leagueSelect.appendChild(opt);
+        });
+      });
+    } catch (err) {
+      console.error("⚠️ Error loading leagues:", err);
+    }
+  }
+
+  async function loadMatchPlan() {
+    planContainer.innerHTML = `<p class="text-center text-gray-400 p-3">Φόρτωση προγράμματος...</p>`;
+    const params = new URLSearchParams();
+    if (countrySelect.value) params.append("country", countrySelect.value);
+    if (leagueSelect.value) params.append("league", leagueSelect.value);
+
+    try {
+      const resp = await fetch(`/api/matchplan?${params.toString()}`);
+      const data = await resp.json();
+      const days = data.days || [];
+
+      if (!days.length) {
+        planContainer.innerHTML = `<p class="text-center text-gray-400 p-3">Δεν υπάρχουν διαθέσιμοι αγώνες για τις επιλεγμένες ημέρες.</p>`;
+        return;
+      }
+
+      planContainer.innerHTML = days.map(day => `
+        <div class="mb-4">
+          <div class="bg-gray-800/90 text-sky-400 font-semibold py-1.5 px-3 rounded-t">
+            ${day.date_label}
+          </div>
+          <table class="w-full text-sm border-collapse">
+            <thead class="bg-gray-900 text-gray-400 sticky top-0">
+              <tr>
+                <th class="p-2 text-left">Διοργάνωση</th>
+                <th class="p-2 text-left">Αγώνας</th>
+                <th class="p-2 text-right">Ώρα / Αποτέλεσμα</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800">
+              ${day.matches.map(m => `
+                <tr class="hover:bg-neutral-800/60 transition">
+                  <td class="p-2">${m.league || '-'}</td>
+                  <td class="p-2">${m.home_team} vs ${m.away_team}</td>
+                  <td class="p-2 text-right">
+                    ${m.status === 'live' 
+                      ? `<span class="text-red-400 font-semibold animate-pulse">LIVE ${m.score}</span>` 
+                      : (m.score ? m.score : m.time || '-')}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `).join('');
+    } catch (err) {
+      console.error("⚠️ Error loading match plan:", err);
+      planContainer.innerHTML = `<p class="text-center text-red-400 p-3">Σφάλμα φόρτωσης προγράμματος αγώνων.</p>`;
+    }
+  }
+
+  document.getElementById("refreshPlan").addEventListener("click", loadMatchPlan);
+  loadLeagues().then(loadMatchPlan);
+  setInterval(loadMatchPlan, 90000);
+</script>
