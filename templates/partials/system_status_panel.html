@@ -1,75 +1,76 @@
-<!-- ========================================================= -->
-<!-- SYSTEM STATUS PANEL – EURO_GOALS v9.5.5 PRO+ Unified Expansion -->
-<!-- ========================================================= -->
-<div id="system-status-panel" class="bg-white/80 dark:bg-neutral-900/70 backdrop-blur-md rounded-xl shadow p-4 mb-4 transition-all">
-  <h2 class="text-lg font-semibold mb-3">🩺 System Health Monitor — Unified Expansion</h2>
+<!-- ============================================================
+     EURO_GOALS v9.6.1 PRO+ — Unified System Status Panel
+============================================================ -->
+<section class="card bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md transition-all">
+  <header class="flex justify-between items-center mb-2">
+    <h3 class="text-lg font-semibold text-sky-400">🩺 Κατάσταση Συστήματος</h3>
+    <button id="refreshSystem" class="text-xs px-2 py-1 bg-sky-700 text-white rounded hover:bg-sky-600 transition">
+      🔄 Ανανέωση
+    </button>
+  </header>
 
-  <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-    <div>💰 SmartMoney: <span id="status-sm" class="status-tag">–</span></div>
-    <div>🎯 GoalMatrix: <span id="status-gm" class="status-tag">–</span></div>
-    <div>🔥 Heatmap: <span id="status-hm" class="status-tag">–</span></div>
-    <div>🕓 BeSoccer: <span id="status-bs" class="status-tag">–</span></div>
-    <div>🧠 CPU: <span id="status-cpu" class="status-tag">–</span></div>
-    <div>💻 RAM: <span id="status-ram" class="status-tag">–</span></div>
+  <!-- Πίνακας κατάστασης συστημάτων -->
+  <div class="overflow-x-auto max-h-[300px] border-t border-gray-800">
+    <table class="w-full text-sm border-collapse">
+      <thead class="bg-gray-800 text-sky-400 sticky top-0">
+        <tr>
+          <th class="p-2 text-left">Υποσύστημα</th>
+          <th class="p-2 text-left">Κατάσταση</th>
+          <th class="p-2 text-right">Ενημέρωση</th>
+        </tr>
+      </thead>
+      <tbody id="system-status-body" class="divide-y divide-gray-700 text-gray-200">
+        <tr>
+          <td colspan="3" class="p-3 text-center text-gray-400">Φόρτωση κατάστασης...</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
-  <div class="text-xs opacity-70 mt-3 flex justify-between">
-    <span id="status-timestamp">Auto-refreshes every 30 s</span>
-    <span>EURO_GOALS v9.5.5</span>
-  </div>
-</div>
-
-<style>
-  .status-tag {
-    font-weight: 600;
-    padding: 2px 6px;
-    border-radius: 6px;
-    color: #000;
-    background: #ccc;
-  }
-  .status-ok { background: #00e676; color: #000; }
-  .status-fail { background: #ff1744; color: #fff; }
-  .status-warn { background: #ffb300; color: #000; }
-</style>
+  <footer class="text-xs text-gray-500 mt-2">
+    * Αυτόματη ανανέωση κάθε 45 δευτερόλεπτα.
+  </footer>
+</section>
 
 <script>
   // ============================================================
-  // SYSTEM STATUS SCRIPT – EURO_GOALS v9.5.5 PRO+ Unified Expansion
+  // EURO_GOALS Unified System Status Fetcher
   // ============================================================
   async function loadSystemStatus() {
+    const tbody = document.getElementById("system-status-body");
     try {
-      const resp = await fetch("/system_status");
+      const resp = await fetch("/api/system/check");
       const data = await resp.json();
-      const e = data.engines || {};
+      const engines = data.engines || {};
 
-      const setStatus = (id, active, value) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.className = "status-tag";
-        if (active) el.classList.add("status-ok");
-        else el.classList.add("status-fail");
-        el.textContent = active ? (value ? `ON (${value})` : "ON") : "OFF";
-      };
+      if (!Object.keys(engines).length) {
+        tbody.innerHTML = `<tr><td colspan="3" class="p-3 text-center text-gray-400">Δεν υπάρχουν διαθέσιμα δεδομένα.</td></tr>`;
+        return;
+      }
 
-      setStatus("status-sm", e.smartmoney?.active, e.smartmoney?.alerts);
-      setStatus("status-gm", e.goalmatrix?.active, e.goalmatrix?.alerts);
-      setStatus("status-hm", e.heatmap?.active, e.heatmap?.items);
-      setStatus("status-bs", e.besoccer?.active, e.besoccer?.history_items);
+      tbody.innerHTML = Object.entries(engines).map(([name, info]) => {
+        let status = "🟢 Ενεργό";
+        let updated = new Date().toLocaleTimeString();
 
-      // Προσωρινά dummy metrics — μπορεί να επεκταθεί αργότερα
-      document.getElementById("status-cpu").textContent = "OK";
-      document.getElementById("status-cpu").className = "status-tag status-ok";
-      document.getElementById("status-ram").textContent = "OK";
-      document.getElementById("status-ram").className = "status-tag status-ok";
+        if (info.error) status = "🔴 Σφάλμα";
+        else if (info.status && info.status !== "ok") status = "🟠 Προειδοποίηση";
 
-      document.getElementById("status-timestamp").textContent =
-        "Τελευταία ενημέρωση: " +
-        new Date().toLocaleTimeString("el-GR", { hour12: false });
+        return `
+          <tr class="hover:bg-neutral-800/60 transition">
+            <td class="p-2 font-medium">${name}</td>
+            <td class="p-2">${status}</td>
+            <td class="p-2 text-right">${updated}</td>
+          </tr>`;
+      }).join('');
     } catch (err) {
-      console.error("[EURO_GOALS] System status fetch error:", err);
+      tbody.innerHTML = `<tr><td colspan="3" class="p-3 text-center text-red-400">⚠ Σφάλμα φόρτωσης.</td></tr>`;
     }
   }
 
-  window.addEventListener("load", loadSystemStatus);
-  setInterval(loadSystemStatus, 30000);
+  // ------------------------------------------------------------
+  // Controls
+  // ------------------------------------------------------------
+  document.getElementById("refreshSystem")?.addEventListener("click", loadSystemStatus);
+  loadSystemStatus();
+  setInterval(loadSystemStatus, 45000);
 </script>

@@ -1,134 +1,166 @@
-<!doctype html>
-<html lang="en">
+<!-- ============================================================
+     EURO_GOALS PRO+ v9.6.1 — Unified Alert Center
+     Responsive | Dark/Light | Auto-refresh | CSV Export
+============================================================ -->
+<!DOCTYPE html>
+<html lang="el">
 <head>
-  <meta charset="utf-8"/>
-  <title>Alert Center – EURO_GOALS v9.4.1</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="stylesheet" href="/static/css/alerts.css"/>
-  <script defer src="/static/js/alerts.js"></script>
-</head>
-<body class="eg-dark">
-  <div class="wrap">
-    <h1>Alert Center</h1>
-    <div class="toolbar">
-      <select id="filter-type" class="pill">
-        <option value="">All types</option>
-        <option>SMART_MONEY_ALERT</option>
-        <option>GOAL_ALERT</option>
-        <option>HEALTH_ALERT</option>
-        <option>SYSTEM_EVENT</option>
-      </select>
-      <label class="pill"><input type="checkbox" id="filter-unread"/> Only unread</label>
-      <button class="btn" id="btn-refresh">Refresh</button>
-      <button class="btn" id="btn-mark-read">Mark as Read</button>
-      <button class="btn" id="btn-clear">Clear All</button>
-      <button class="btn" id="btn-export">Export CSV</button>
-      <label class="pill" style="margin-left:auto;"><input type="checkbox" id="notif-toggle"/> Browser Notifications</label>
-    </div>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🚨 Alert Center — EURO_GOALS PRO+ v9.6.1</title>
+  <link rel="icon" href="/static/icons/eurogoals_512.png" />
 
-    <table id="alert-table" class="eg-table">
-      <thead>
-        <tr>
-          <th style="width:32px"><input type="checkbox" id="check-all"/></th>
-          <th style="width:160px">Time (UTC)</th>
-          <th style="width:200px">Type</th>
-          <th>Message</th>
-          <th style="width:260px">Meta</th>
-          <th style="width:90px">Status</th>
-        </tr>
-      </thead>
-      <tbody id="alert-tbody"><tr><td colspan="6">Loading…</td></tr></tbody>
-    </table>
-  </div>
+  <link rel="stylesheet" href="/static/css/unified_theme.css" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body data-theme="dark" class="font-inter bg-neutral-900 text-gray-100">
+
+  {% include "partials/unified_header.html" %}
+
+  <main class="max-w-6xl mx-auto p-4">
+    <section class="bg-neutral-900/70 dark:bg-neutral-900/70 backdrop-blur-md rounded-xl shadow p-4">
+      <h2 class="text-xl font-semibold text-sky-400 mb-4">🚨 Alert Center</h2>
+
+      <!-- Filter / Toolbar -->
+      <div class="flex flex-wrap gap-2 mb-4 text-sm">
+        <select id="filter-type" class="bg-neutral-800 border border-gray-700 rounded px-2 py-1">
+          <option value="">All types</option>
+          <option>SMART_MONEY_ALERT</option>
+          <option>GOAL_ALERT</option>
+          <option>HEALTH_ALERT</option>
+          <option>SYSTEM_EVENT</option>
+        </select>
+        <label class="flex items-center gap-1 text-gray-300">
+          <input type="checkbox" id="filter-unread" /> Only unread
+        </label>
+        <button id="btn-refresh" class="modal-btn bg-sky-700 hover:bg-sky-600">🔄 Refresh</button>
+        <button id="btn-mark-read" class="modal-btn bg-emerald-700 hover:bg-emerald-600">✅ Mark as Read</button>
+        <button id="btn-clear" class="modal-btn bg-rose-700 hover:bg-rose-600">🧹 Clear All</button>
+        <button id="btn-export" class="modal-btn bg-indigo-700 hover:bg-indigo-600">📦 Export CSV</button>
+        <label class="flex items-center gap-1 ml-auto text-gray-300 text-sm">
+          <input type="checkbox" id="notif-toggle" /> Browser Notifications
+        </label>
+      </div>
+
+      <!-- Alerts Table -->
+      <div class="overflow-x-auto max-h-[600px] border border-gray-800 rounded-lg">
+        <table class="w-full text-sm border-collapse">
+          <thead class="bg-gray-800 text-sky-400 sticky top-0">
+            <tr>
+              <th class="p-2 text-left w-10"><input type="checkbox" id="check-all" /></th>
+              <th class="p-2 text-left w-36">Time</th>
+              <th class="p-2 text-left w-40">Type</th>
+              <th class="p-2 text-left">Message</th>
+              <th class="p-2 text-left w-52">Meta</th>
+              <th class="p-2 text-left w-20">Status</th>
+            </tr>
+          </thead>
+          <tbody id="alert-tbody" class="divide-y divide-gray-700">
+            <tr><td colspan="6" class="text-center text-gray-400 p-3">Φόρτωση ειδοποιήσεων...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-xs text-gray-500 mt-3 text-right">Auto-refresh κάθε 60s — Unified v9.6.1</p>
+    </section>
+  </main>
+
+  <footer class="footer text-center text-xs text-gray-500 py-4">
+    © 2025 EURO_GOALS PRO+ | Unified Alert Center v9.6.1
+  </footer>
 
   <script>
     const q = s => document.querySelector(s);
     const tbody = q('#alert-tbody');
     const filterType = q('#filter-type');
     const filterUnread = q('#filter-unread');
-    const btnRefresh = q('#btn-refresh');
-    const btnMarkRead = q('#btn-mark-read');
-    const btnClear = q('#btn-clear');
-    const btnExport = q('#btn-export');
     const checkAll = q('#check-all');
 
-    const notifToggle = q('#notif-toggle');
-    // Συγχρονισμός με server preferences
-    (async()=>{
-      const s = await fetch('/api/settings/get').then(r=>r.json()).catch(()=>({ok:false}));
-      const enabled = !!(s.ok && s.settings && s.settings.notifications_enabled);
-      notifToggle.checked = enabled;
-    })();
-    notifToggle.addEventListener('change', async ()=>{
-      await fetch('/api/settings/update', {method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({notifications_enabled: notifToggle.checked})});
-      // ενημέρωση alerts.js για άμεση συμπεριφορά
-      if(window.EUROGOALS && EUROGOALS.Alerts){
-        EUROGOALS.Alerts.setNotificationsEnabled(notifToggle.checked);
-        if (notifToggle.checked) EUROGOALS.Alerts.requestPermission();
+    async function fetchAlerts() {
+      const params = new URLSearchParams();
+      if (filterType.value) params.set('types', filterType.value);
+      if (filterUnread.checked) params.set('unread', 'true');
+      params.set('limit', '200');
+      try {
+        const data = await fetch(`/api/alerts/list?${params}`).then(r => r.json());
+        renderAlerts(data.items || []);
+      } catch {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-rose-400">⚠️ Σφάλμα φόρτωσης alerts</td></tr>`;
       }
+    }
+
+    function renderAlerts(items) {
+      if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 p-3">No alerts</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = items.map(it => {
+        const t = it.created_at ? new Date(it.created_at).toISOString().replace('T', ' ').slice(0, 19) : '-';
+        const meta = it.meta ? JSON.stringify(it.meta, null, 1) : '-';
+        return `
+          <tr data-id="${it.id}" class="hover:bg-neutral-800/60 transition">
+            <td class="p-2"><input type="checkbox" class="row-check" /></td>
+            <td class="p-2">${t}</td>
+            <td class="p-2 text-sky-400">${it.type}</td>
+            <td class="p-2">${escapeHtml(it.message)}</td>
+            <td class="p-2 text-xs text-gray-400"><pre>${escapeHtml(meta)}</pre></td>
+            <td class="p-2 ${it.is_read ? 'text-emerald-400' : 'text-rose-400'}">${it.is_read ? 'Read' : 'Unread'}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    q('#btn-refresh').addEventListener('click', fetchAlerts);
+    q('#btn-clear').addEventListener('click', async () => {
+      if (!confirm('🧹 Διαγραφή όλων των alerts;')) return;
+      await fetch('/api/alerts/clear', { method: 'POST' });
+      fetchAlerts();
     });
+    q('#btn-mark-read').addEventListener('click', async () => {
+      const ids = Array.from(document.querySelectorAll('tr[data-id]'))
+        .filter(tr => tr.querySelector('.row-check')?.checked)
+        .map(tr => parseInt(tr.dataset.id));
+      const payload = ids.length ? { ids } : { all: true };
+      await fetch('/api/alerts/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      fetchAlerts();
+    });
+    q('#btn-export').addEventListener('click', () => {
+      const rows = Array.from(document.querySelectorAll('#alert-tbody tr[data-id]')).map(tr => {
+        const tds = tr.querySelectorAll('td');
+        return [tr.dataset.id, tds[1].textContent, tds[2].textContent, tds[3].textContent, tds[4].innerText, tds[5].textContent];
+      });
+      const csv = [['id', 'created_at', 'type', 'message', 'meta', 'status']]
+        .concat(rows).map(r => r.map(csvEsc).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'alerts_export.csv';
+      a.click();
+    });
+
+    function csvEsc(v) {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    }
 
     checkAll.addEventListener('change', () => {
       document.querySelectorAll('.row-check').forEach(cb => cb.checked = checkAll.checked);
     });
 
-    async function fetchList() {
-      const params = new URLSearchParams();
-      if (filterType.value) params.set('types', filterType.value);
-      if (filterUnread.checked) params.set('unread', 'true');
-      params.set('limit', '500');
-      const data = await fetch(`/api/alerts/list?${params}`).then(r=>r.json());
-      renderRows(data.items || []);
-    }
+    filterType.addEventListener('change', fetchAlerts);
+    filterUnread.addEventListener('change', fetchAlerts);
 
-    function renderRows(items){
-      if (!items.length){ tbody.innerHTML = `<tr><td colspan="6">No alerts</td></tr>`; return; }
-      tbody.innerHTML = items.map(it => {
-        const created = it.created_at ? new Date(it.created_at).toISOString().replace('T',' ').slice(0,19) : '';
-        const meta = it.meta ? JSON.stringify(it.meta) : '';
-        return `
-        <tr data-id="${it.id}">
-          <td><input type="checkbox" class="row-check"/></td>
-          <td>${created}</td>
-          <td><span class="tag ${it.type}">${it.type}</span></td>
-          <td>${escapeHtml(it.message)}</td>
-          <td><pre class="meta">${escapeHtml(meta)}</pre></td>
-          <td>${it.is_read ? 'Read' : 'Unread'}</td>
-        </tr>`;
-      }).join('');
-    }
-
-    btnRefresh.addEventListener('click', fetchList);
-    btnClear.addEventListener('click', async ()=>{
-      if(!confirm('Delete ALL alerts?')) return;
-      await fetch('/api/alerts/clear', {method:'POST'}); fetchList();
-    });
-    btnMarkRead.addEventListener('click', async ()=>{
-      const ids = Array.from(document.querySelectorAll('tr[data-id]'))
-        .filter(tr=>tr.querySelector('.row-check')?.checked)
-        .map(tr=>parseInt(tr.getAttribute('data-id'),10));
-      const payload = ids.length ? {ids} : {all:true};
-      await fetch('/api/alerts/mark-read', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-      fetchList();
-    });
-    btnExport.addEventListener('click', ()=>{
-      const rows = Array.from(document.querySelectorAll('#alert-tbody tr[data-id]')).map(tr=>{
-        const tds = tr.querySelectorAll('td');
-        return [tr.getAttribute('data-id'), tds[1].textContent, tds[2].innerText, tds[3].textContent, tds[4].innerText, tds[5].textContent];
-      });
-      const csv = [['id','created_at','type','message','meta','status']].concat(rows).map(r=>r.map(csvEsc).join(',')).join('\n');
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob);
-      const a=document.createElement('a'); a.href=url; a.download='alerts_export.csv'; a.click(); URL.revokeObjectURL(url);
-    });
-
-    function csvEsc(v){ const s=String(v??''); return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s }
-    function escapeHtml(s){ return String(s??'').replace(/[&<>"']/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
-
-    filterType.addEventListener('change', fetchList);
-    filterUnread.addEventListener('change', fetchList);
-    fetchList();
-    window.addEventListener('DOMContentLoaded', ()=>{ window.EUROGOALS && EUROGOALS.Alerts.startPolling(); });
+    fetchAlerts();
+    setInterval(fetchAlerts, 60000); // Auto-refresh κάθε 60s
   </script>
 </body>
 </html>

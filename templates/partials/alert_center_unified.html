@@ -1,0 +1,106 @@
+<!-- ============================================================
+     EURO_GOALS v9.6.1 PRO+ — Unified Alert Center Panel
+============================================================ -->
+<section class="card bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md transition-all">
+  <header class="flex justify-between items-center mb-2">
+    <h3 class="text-lg font-semibold text-sky-400">🚨 Alert Center</h3>
+    <div class="flex gap-2">
+      <button id="alerts-refresh" class="text-xs px-2 py-1 bg-sky-700 text-white rounded hover:bg-sky-600 transition">🔄</button>
+      <button id="alerts-clear" class="text-xs px-2 py-1 bg-red-700 text-white rounded hover:bg-red-600 transition">🗑</button>
+      <button id="alerts-export" class="text-xs px-2 py-1 bg-emerald-700 text-white rounded hover:bg-emerald-600 transition">⬇</button>
+    </div>
+  </header>
+
+  <!-- Alerts Table -->
+  <div class="overflow-x-auto max-h-[360px] border-t border-gray-800">
+    <table class="w-full text-sm border-collapse">
+      <thead class="bg-gray-800 text-sky-400 sticky top-0">
+        <tr>
+          <th class="p-2 text-left">Ώρα</th>
+          <th class="p-2 text-left">Τύπος</th>
+          <th class="p-2 text-left">Μήνυμα</th>
+          <th class="p-2 text-right">Κατάσταση</th>
+        </tr>
+      </thead>
+      <tbody id="alerts-body" class="divide-y divide-gray-700 text-gray-200">
+        <tr><td colspan="4" class="p-3 text-center text-gray-400">Φόρτωση ειδοποιήσεων...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="text-xs text-gray-500 mt-2">
+    * Ενημέρωση ανά 30 δευτερόλεπτα — τα alerts προέρχονται από SmartMoney, GoalMatrix & System Events.
+  </footer>
+</section>
+
+<script>
+  // ============================================================
+  // EURO_GOALS v9.6.1 PRO+ — Unified Alert Center Logic
+  // ============================================================
+  const bodyEl = document.getElementById("alerts-body");
+  const refreshBtn = document.getElementById("alerts-refresh");
+  const clearBtn = document.getElementById("alerts-clear");
+  const exportBtn = document.getElementById("alerts-export");
+
+  async function loadAlerts() {
+    try {
+      const res = await fetch("/api/smartmoney/alerts");
+      const data = await res.json();
+      const alerts = data.alerts || [];
+
+      if (!alerts.length) {
+        bodyEl.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-gray-400">Δεν υπάρχουν ενεργές ειδοποιήσεις.</td></tr>`;
+        return;
+      }
+
+      bodyEl.innerHTML = alerts.map(a => {
+        const time = a.timestamp
+          ? new Date(a.timestamp * 1000).toLocaleTimeString("el-GR", { hour12: false })
+          : "--:--";
+        const type = a.type || "GENERAL";
+        const msg = a.message || "-";
+        const status = a.resolved ? "✅ Κλειστό" : "⚠️ Ενεργό";
+
+        return `
+          <tr class="hover:bg-neutral-800/60 transition">
+            <td class="p-2">${time}</td>
+            <td class="p-2">${type}</td>
+            <td class="p-2">${msg}</td>
+            <td class="p-2 text-right">${status}</td>
+          </tr>`;
+      }).join("");
+    } catch (err) {
+      bodyEl.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-red-400">⚠ Σφάλμα φόρτωσης alerts.</td></tr>`;
+    }
+  }
+
+  // ------------------------------------------------------------
+  // Buttons
+  // ------------------------------------------------------------
+  refreshBtn.addEventListener("click", loadAlerts);
+  clearBtn.addEventListener("click", async () => {
+    if (!confirm("Να διαγραφούν όλες οι ειδοποιήσεις;")) return;
+    await fetch("/api/alerts/clear", { method: "POST" }).catch(() => {});
+    loadAlerts();
+  });
+
+  exportBtn.addEventListener("click", () => {
+    const rows = Array.from(bodyEl.querySelectorAll("tr")).map(tr => {
+      return Array.from(tr.children).map(td => td.textContent);
+    });
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "alerts_export.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // ------------------------------------------------------------
+  // Auto refresh
+  // ------------------------------------------------------------
+  loadAlerts();
+  setInterval(loadAlerts, 30000);
+</script>

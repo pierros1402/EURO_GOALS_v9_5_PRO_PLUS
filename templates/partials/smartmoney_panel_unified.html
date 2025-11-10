@@ -1,0 +1,99 @@
+<!-- ============================================================
+     EURO_GOALS v9.6.1 PRO+ — SmartMoney Panel (Unified Style)
+============================================================ -->
+<section class="card bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md transition-all">
+  <header class="flex justify-between items-center mb-2">
+    <h3 class="text-lg font-semibold text-sky-400">💰 SmartMoney Engine</h3>
+    <span id="sm-status-pill" class="px-2 py-1 rounded text-xs bg-gray-600 text-white">Φόρτωση...</span>
+  </header>
+
+  <div class="flex flex-wrap justify-between text-sm mb-2 text-gray-300">
+    <span id="sm-summary-total">Σύνολο αγώνων: 0</span>
+    <span id="sm-summary-updated">Ενημέρωση: --:--:--</span>
+    <button id="sm-refresh" class="text-xs px-2 py-1 bg-sky-700 text-white rounded hover:bg-sky-600 transition">
+      🔄 Ανανέωση
+    </button>
+  </div>
+
+  <!-- Πίνακας SmartMoney Highlights -->
+  <div class="overflow-x-auto max-h-[420px] border-t border-gray-800">
+    <table class="w-full text-sm border-collapse">
+      <thead class="bg-gray-800 text-sky-400 sticky top-0 z-10">
+        <tr>
+          <th class="p-2 text-left">League</th>
+          <th class="p-2 text-left">Match</th>
+          <th class="p-2 text-right">Odds</th>
+          <th class="p-2 text-right">Change</th>
+          <th class="p-2 text-center">Alerts</th>
+        </tr>
+      </thead>
+      <tbody id="sm-body" class="divide-y divide-gray-700 text-gray-200">
+        <tr><td colspan="5" class="p-3 text-center text-gray-400">Φόρτωση SmartMoney δεδομένων...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="text-xs text-gray-500 mt-2">
+    * Αυτόματη ανανέωση κάθε 30s — Προβολή κορυφαίων SmartMoney κινήσεων.
+  </footer>
+</section>
+
+<script>
+  // ============================================================
+  // EURO_GOALS v9.6.1 PRO+ — SmartMoney Unified Controller
+  // ============================================================
+  const smBody = document.getElementById("sm-body");
+  const smStatus = document.getElementById("sm-status-pill");
+  const smTotal = document.getElementById("sm-summary-total");
+  const smUpdated = document.getElementById("sm-summary-updated");
+  const smRefresh = document.getElementById("sm-refresh");
+
+  async function loadSmartMoney() {
+    try {
+      const res = await fetch("/api/smartmoney/summary");
+      const data = await res.json();
+      const items = data.matches || data.summary || [];
+      const active = data.status === "ok" || items.length > 0;
+
+      smStatus.textContent = active ? "Ενεργό" : "Ανενεργό";
+      smStatus.className = "px-2 py-1 rounded text-xs " + (active ? "bg-emerald-500 text-black" : "bg-red-600 text-white");
+
+      smTotal.textContent = `Σύνολο αγώνων: ${items.length}`;
+      smUpdated.textContent = "Ενημέρωση: " + new Date().toLocaleTimeString("el-GR", { hour12: false });
+
+      if (!items.length) {
+        smBody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-gray-400">Δεν υπάρχουν ενεργά δεδομένα.</td></tr>`;
+        return;
+      }
+
+      smBody.innerHTML = items.map(m => {
+        const league = m.league || "-";
+        const match = m.match || `${m.home_team || "?"} vs ${m.away_team || "?"}`;
+        const odds = m.odds ? m.odds.toFixed(2) : "-";
+        const change = m.change ? (m.change > 0 ? `+${m.change}%` : `${m.change}%`) : "-";
+        const alerts = m.alerts || 0;
+        const color = m.change > 0 ? "text-green-400" : (m.change < 0 ? "text-red-400" : "text-gray-300");
+
+        return `
+          <tr class="hover:bg-neutral-800/60 transition">
+            <td class="p-2">${league}</td>
+            <td class="p-2">${match}</td>
+            <td class="p-2 text-right">${odds}</td>
+            <td class="p-2 text-right ${color}">${change}</td>
+            <td class="p-2 text-center">${alerts}</td>
+          </tr>`;
+      }).join("");
+    } catch (err) {
+      smStatus.textContent = "Σφάλμα";
+      smStatus.className = "px-2 py-1 rounded text-xs bg-red-600 text-white";
+      smBody.innerHTML = `<tr><td colspan="5" class="p-3 text-center text-red-400">⚠ Σφάλμα φόρτωσης SmartMoney δεδομένων.</td></tr>`;
+    }
+  }
+
+  // ------------------------------------------------------------
+  // Controls
+  // ------------------------------------------------------------
+  smRefresh.addEventListener("click", loadSmartMoney);
+  setInterval(loadSmartMoney, 30000);
+  window.addEventListener("load", loadSmartMoney);
+</script>

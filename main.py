@@ -113,11 +113,21 @@ async def history_page(request: Request):
 
 @app.get("/system_status_page", response_class=HTMLResponse)
 async def system_status_page(request: Request):
-    return templates.TemplateResponse("system_status.html", {"request": request, "version": APP_VERSION})
+    return templates.TemplateResponse("system_status.html", {"request": request, "version": APP_VERSION}) 
+
+@app.get("/alert_center", response_class=HTMLResponse)
+async def alert_center(request: Request):
+    """Unified Alert Center v9.6.1 PRO+"""
+    return templates.TemplateResponse("alert_center.html", {"request": request, "version": APP_VERSION})
 
 # ============================================================
 # API ENDPOINTS
 # ============================================================
+@app.get("/system_status", response_class=HTMLResponse)
+async def system_status_alias(request: Request):
+    """Alias προς το system_status_page για local compatibility"""
+    return templates.TemplateResponse("system_status.html", {"request": request, "version": APP_VERSION})
+
 @app.get("/api/smartmoney/summary")
 async def api_sm_summary(): return await smartmoney_engine.get_summary()
 

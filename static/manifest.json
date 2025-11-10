@@ -1,75 +1,46 @@
 {
   "name": "EURO_GOALS PRO+ Unified",
   "short_name": "EURO_GOALS",
-  "description": "EURO_GOALS PRO+ Unified Expansion v9.5.5 — SmartMoney Engine, GoalMatrix Analytics, Heatmap & Historical System.",
+  "description": "EURO_GOALS PRO+ v9.6.1 — Unified Expansion integrating SmartMoney, GoalMatrix, Heatmap & Historical Engines.",
+  "lang": "el",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#0a0f1a",
+  "background_color": "#0a0a0a",
   "theme_color": "#0a84ff",
-  "categories": ["sports", "analytics", "dashboard"],
-
+  "orientation": "any",
+  "scope": "/",
   "icons": [
     {
-      "src": "/static/icons/icon-192.png",
+      "src": "/static/icons/eurogoals_192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/static/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "/static/icons/eurogoals_512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     }
   ],
-
-  "screenshots": [
-    {
-      "src": "/static/icons/splash_720x1280.png",
-      "sizes": "720x1280",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/static/icons/splash_1080x1920.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "wide"
-    }
-  ],
-
   "shortcuts": [
     {
       "name": "SmartMoney Monitor",
-      "short_name": "SmartMoney",
       "url": "/smartmoney_monitor",
-      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/static/icons/eurogoals_192.png", "sizes": "192x192" }]
     },
     {
       "name": "GoalMatrix Panel",
-      "short_name": "GoalMatrix",
-      "url": "/#goalmatrix",
-      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+      "url": "/goalmatrix_panel",
+      "icons": [{ "src": "/static/icons/eurogoals_192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Heatmap View",
-      "short_name": "Heatmap",
+      "name": "Heatmap",
       "url": "/heatmap",
-      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/static/icons/eurogoals_192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Historical Data",
-      "short_name": "History",
+      "name": "Ιστορικά Δεδομένα",
       "url": "/history_unified",
-      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/static/icons/eurogoals_192.png", "sizes": "192x192" }]
     }
   ]
 }

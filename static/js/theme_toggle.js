@@ -1,18 +1,26 @@
 // ============================================================
-// EURO_GOALS v9.5.5 PRO+ — Adaptive Theme Controller (Unified)
-// Auto sync μεταξύ tabs + System Preference + Manual Toggle
+// EURO_GOALS v9.6.1 PRO+ — Adaptive Theme Controller (MOBILE+)
+// Auto Sync + Fade Transition + System Preference + Manual Toggle
 // ============================================================
 
 (function () {
   const STORAGE_KEY = "eg_theme";
+  const SYNC_KEY = "eg_theme_sync";
   const body = document.body;
   const btn = document.getElementById("themeToggle");
+
+  // --- Fade helper για smooth αλλαγή
+  const fadeTransition = () => {
+    body.classList.add("fade-exit-active");
+    setTimeout(() => {
+      body.classList.remove("fade-exit-active");
+    }, 400);
+  };
 
   // --- Ανάγνωση αποθηκευμένου ή συστήματος
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const savedTheme = localStorage.getItem(STORAGE_KEY);
   const currentTheme = savedTheme || (prefersDark ? "dark" : "light");
-
   applyTheme(currentTheme);
 
   // --- Ενημέρωση κουμπιού
@@ -23,22 +31,21 @@
 
   // --- Εφαρμογή θέματος
   function applyTheme(theme, broadcast = false) {
+    fadeTransition();
     body.dataset.theme = theme;
     localStorage.setItem(STORAGE_KEY, theme);
     updateButton(theme);
 
-    // Εφαρμόζουμε και σε όλη τη σελίδα (header, panels, sections)
+    // Εφαρμογή κλάσεων (όπως στο CSS unified_theme)
     document.querySelectorAll("*").forEach((el) => {
       el.classList.remove("dark-mode", "light-mode");
       el.classList.add(theme === "dark" ? "dark-mode" : "light-mode");
     });
 
+    // Broadcast sync
     if (broadcast) {
       try {
-        localStorage.setItem(
-          "eg_theme_sync",
-          JSON.stringify({ theme, time: Date.now() })
-        );
+        localStorage.setItem(SYNC_KEY, JSON.stringify({ theme, time: Date.now() }));
       } catch {}
     }
   }
@@ -53,7 +60,7 @@
 
   // --- Sync across tabs
   window.addEventListener("storage", (e) => {
-    if (e.key === "eg_theme_sync" && e.newValue) {
+    if (e.key === SYNC_KEY && e.newValue) {
       try {
         const data = JSON.parse(e.newValue);
         if (data && data.theme && data.theme !== body.dataset.theme) {
@@ -64,7 +71,8 @@
   });
 
   // --- React to system preference change
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+  const systemMedia = window.matchMedia("(prefers-color-scheme: dark)");
+  systemMedia.addEventListener("change", (e) => {
     const systemTheme = e.matches ? "dark" : "light";
     const userPref = localStorage.getItem(STORAGE_KEY);
     if (!userPref) {
