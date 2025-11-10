@@ -1,14 +1,14 @@
 # ============================================================
-# EURO_GOALS v9.6.1 PRO+ — UNIFIED EXPANSION MAIN (STABLE)
+# EURO_GOALS v9.6.2 PRO+ — UNIFIED LIVE PROXY INTEGRATION
 # ============================================================
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import asyncio, os, sys, time
+import asyncio, os, sys, time, requests
 
-print("=== [EURO_GOALS] Unified App 9.6.1 PRO+ — FULL DEPLOY ACTIVE ===")
+print("=== [EURO_GOALS] Unified App 9.6.2 PRO+ — LIVE PROXY ENABLED ===")
 
 # ------------------------------------------------------------
 # SYSTEM PATH FIX
@@ -17,11 +17,26 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
+# ------------------------------------------------------------
+# GLOBAL LIVE PROXY ENDPOINT (Cloudflare Worker)
+# ------------------------------------------------------------
+LIVE_PROXY_URL = os.getenv("LIVE_PROXY_URL", "https://eurogoals-live.worker.dev/live")
+
+def get_live_data():
+    """Pulls unified live data feed from Cloudflare Worker"""
+    try:
+        r = requests.get(LIVE_PROXY_URL, timeout=6)
+        if r.status_code == 200:
+            return r.json()
+        else:
+            return {"status": "error", "msg": f"Worker returned {r.status_code}"}
+    except Exception as e:
+        return {"status": "offline", "error": str(e)}
+
 # ============================================================
 # ENGINE SHIMS (Fallback για μη διαθέσιμα modules)
 # ============================================================
 class _CacheShim:
-    """Απλό shim cache αντικείμενο για dummy επιστροφές."""
     def __init__(self, name): self.name = name
     def get_summary(self): return {"engine": self.name, "status": "ok", "summary": []}
     def get_alerts(self):  return {"engine": self.name, "alerts": []}
@@ -29,12 +44,10 @@ class _CacheShim:
     def get_history(self): return {"engine": self.name, "history": []}
 
 class _EngineShim:
-    """Fallback engine όταν λείπει το πραγματικό module."""
     def __init__(self, name):
         self.name = name
         self.cache = _CacheShim(name)
         self.ENABLED = False
-
     async def get_summary(self): return self.cache.get_summary()
     async def get_alerts(self):  return self.cache.get_alerts()
     async def get_data(self):    return self.cache.get_data()
@@ -70,7 +83,6 @@ def _try_import():
 # LOAD ENGINES
 # ============================================================
 _imports = _try_import()
-
 if _imports is None:
     print("[EURO_GOALS] ⚠️ Services not found. Using Engine Shims.")
     smartmoney_engine  = _EngineShim("smartmoney_engine")
@@ -84,7 +96,7 @@ else:
 # ============================================================
 # FASTAPI APP
 # ============================================================
-APP_VERSION = "9.6.1 PRO+ Unified Expansion"
+APP_VERSION = "9.6.2 PRO+ Live Proxy Integration"
 app = FastAPI(title=f"EURO_GOALS {APP_VERSION}")
 
 STATIC_DIR    = os.path.join(BASE_DIR, "static")
@@ -117,16 +129,15 @@ async def system_status_page(request: Request):
 
 @app.get("/alert_center", response_class=HTMLResponse)
 async def alert_center(request: Request):
-    """Unified Alert Center v9.6.1 PRO+"""
     return templates.TemplateResponse("alert_center.html", {"request": request, "version": APP_VERSION})
 
 # ============================================================
 # API ENDPOINTS
 # ============================================================
-@app.get("/system_status", response_class=HTMLResponse)
-async def system_status_alias(request: Request):
-    """Alias προς το system_status_page για local compatibility"""
-    return templates.TemplateResponse("system_status.html", {"request": request, "version": APP_VERSION})
+@app.get("/api/live")
+async def api_live_proxy():
+    """Returns unified live data directly from Cloudflare Worker"""
+    return JSONResponse(get_live_data())
 
 @app.get("/api/smartmoney/summary")
 async def api_sm_summary(): return await smartmoney_engine.get_summary()
@@ -157,13 +168,11 @@ async def api_odds_summary():
         return odds_unified_engine.get_summary()
 
 # ============================================================
-# SYSTEM CHECK ENDPOINT (fixed await handling)
+# SYSTEM CHECK
 # ============================================================
 @app.get("/api/system/check", response_class=JSONResponse)
 async def api_system_check():
-    """Επιστρέφει αναφορά κατάστασης όλων των ενεργών engines."""
     engines = {}
-
     async def safe_call(name, func):
         try:
             result = func
@@ -172,7 +181,6 @@ async def api_system_check():
             engines[name] = result
         except Exception as e:
             engines[name] = {"error": str(e)}
-
     await safe_call("smartmoney", smartmoney_engine.get_summary())
     await safe_call("goalmatrix", goal_matrix_engine.get_summary())
     await safe_call("heatmap", heatmap_engine.get_summary())
@@ -182,6 +190,7 @@ async def api_system_check():
     return {
         "version": APP_VERSION,
         "status": "online",
+        "proxy_url": LIVE_PROXY_URL,
         "timestamp": int(time.time()),
         "engines": engines
     }
@@ -192,6 +201,7 @@ async def api_system_check():
 @app.on_event("startup")
 async def startup_event():
     print(f"[EURO_GOALS] 🚀 Εκκίνηση v{APP_VERSION}")
+    print(f"[EURO_GOALS] 🌍 Using LIVE PROXY URL: {LIVE_PROXY_URL}")
     async def _safe(name, func):
         try:
             asyncio.create_task(func())
