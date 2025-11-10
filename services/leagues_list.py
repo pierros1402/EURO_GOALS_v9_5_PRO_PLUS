@@ -1,59 +1,35 @@
 # ============================================================
-# EURO_GOALS v9.6.6 — Leagues Registry
+# EURO_GOALS v9.6.7 PRO+ — Structured Europe Leagues List
 # ============================================================
 
 LEAGUES = {
-    # ---- England (4 tiers)
-    "england/premier-league": "Premier League",
-    "england/championship": "Championship",
-    "england/league-one": "League One",
-    "england/league-two": "League Two",
+    "england/premier-league": {"name": "Premier League", "country": "England", "tier": 1, "has_table": True, "active": True},
+    "england/championship": {"name": "Championship", "country": "England", "tier": 2, "has_table": True, "active": True},
+    "england/league-one": {"name": "League One", "country": "England", "tier": 3, "has_table": True, "active": True},
+    "england/league-two": {"name": "League Two", "country": "England", "tier": 4, "has_table": True, "active": True},
+    "germany/bundesliga": {"name": "Bundesliga", "country": "Germany", "tier": 1, "has_table": True, "active": True},
+    "germany/2-bundesliga": {"name": "2. Bundesliga", "country": "Germany", "tier": 2, "has_table": True, "active": True},
+    "germany/3-liga": {"name": "3. Liga", "country": "Germany", "tier": 3, "has_table": True, "active": True},
+    "greece/super-league": {"name": "Super League Greece", "country": "Greece", "tier": 1, "has_table": True, "active": True},
+    "greece/super-league-2": {"name": "Super League 2", "country": "Greece", "tier": 2, "has_table": True, "active": True},
+    "greece/football-league": {"name": "Football League", "country": "Greece", "tier": 3, "has_table": True, "active": True},
+    "spain/laliga": {"name": "La Liga", "country": "Spain", "tier": 1, "has_table": True, "active": True},
+    "spain/laliga2": {"name": "La Liga 2", "country": "Spain", "tier": 2, "has_table": True, "active": True},
+    "italy/serie-a": {"name": "Serie A", "country": "Italy", "tier": 1, "has_table": True, "active": True},
+    "italy/serie-b": {"name": "Serie B", "country": "Italy", "tier": 2, "has_table": True, "active": True},
+    "france/ligue-1": {"name": "Ligue 1", "country": "France", "tier": 1, "has_table": True, "active": True},
+    "france/ligue-2": {"name": "Ligue 2", "country": "France", "tier": 2, "has_table": True, "active": True},
+    "portugal/primeira-liga": {"name": "Primeira Liga", "country": "Portugal", "tier": 1, "has_table": True, "active": True},
+    "portugal/liga-2": {"name": "Liga Portugal 2", "country": "Portugal", "tier": 2, "has_table": True, "active": True},
+    "netherlands/eredivisie": {"name": "Eredivisie", "country": "Netherlands", "tier": 1, "has_table": True, "active": True},
+    "netherlands/eerste-divisie": {"name": "Eerste Divisie", "country": "Netherlands", "tier": 2, "has_table": True, "active": True},
+}
 
-    # ---- Germany (3 tiers)
-    "germany/bundesliga": "Bundesliga",
-    "germany/2-bundesliga": "2. Bundesliga",
-    "germany/3-liga": "3. Liga",
-
-    # ---- Greece (3 tiers)
-    "greece/super-league": "Super League 1",
-    "greece/super-league-2": "Super League 2",
-    "greece/gamma-ethniki": "Gamma Ethniki",
-
-    # ---- Italy / Spain / France / Portugal / Netherlands (1–2)
-    "italy/serie-a": "Serie A",
-    "italy/serie-b": "Serie B",
-    "spain/laliga": "La Liga",
-    "spain/laliga2": "La Liga 2",
-    "france/ligue-1": "Ligue 1",
-    "france/ligue-2": "Ligue 2",
-    "portugal/primeira-liga": "Primeira Liga",
-    "portugal/liga-2": "Liga Portugal 2",
-    "netherlands/eredivisie": "Eredivisie",
-    "netherlands/eerste-divisie": "Eerste Divisie",
-
-    # ---- Scandinavia
-    "sweden/allsvenskan": "Allsvenskan",
-    "sweden/superettan": "Superettan",
-    "norway/eliteserien": "Eliteserien",
-    "norway/1st-division": "OBOS-ligaen",
-    "denmark/superliga": "Superliga",
-    "denmark/1st-division": "1st Division",
-
-    # ---- Eastern Europe
-    "poland/ekstraklasa": "Ekstraklasa",
-    "poland/1-liga": "I Liga",
-    "romania/liga-i": "Liga I",
-    "romania/liga-ii": "Liga II",
-    "czech-republic/1-liga": "Czech First League",
-    "czech-republic/2-liga": "Czech Second League",
-    "croatia/1-hnl": "1. HNL",
-    "serbia/super-liga": "Super Liga",
-    "turkey/super-lig": "Super Lig",
-    "turkey/1-lig": "1. Lig",
-
-    # ---- European Cups
-    "uefa/champions-league": "UEFA Champions League",
-    "uefa/europa-league": "UEFA Europa League",
-    "uefa/europa-conference-league": "UEFA Conference League",
-    "uefa/nations-league": "UEFA Nations League"
+EURO_COMPETITIONS = {
+    "europe/champions-league": {"name": "UEFA Champions League", "country": "Europe", "tier": 1, "has_table": False, "active": True},
+    "europe/europa-league": {"name": "UEFA Europa League", "country": "Europe", "tier": 2, "has_table": False, "active": True},
+    "europe/conference-league": {"name": "UEFA Conference League", "country": "Europe", "tier": 3, "has_table": False, "active": True},
+    "europe/euro-cup": {"name": "UEFA Euro", "country": "Europe", "tier": 1, "has_table": False, "active": True},
+    "europe/euro-qualifiers": {"name": "Euro Qualifiers", "country": "Europe", "tier": 2, "has_table": False, "active": True},
+    "europe/nations-league": {"name": "Nations League", "country": "Europe", "tier": 3, "has_table": False, "active": True},
 }

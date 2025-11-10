@@ -25,6 +25,7 @@ from services import (
     matchplan_engine,
     standings_engine
 )
+from services.leagues_list import LEAGUES, EURO_COMPETITIONS
 
 # Optional live proxy (Cloudflare)
 LIVE_PROXY_URL = os.getenv("LIVE_PROXY_URL", "https://eurogoals-live-proxy.pierros1402.workers.dev/live")
