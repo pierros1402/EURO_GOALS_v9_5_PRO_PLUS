@@ -1,31 +1,23 @@
-<!-- ==========================================================
-     EURO_GOALS PRO+ Unified — GoalMatrix Panel (v9.5.4)
-     ========================================================== -->
-<div class="panel-header">
-  <h3>⚽ GoalMatrix Engine</h3>
-  <button id="gm-refresh" class="header-btn">⟳</button>
-</div>
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚽ GoalMatrix Engine — EURO_GOALS PRO+ v9.5.5</title>
+  <link rel="icon" href="/static/icons/eurogoals_512.png" />
+  <link rel="stylesheet" href="/static/css/unified_theme.css" />
+  <link rel="stylesheet" href="/static/css/panels.css" />
+  <style>
+    body { background:#0d1117; color:#e6e6e6; font-family:'Inter',sans-serif; margin:0; padding:20px; }
+    h1 { color:#00bfff; text-align:center; margin-bottom:20px; }
+    .container { max-width:1100px; margin:auto; }
+  </style>
+</head>
 
-<div class="panel-body">
-  <div class="status-row">
-    <span>Κατάσταση:</span>
-    <span id="gm-status-pill" class="status-pill bg-gray">Loading...</span>
+<body>
+  <div class="container">
+    <h1>⚽ GoalMatrix Engine — EURO_GOALS PRO+ Unified Odds Feed</h1>
+    {% include "partials/goal_matrix_panel_unified.html" %}
   </div>
-
-  <table class="compact-table">
-    <thead>
-      <tr>
-        <th>League</th><th>Match</th><th>xG Home</th><th>xG Away</th><th>Exp Goals</th><th>Tendency</th>
-      </tr>
-    </thead>
-    <tbody id="gm-body">
-      <tr><td colspan="6">Αναμονή δεδομένων...</td></tr>
-    </tbody>
-  </table>
-
-  <div class="summary-footer">
-    <span id="gm-summary-total">Matches: 0</span> |
-    <span id="gm-summary-avg">Avg xG: --</span> |
-    <span id="gm-summary-time">Last Update: --</span>
-  </div>
-</div>
+</body>
+</html>

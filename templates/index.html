@@ -1,159 +1,105 @@
-<!DOCTYPE html>
-<html lang="el">
-<head>
-  <!-- =========================
-       META / SEO
-  ========================== -->
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>EURO_GOALS PRO+ v9.5.5 Unified Expansion</title>
-  <meta name="description" content="EURO_GOALS PRO+ Unified Expansion Platform v9.5.5 — SmartMoney, GoalMatrix, Heatmap & Historical Engine" />
+/* ============================================================
+   EURO_GOALS PRO+ v9.6.1 — Unified Service Worker
+   Ενεργοποιεί caching, offline mode & push event hooks
+   ============================================================ */
 
-  <!-- =========================
-       THEME / PWA / ICONS
-  ========================== -->
-  <meta name="theme-color" content="#0a84ff" />
-  <meta name="application-name" content="EURO_GOALS PRO+ Unified Expansion" />
-  <meta name="apple-mobile-web-app-title" content="EURO_GOALS PRO+" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+const CACHE_NAME = "eurogoals-cache-v961";
+const STATIC_ASSETS = [
+  "/",
+  "/static/css/style.css",
+  "/static/js/unified_expansion.js",
+  "/static/js/odds_panel.js",
+  "/static/js/goalmatrix_panel.js",
+  "/static/js/smartmoney_panel.js",
+  "/static/icons/eg_logo.png",
+  "/system_status",
+];
 
-  <link rel="icon" href="/static/icons/eurogoals_512.png" sizes="512x512" />
-  <link rel="apple-touch-icon" href="/static/icons/eurogoals_512.png" />
-  <link rel="manifest" href="/static/manifest.json" />
-  <link rel="shortcut icon" href="/static/icons/favicon.ico" type="image/x-icon" />
+// ------------------------------------------------------------
+// INSTALL — cache βασικά assets
+// ------------------------------------------------------------
+self.addEventListener("install", (event) => {
+  console.log("[EURO_GOALS][SW] Installing...");
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log("[EURO_GOALS][SW] Caching static assets...");
+      return cache.addAll(STATIC_ASSETS);
+    })
+  );
+});
 
-  <!-- =========================
-       FONTS / STYLES
-  ========================== -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/unified_theme.css" />
-  <link rel="stylesheet" href="/static/css/panels.css" />
-  <link rel="stylesheet" href="/static/css/style.css" />
-</head>
+// ------------------------------------------------------------
+// ACTIVATE — clean up old caches
+// ------------------------------------------------------------
+self.addEventListener("activate", (event) => {
+  console.log("[EURO_GOALS][SW] Activating...");
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+});
 
-<body data-theme="dark">
-  <!-- =========================
-       UNIFIED HEADER
-  ========================== -->
-  {% include "partials/unified_header.html" %}
+// ------------------------------------------------------------
+// FETCH — network first for API, cache first for static
+// ------------------------------------------------------------
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  const url = new URL(req.url);
 
-  <!-- =========================
-       SYSTEM SUMMARY
-  ========================== -->
-  <section class="system-summary mt-2">
-    {% include "partials/system_summary_bar.html" %}
-  </section>
-
-  <!-- =========================
-       DASHBOARD PANELS
-  ========================== -->
-  <main class="p-4">
-    <section class="grid-panels">
-      <!-- System Status -->
-      <article class="card col-4">{% include "partials/system_status_panel.html" %}</article>
-
-      <!-- GoalMatrix / SmartMoney -->
-      <article class="card col-4">{% include "partials/goal_matrix_panel.html" %}</article>
-      <article class="card col-4">{% include "partials/smartmoney_panel.html" %}</article>
-
-      <!-- Alerts Center -->
-      <article class="card col-6">{% include "partials/alert_center.html" %}</article>
-
-      <!-- Heatmap -->
-      <article class="card col-6 bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md">
-        <h3 class="text-lg font-semibold text-sky-400 mb-2">🔥 Goal Heatmap</h3>
-        <iframe src="/heatmap" style="width:100%;height:380px;border:0;border-radius:12px;"></iframe>
-      </article>
-
-      <!-- Historical Data -->
-      <article class="card col-12 bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md">
-        <h3 class="text-lg font-semibold text-sky-400 mb-2">📜 Ιστορικά Δεδομένα (FlashScore + SofaScore)</h3>
-        <div id="history_preview" style="max-height:380px;overflow-y:auto;">
-          <p>Φόρτωση ιστορικών δεδομένων...</p>
-        </div>
-      </article>
-    </section>
-  </main>
-
-  <!-- =========================
-       QUICK LINKS
-  ========================== -->
-  <section class="text-center mt-6 mb-6 text-sm">
-    <a href="/goalmatrix_panel" class="text-sky-400 hover:underline">📊 GoalMatrix Panel</a> |
-    <a href="/heatmap" class="text-sky-400 hover:underline">🔥 Heatmap</a> |
-    <a href="/smartmoney_monitor" class="text-sky-400 hover:underline">💰 SmartMoney Monitor</a> |
-    <a href="/history_unified" class="text-sky-400 hover:underline">📜 Ιστορικά Δεδομένα</a>
-  </section>
-
-  {% include "partials/system_controls_modal.html" %}
-
-  <footer class="footer text-center text-xs text-gray-500 py-4">
-    © 2025 EURO_GOALS PRO+ | Unified Expansion Interface v9.5.5
-  </footer>
-
-  <!-- =========================
-       SCRIPTS
-  ========================== -->
-  <script src="/static/js/ui_animations.js"></script>
-  <script src="/static/js/ui_controls.js"></script>
-  <script src="/static/js/system_summary.js"></script>
-  <script src="/static/js/goalmatrix_panel.js"></script>
-  <script src="/static/js/smartmoney_panel.js"></script>
-  <script src="/static/js/heatmap.js"></script>
-  <script src="/static/js/unified_expansion.js"></script>
-  <script src="/static/js/theme_toggle.js"></script>
-
-  <script>
-    // Modal Controls
-    document.getElementById('openControlsBtn')?.addEventListener('click', () => {
-      document.getElementById('systemControlsModal')?.classList.add('open');
-    });
-
-    // Quick Refresh
-    document.getElementById('quickRefresh')?.addEventListener('click', () => location.reload(true));
-
-    // Load Historical Preview
-    async function loadHistoryPreview() {
-      const el = document.getElementById("history_preview");
-      try {
-        const resp = await fetch("/api/history");
-        const data = await resp.json();
-        const items = data.history.slice(0, 25);
-        el.innerHTML = `
-          <table class="w-full text-sm border-collapse">
-            <thead class="bg-gray-800 text-sky-400 sticky top-0">
-              <tr><th class="p-2 text-left">League</th><th class="p-2 text-left">Match</th><th class="p-2 text-right">Score</th><th class="p-2 text-right">Source</th></tr>
-            </thead>
-            <tbody>
-              ${items.map(m => `
-                <tr class="hover:bg-neutral-800/60 transition">
-                  <td class="p-2">${m.league || '-'}</td>
-                  <td class="p-2">${m.home_team || '-'} vs ${m.away_team || '-'}</td>
-                  <td class="p-2 text-right">${m.score || '-'}</td>
-                  <td class="p-2 text-right">${m.source || '-'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>`;
-      } catch (err) {
-        el.innerHTML = `<p style="color:#f66;">⚠ Σφάλμα φόρτωσης ιστορικών δεδομένων.</p>`;
-      }
-    }
-    window.addEventListener("load", loadHistoryPreview);
-  </script>
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("/static/service-worker.js")
-        .then((reg) => console.log("[EURO_GOALS] ✅ Service Worker registered:", reg.scope))
-        .catch((err) => console.warn("[EURO_GOALS] ⚠️ Service Worker registration failed:", err));
-    });
+  // Network first για API endpoints
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
   }
-</script>
-</body>
-</html>
+
+  // Cache first για static resources
+  event.respondWith(
+    caches.match(req).then(
+      (cached) =>
+        cached ||
+        fetch(req).then((res) => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          return res;
+        })
+    )
+  );
+});
+
+// ------------------------------------------------------------
+// PUSH NOTIFICATIONS (hook, αν προστεθεί αργότερα VAPID)
+// ------------------------------------------------------------
+self.addEventListener("push", (event) => {
+  const data = event.data?.json() || {};
+  const title = data.title || "EURO_GOALS Update";
+  const body = data.body || "Νέα ενημέρωση διαθέσιμη";
+  const icon = "/static/icons/eg_logo.png";
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon,
+      badge: icon,
+      vibrate: [150, 75, 150],
+      data: data.url || "/",
+    })
+  );
+});
+
+// ------------------------------------------------------------
+// NOTIFICATION CLICK
+// ------------------------------------------------------------
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = event.notification.data || "/";
+  event.waitUntil(clients.openWindow(target));
+});

@@ -1,10 +1,9 @@
 <!-- ============================================================
-     EURO_GOALS PRO+ v9.5.5 – SmartMoney Panel (Unified Expansion)
-     Ενοποιημένο dashboard για SmartMoney Engine
+     EURO_GOALS PRO+ v9.6.3 — SmartMoney + Live Odds + History Tooltip
 ============================================================ -->
 <section class="card smartmoney-panel bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md transition-all">
   <header class="flex justify-between items-center mb-2">
-    <h3 class="text-lg font-semibold text-emerald-400">💰 SmartMoney Engine</h3>
+    <h3 class="text-lg font-semibold text-emerald-400">💰 SmartMoney Engine + Live Odds (History)</h3>
     <span id="sm-status-pill" class="px-2 py-1 rounded text-xs bg-gray-600 text-white">Loading...</span>
   </header>
 
@@ -17,7 +16,7 @@
     </button>
   </div>
 
-  <div class="table-container overflow-x-auto max-h-[420px]">
+  <div class="overflow-x-auto max-h-[460px]">
     <table class="w-full text-sm border-collapse">
       <thead class="bg-gray-800 text-emerald-400 sticky top-0 z-10">
         <tr>
@@ -26,83 +25,168 @@
           <th class="p-2 text-left">Bookmaker</th>
           <th class="p-2 text-right">Movement</th>
           <th class="p-2 text-right">Signal</th>
+          <th class="p-2 text-right">1</th>
+          <th class="p-2 text-right">X</th>
+          <th class="p-2 text-right">2</th>
           <th class="p-2 text-center">Status</th>
         </tr>
       </thead>
       <tbody id="sm-body" class="divide-y divide-gray-700 text-gray-200">
-        <tr>
-          <td colspan="6" class="p-2 text-center text-gray-400">Φόρτωση δεδομένων SmartMoney...</td>
-        </tr>
+        <tr><td colspan="9" class="p-2 text-center text-gray-400">Φόρτωση δεδομένων...</td></tr>
       </tbody>
     </table>
   </div>
 
   <footer class="text-xs text-gray-500 mt-2">
-    * Αυτόματη ενημέρωση κάθε 30 s – SmartMoney Unified API Feed
+    * Κόκκινο = μεταβολή απόδοσης • Hover = mini-ιστορικό (τελευταίες 3 τιμές)
   </footer>
 </section>
 
+<style>
+  @keyframes flashRed {
+    0% { background-color: rgba(255,0,0,0.25); }
+    100% { background-color: transparent; }
+  }
+  .odds-changed {
+    animation: flashRed 1.5s ease-in-out;
+  }
+  td[data-tooltip] {
+    position: relative;
+    cursor: help;
+  }
+  td[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  td[data-tooltip]:hover::after {
+    opacity: 1;
+  }
+</style>
+
 <script>
   // ============================================================
-  // SMARTMONEY PANEL SCRIPT – EURO_GOALS v9.5.5 PRO+ Unified Expansion
+  // SMARTMONEY + LIVE ODDS UNIFIED (με κόκκινο highlight + ιστορικό)
   // ============================================================
-  async function loadSmartMoneyData() {
+
+  let lastOddsCache = {}; // current snapshot
+  let oddsHistory = {};   // κρατάει έως 3 τελευταίες τιμές ανά match
+
+  async function loadSmartMoneyWithOdds() {
     const body = document.getElementById("sm-body");
     const pill = document.getElementById("sm-status-pill");
 
     try {
-      const [summaryRes, alertsRes] = await Promise.all([
-        fetch("/api/smartmoney/summary"),
-        fetch("/api/smartmoney/alerts")
+      const [alertsRes, oddsRes] = await Promise.all([
+        fetch("/api/smartmoney/alerts"),
+        fetch("/api/odds/data")
       ]);
 
-      const summary = await summaryRes.json();
       const alertsData = await alertsRes.json();
+      const oddsData = await oddsRes.json();
       const alerts = alertsData?.alerts || [];
+      const odds = oddsData?.matches || [];
+
+      function findOdds(matchName) {
+        const [home, away] = matchName.split(" vs ").map(s => s?.trim()?.toLowerCase());
+        if (!home || !away) return null;
+        return odds.find(o =>
+          o.home?.toLowerCase() === home && o.away?.toLowerCase() === away
+        );
+      }
 
       pill.textContent = "ON";
       pill.className = "px-2 py-1 rounded text-xs bg-green-500 text-black font-semibold";
 
-      if (alerts.length === 0) {
-        body.innerHTML = `<tr><td colspan="6" class="p-2 text-center text-gray-400">No active SmartMoney alerts.</td></tr>`;
-      } else {
-        body.innerHTML = alerts
-          .map(a => `
-            <tr class="hover:bg-neutral-800/60 transition">
-              <td class="p-2">${a.league || "-"}</td>
-              <td class="p-2">${a.match || "-"}</td>
-              <td class="p-2">${a.bookmaker || "-"}</td>
-              <td class="p-2 text-right">${a.movement || "-"}</td>
-              <td class="p-2 text-right ${
-                a.signal === "Strong"
-                  ? "text-green-400"
-                  : a.signal === "Weak"
-                  ? "text-yellow-300"
-                  : "text-gray-300"
-              }">${a.signal || "–"}</td>
-              <td class="p-2 text-center ${
-                a.active ? "text-green-400" : "text-red-400"
-              }">${a.active ? "Active" : "Closed"}</td>
-            </tr>
-          `)
-          .join("");
+      if (!alerts.length) {
+        body.innerHTML = `<tr><td colspan="9" class="p-2 text-center text-gray-400">No active SmartMoney alerts.</td></tr>`;
+        return;
       }
 
-      // summary info
+      body.innerHTML = alerts.map((a) => {
+        const o = findOdds(a.match || "") || {};
+        const key = `${a.match}-${a.bookmaker}`;
+        const prev = lastOddsCache[key] || {};
+        const cells = {};
+        const tooltip = {};
+
+        // Ενημέρωση ιστορικού
+        if (!oddsHistory[key]) oddsHistory[key] = { home: [], draw: [], away: [] };
+        ["odds_live_home","odds_live_draw","odds_live_away"].forEach(f => {
+          const newVal = o[f];
+          if (!newVal) return;
+          const type = f.includes("home") ? "home" : f.includes("draw") ? "draw" : "away";
+
+          // Αν αλλάζει τιμή, καταγραφή στο ιστορικό
+          if (prev[f] && prev[f] !== newVal) {
+            cells[f] = "odds-changed";
+            oddsHistory[key][type].unshift(newVal);
+            if (oddsHistory[key][type].length > 3)
+              oddsHistory[key][type].pop();
+          } else if (!oddsHistory[key][type].length) {
+            oddsHistory[key][type].push(newVal);
+          }
+
+          tooltip[f] = oddsHistory[key][type].join(" → ");
+        });
+
+        // Cache ενημέρωση
+        lastOddsCache[key] = {
+          odds_live_home: o.odds_live_home,
+          odds_live_draw: o.odds_live_draw,
+          odds_live_away: o.odds_live_away
+        };
+
+        return `
+          <tr class="hover:bg-neutral-800/60 transition">
+            <td class="p-2">${a.league || "-"}</td>
+            <td class="p-2">${a.match || "-"}</td>
+            <td class="p-2">${a.bookmaker || "-"}</td>
+            <td class="p-2 text-right">${a.movement || "-"}</td>
+            <td class="p-2 text-right ${
+              a.signal === "Strong" ? "text-green-400 font-semibold"
+              : a.signal === "Weak" ? "text-yellow-300" : "text-gray-300"
+            }">${a.signal || "–"}</td>
+            <td class="p-2 text-right ${cells.odds_live_home || ""}" data-tooltip="${tooltip.odds_live_home || ''}">
+              ${o.odds_live_home ?? "-"}
+            </td>
+            <td class="p-2 text-right ${cells.odds_live_draw || ""}" data-tooltip="${tooltip.odds_live_draw || ''}">
+              ${o.odds_live_draw ?? "-"}
+            </td>
+            <td class="p-2 text-right ${cells.odds_live_away || ""}" data-tooltip="${tooltip.odds_live_away || ''}">
+              ${o.odds_live_away ?? "-"}
+            </td>
+            <td class="p-2 text-center ${a.active ? "text-green-400" : "text-red-400"}">
+              ${a.active ? "Active" : "Closed"}
+            </td>
+          </tr>`;
+      }).join("");
+
       document.getElementById("sm-summary-total").textContent = `Alerts: ${alerts.length}`;
-      const activeCount = alerts.filter(a => a.active).length;
-      document.getElementById("sm-summary-active").textContent = `Active: ${activeCount}`;
+      document.getElementById("sm-summary-active").textContent = `Active: ${alerts.filter(a => a.active).length}`;
       document.getElementById("sm-summary-time").textContent =
-        "Last update: " + new Date().toLocaleTimeString("el-GR", { hour12: false });
+        "Last update: " + new Date().toLocaleTimeString("el-GR",{hour12:false});
+
     } catch (err) {
-      console.warn("[EURO_GOALS] SmartMoney fetch error:", err);
+      console.warn("[EURO_GOALS] SmartMoney+Odds fetch error:", err);
       pill.textContent = "OFF";
       pill.className = "px-2 py-1 rounded text-xs bg-red-600 text-white";
-      body.innerHTML = `<tr><td colspan="6" class="p-2 text-center text-gray-400">⚠ Σφάλμα φόρτωσης δεδομένων.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="9" class="p-2 text-center text-gray-400">⚠ Σφάλμα φόρτωσης δεδομένων.</td></tr>`;
     }
   }
 
-  document.getElementById("sm-refresh")?.addEventListener("click", loadSmartMoneyData);
-  window.addEventListener("load", loadSmartMoneyData);
-  setInterval(loadSmartMoneyData, 30000);
+  document.getElementById("sm-refresh")?.addEventListener("click", loadSmartMoneyWithOdds);
+  window.addEventListener("load", loadSmartMoneyWithOdds);
+  setInterval(loadSmartMoneyWithOdds, 30000);
 </script>

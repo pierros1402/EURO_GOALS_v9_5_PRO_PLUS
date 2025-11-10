@@ -1,5 +1,5 @@
 # ============================================================
-# SMARTMONEY ENGINE v1.0.0 — EURO_GOALS PRO+ Unified
+# SMARTMONEY ENGINE v1.0.1 — EURO_GOALS PRO+ Unified
 # Multi-source odds (Bet365, Stoiximan, OPAP)
 # ============================================================
 
@@ -22,20 +22,24 @@ class SmartMoneyCache:
     def __init__(self):
         self.summary = {
             "enabled": SMARTMONEY_ENABLED,
-            "status": "Loading",
+            "status": "Initializing",
             "count": 0,
             "last_updated_ts": 0
         }
         self.alerts = []
 
     # --------------------------------------------------------
-    # New helper methods
+    # Core methods
     # --------------------------------------------------------
     def get_summary(self):
         return self.summary
 
     def get_alerts(self):
         return self.alerts
+
+    def get_data(self):
+        """Generic data accessor for compatibility"""
+        return {"summary": self.summary, "alerts": self.alerts}
 
 
 # ------------------------------------------------------------
@@ -47,9 +51,9 @@ cache = SmartMoneyCache()
 # BACKGROUND REFRESHER (Simulated until real API integration)
 # ------------------------------------------------------------
 async def background_refresher():
-    """Fake background task — replace with real API polling"""
+    """Fake background task — replace with real API polling."""
     if not SMARTMONEY_ENABLED:
-        print("⚠️ SMARTMONEY DISABLED")
+        print("⚠️ SMARTMONEY ENGINE DISABLED")
         return
 
     print("💰 SMARTMONEY ENGINE ACTIVE (looping)...")
@@ -57,7 +61,6 @@ async def background_refresher():
     while True:
         await asyncio.sleep(SMARTMONEY_REFRESH_INTERVAL)
 
-        # Dummy data simulation
         sample_sources = ["Bet365", "Stoiximan", "OPAP"]
         sample_matches = [
             ("Arsenal", "Chelsea"),
@@ -93,3 +96,15 @@ async def background_refresher():
         }
 
         print(f"[SMARTMONEY] Refreshed {len(alerts)} alerts at {time.strftime('%H:%M:%S')}")
+
+# ------------------------------------------------------------
+# API-LIKE ACCESSORS (Async wrappers)
+# ------------------------------------------------------------
+async def get_summary():
+    return cache.get_summary()
+
+async def get_alerts():
+    return cache.get_alerts()
+
+async def get_data():
+    return cache.get_data()

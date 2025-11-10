@@ -1,98 +1,99 @@
 # ============================================================
-# EURO_GOALS v9.5.5 PRO+ UNIFIED EXPANSION — MAIN APP (FINAL)
+# EURO_GOALS v9.6.1 PRO+ — UNIFIED EXPANSION MAIN (STABLE)
 # ============================================================
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import asyncio, time, os
+import asyncio, os, sys, time
 
-print("=== [EURO_GOALS] Unified App 9.5.5 PRO+ — FULL DEPLOY ACTIVE ===")
-
-# ------------------------------------------------------------
-# Προσπάθεια imports για Render + Local συμβατότητα
-# ------------------------------------------------------------
-def _try_import():
-    try:
-        # Render-style (όταν υπάρχει φάκελος app/)
-        from app.services import smartmoney_engine, goalmatrix_engine, heatmap_engine, history_engine
-        return smartmoney_engine, goalmatrix_engine, heatmap_engine, history_engine
-    except ModuleNotFoundError:
-        try:
-            # Local-style
-            from services import smartmoney_engine, goalmatrix_engine, heatmap_engine, history_engine
-            return smartmoney_engine, goalmatrix_engine, heatmap_engine, history_engine
-        except ModuleNotFoundError:
-            return None
-
-_imports = _try_import()
+print("=== [EURO_GOALS] Unified App 9.6.1 PRO+ — FULL DEPLOY ACTIVE ===")
 
 # ------------------------------------------------------------
-# Engine Shims για ασφαλή εκκίνηση
+# SYSTEM PATH FIX
 # ------------------------------------------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
+# ============================================================
+# ENGINE SHIMS (Fallback για μη διαθέσιμα modules)
+# ============================================================
 class _CacheShim:
+    """Απλό shim cache αντικείμενο για dummy επιστροφές."""
     def __init__(self, name): self.name = name
-    def get_summary(self): return {"engine": self.name, "summary": [], "ts": int(time.time())}
-    def get_alerts(self): return []
-    def get_data(self): return {"engine": self.name, "data": [], "ts": int(time.time())}
-    def get_history(self): return {"engine": self.name, "history": [], "ts": int(time.time())}
+    def get_summary(self): return {"engine": self.name, "status": "ok", "summary": []}
+    def get_alerts(self):  return {"engine": self.name, "alerts": []}
+    def get_data(self):    return {"engine": self.name, "data": []}
+    def get_history(self): return {"engine": self.name, "history": []}
 
 class _EngineShim:
+    """Fallback engine όταν λείπει το πραγματικό module."""
     def __init__(self, name):
         self.name = name
         self.cache = _CacheShim(name)
-        self.ENABLED = True
+        self.ENABLED = False
+
+    async def get_summary(self): return self.cache.get_summary()
+    async def get_alerts(self):  return self.cache.get_alerts()
+    async def get_data(self):    return self.cache.get_data()
+    async def get_history(self, source="flashscore"): return self.cache.get_history()
+    async def get_odds_data(self): return self.cache.get_data()
+    async def get_odds_summary(self): return self.cache.get_summary()
     async def background_refresher(self):
-        print(f"[EURO_GOALS] ({self.name}) shim refresher started.")
+        print(f"[EURO_GOALS] ({self.name}) background shim running.")
         while True:
-            await asyncio.sleep(15)
+            await asyncio.sleep(30)
+
+# ============================================================
+# ENGINE IMPORT HELPER
+# ============================================================
+def _try_import():
+    try:
+        from services import (
+            smartmoney_engine,
+            goal_matrix_engine,
+            history_engine,
+            odds_unified_engine
+        )
+        try:
+            from services import heatmap_engine
+        except ImportError:
+            heatmap_engine = _EngineShim("heatmap_engine")
+        return smartmoney_engine, goal_matrix_engine, history_engine, odds_unified_engine, heatmap_engine
+    except ImportError as e:
+        print(f"[EURO_GOALS] ⚠️ Import error: {e}")
+        return None
+
+# ============================================================
+# LOAD ENGINES
+# ============================================================
+_imports = _try_import()
 
 if _imports is None:
     print("[EURO_GOALS] ⚠️ Services not found. Using Engine Shims.")
-    smartmoney_engine = _EngineShim("smartmoney_engine")
+    smartmoney_engine  = _EngineShim("smartmoney_engine")
     goal_matrix_engine = _EngineShim("goal_matrix_engine")
-    heatmap_engine = _EngineShim("heatmap_engine")
-    history_engine = _EngineShim("history_engine")
+    history_engine     = _EngineShim("history_engine")
+    odds_unified_engine = _EngineShim("odds_unified_engine")
+    heatmap_engine     = _EngineShim("heatmap_engine")
 else:
-    smartmoney_engine, goal_matrix_engine, heatmap_engine, history_engine = _imports
+    smartmoney_engine, goal_matrix_engine, history_engine, odds_unified_engine, heatmap_engine = _imports
 
-# ------------------------------------------------------------
-# Ενιαία διεπαφή (προστασία)
-# ------------------------------------------------------------
-def _ensure_engine_iface(engine, name):
-    if not hasattr(engine, "cache"): engine.cache = _CacheShim(name)
-    for meth in ["get_summary","get_alerts","get_data","get_history"]:
-        if not hasattr(engine.cache, meth):
-            setattr(engine.cache, meth, lambda: {"engine": name})
-    if not hasattr(engine, "background_refresher"):
-        async def _noop(): 
-            print(f"[EURO_GOALS] ({name}) bg shim running.")
-            while True: await asyncio.sleep(15)
-        engine.background_refresher = _noop
-    if not hasattr(engine, "ENABLED"): engine.ENABLED = True
-
-for eng, nm in [
-    (smartmoney_engine,"smartmoney_engine"),
-    (goal_matrix_engine,"goal_matrix_engine"),
-    (heatmap_engine,"heatmap_engine"),
-    (history_engine,"history_engine"),
-]: _ensure_engine_iface(eng, nm)
-
-# ------------------------------------------------------------
-# FastAPI app & templates
-# ------------------------------------------------------------
-APP_VERSION = "9.5.5 PRO+ Unified Expansion"
+# ============================================================
+# FASTAPI APP
+# ============================================================
+APP_VERSION = "9.6.1 PRO+ Unified Expansion"
 app = FastAPI(title=f"EURO_GOALS {APP_VERSION}")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR = os.path.join(BASE_DIR, "static")
+STATIC_DIR    = os.path.join(BASE_DIR, "static")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # ============================================================
-# MAIN PAGES
+# PAGES
 # ============================================================
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -117,88 +118,66 @@ async def system_status_page(request: Request):
 # ============================================================
 # API ENDPOINTS
 # ============================================================
-# 🧠 SMARTMONEY
 @app.get("/api/smartmoney/summary")
-async def api_sm_summary(): return smartmoney_engine.cache.get_summary()
+async def api_sm_summary(): return await smartmoney_engine.get_summary()
 
 @app.get("/api/smartmoney/alerts")
-async def api_sm_alerts(): return {"alerts": smartmoney_engine.cache.get_alerts()}
+async def api_sm_alerts(): return {"alerts": await smartmoney_engine.get_alerts()}
 
-# 🎯 GOALMATRIX
 @app.get("/api/goalmatrix/summary")
-async def api_gm_summary(): return goal_matrix_engine.cache.get_summary()
+async def api_gm_summary(): return await goal_matrix_engine.get_summary()
 
 @app.get("/api/goalmatrix/alerts")
-async def api_gm_alerts(): return {"alerts": goal_matrix_engine.cache.get_alerts()}
-@app.get("/api/goalmatrix/items")
-async def api_gm_items():
-    # Dummy data για εμφάνιση στο panel (θα αντικατασταθεί με real GoalMatrix data)
-    sample_items = [
-        {
-            "league": "Premier League",
-            "home": "Arsenal",
-            "away": "Liverpool",
-            "xg_home": 1.9,
-            "xg_away": 1.2,
-            "expected_goals": 3.1,
-            "tendency": "Over 2.5"
-        },
-        {
-            "league": "Serie A",
-            "home": "Inter",
-            "away": "Napoli",
-            "xg_home": 1.4,
-            "xg_away": 1.1,
-            "expected_goals": 2.5,
-            "tendency": "Balanced"
-        }
-    ]
-    return {"items": sample_items, "ts": int(time.time())}
-# 🔥 HEATMAP
+async def api_gm_alerts(): return {"alerts": await goal_matrix_engine.get_alerts()}
+
 @app.get("/api/heatmap/data")
-async def api_heatmap_data(): return heatmap_engine.cache.get_data()
+async def api_heatmap_data(): return await heatmap_engine.get_data()
 
-# 🕓 ΙΣΤΟΡΙΚΑ (FlashScore + SofaScore)
 @app.get("/api/history")
-async def api_history(source: str = "flashscore"):
-    return await history_engine.get_history(source)
+async def api_history(source: str = "flashscore"): return await history_engine.get_history(source)
+
+@app.get("/api/odds/data")
+async def api_odds_data(): return await odds_unified_engine.get_odds_data()
+
+@app.get("/api/odds/summary")
+async def api_odds_summary():
+    try:
+        return await odds_unified_engine.get_summary()
+    except TypeError:
+        return odds_unified_engine.get_summary()
 
 # ============================================================
-# HEALTH / STATUS
+# SYSTEM CHECK ENDPOINT (fixed await handling)
 # ============================================================
-@app.get("/system_status")
-async def system_status():
-    def safe_len(data, key): 
+@app.get("/api/system/check", response_class=JSONResponse)
+async def api_system_check():
+    """Επιστρέφει αναφορά κατάστασης όλων των ενεργών engines."""
+    engines = {}
+
+    async def safe_call(name, func):
         try:
-            return len(data.get(key, [])) if isinstance(data, dict) else 0
-        except Exception:
-            return 0
+            result = func
+            if asyncio.iscoroutine(result):
+                result = await result
+            engines[name] = result
+        except Exception as e:
+            engines[name] = {"error": str(e)}
+
+    await safe_call("smartmoney", smartmoney_engine.get_summary())
+    await safe_call("goalmatrix", goal_matrix_engine.get_summary())
+    await safe_call("heatmap", heatmap_engine.get_summary())
+    await safe_call("history", history_engine.get_summary())
+    await safe_call("odds_unified", odds_unified_engine.get_summary())
 
     return {
         "version": APP_VERSION,
-        "engines": {
-            "smartmoney": {
-                "active": getattr(smartmoney_engine, "ENABLED", True),
-                "alerts": safe_len(smartmoney_engine.cache.get_summary(), "summary")
-            },
-            "goalmatrix": {
-                "active": getattr(goal_matrix_engine, "ENABLED", True),
-                "alerts": safe_len(goal_matrix_engine.cache.get_summary(), "summary")
-            },
-            "heatmap": {
-                "active": getattr(heatmap_engine, "ENABLED", True),
-                "items": safe_len(heatmap_engine.cache.get_data(), "data")
-            },
-            "history": {
-                "active": getattr(history_engine, "ENABLED", True),
-                "history_items": safe_len(history_engine.cache.get_history(), "history")
-            }
-        },
-        "ts": int(time.time())
+        "status": "online",
+        "timestamp": int(time.time()),
+        "engines": engines
     }
 
 # ============================================================
-# STARTUP
+# STARTUP TASKS
 # ============================================================
 @app.on_event("startup")
 async def startup_event():
@@ -209,17 +188,17 @@ async def startup_event():
             print(f"✅ {name} background task started.")
         except Exception as e:
             print(f"⚠️ {name} init error: {e}")
-
     await _safe("SMARTMONEY", smartmoney_engine.background_refresher)
     await _safe("GOALMATRIX", goal_matrix_engine.background_refresher)
-    await _safe("HEATMAP", heatmap_engine.background_refresher)
-    await _safe("HISTORY", history_engine.background_refresher)
+    await _safe("HEATMAP",    heatmap_engine.background_refresher)
+    await _safe("HISTORY",    history_engine.background_refresher)
+    await _safe("ODDS",       odds_unified_engine.background_refresher)
 
 # ============================================================
-# LOCAL STARTUP
+# LOCAL RUN
 # ============================================================
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
     print(f"🏁 Running EURO_GOALS on 0.0.0.0:{port}")
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
