@@ -1,5 +1,5 @@
 # =====================================================
-# EURO_GOALS v9.5.4 PRO+ — Clean UTF-8 Requirements
+# EURO_GOALS v9.6.1 PRO+ — Clean UTF-8 Requirements
 # =====================================================
 
 # --- Core Framework ---
@@ -13,6 +13,7 @@ pydantic==2.9.2
 
 # --- HTTP / APIs ---
 httpx==0.27.0
+aiohttp==3.10.10
 requests==2.32.3
 
 # --- Database ---
@@ -23,9 +24,11 @@ psycopg2-binary==2.9.9
 # --- Data Handling ---
 pandas==2.2.3
 openpyxl==3.1.5
+beautifulsoup4==4.12.3
 
 # --- System Monitoring / Sound / Alerts ---
 psutil==6.1.0
 playsound==1.2.2
 pydub==0.25.1
-# rebuild trigger
+
+# --- Rebuild Trigger ---
