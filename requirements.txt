@@ -1,5 +1,5 @@
 # =====================================================
-# EURO_GOALS v9.6.1 PRO+ — Clean UTF-8 Requirements
+# EURO_GOALS v9.6.8 PRO+ — Full Stable Requirements
 # =====================================================
 
 # --- Core Framework ---
@@ -16,7 +16,7 @@ httpx==0.27.0
 aiohttp==3.10.10
 requests==2.32.3
 
-# --- Database ---
+# --- Database (optional for Render/Local) ---
 SQLAlchemy==2.0.36
 alembic==1.14.0
 psycopg2-binary==2.9.9
@@ -31,4 +31,15 @@ psutil==6.1.0
 playsound==1.2.2
 pydub==0.25.1
 
-# --- Rebuild Trigger ---
+# --- CLI / Debug / Output Formatting ---
+rich==13.9.3   # για test_env_status.py
+colorama==0.4.6
+
+# --- Caching / Misc ---
+cachetools==5.5.0
+
+# =====================================================
+# DEV / LOCAL ONLY (προαιρετικά)
+# =====================================================
+# notebook==7.2.0
+# ipython==8.27.0

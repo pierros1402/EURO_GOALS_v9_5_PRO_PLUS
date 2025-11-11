@@ -1,213 +1,161 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="el">
 <head>
-  <!-- ========================================================= -->
-  <!-- META / SEO / PWA                                           -->
-  <!-- ========================================================= -->
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>EURO_GOALS PRO+ v9.6.8 — Unified Auto-Refresh PWA</title>
-  <meta name="description"
-        content="EURO_GOALS PRO+ v9.6.8 — Unified Expansion Platform integrating SmartMoney, GoalMatrix, Heatmap & History Engines" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EURO_GOALS PRO+ v9.6.9</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" href="/static/icons/eurogoals_192.png" sizes="192x192">
   <meta name="theme-color" content="#0a84ff" />
-
-  <!-- ========================================================= -->
-  <!-- ICONS / MANIFEST / APPLE SPLASH -->
-  <!-- ========================================================= -->
-  <link rel="manifest" href="/static/manifest.json" />
-  <link rel="icon" href="/static/icons/eurogoals_512.png" sizes="512x512" />
-  <link rel="apple-touch-icon" href="/static/icons/apple_touch_icon.png" />
-  <link rel="apple-touch-startup-image" href="/static/icons/apple_splash.png" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="EURO_GOALS PRO+" />
-
-  <!-- ========================================================= -->
-  <!-- FONTS & STYLES                                             -->
-  <!-- ========================================================= -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/unified_theme.css" />
-  <link rel="stylesheet" href="/static/css/panels.css" />
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    :root { --bg: #0b1220; --fg: #e6eefc; --muted:#8aa3c7; --accent:#0a84ff; --ok:#2ecc71; --warn:#f1c40f; --err:#ff6b6b; }
+    body { margin:0; background:var(--bg); color:var(--fg); font-family:ui-sans-serif, system-ui, Segoe UI, Roboto, Ubuntu, Cantarell; }
+    header { position:sticky; top:0; background:#0d1526cc; backdrop-filter: blur(6px); border-bottom:1px solid #0f1b33; padding:10px 14px; z-index:5; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .badge { padding:6px 10px; border-radius:10px; background:#0f1b33; border:1px solid #132042; font-size:12px; color:var(--muted); }
+    .badge.ok { color:#c8f7dc; border-color:#1f6d4d; background:#113a2d; }
+    .badge.warn { color:#ffeaa7; border-color:#574d1a; background:#352f10; }
+    .badge.err { color:#ffd6d6; border-color:#5c1c1c; background:#301111; }
+    main { padding:14px; display:grid; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); gap:14px; }
+    .card { background:#0f1b33; border:1px solid #152449; border-radius:14px; padding:14px; }
+    .title { font-weight:700; letter-spacing:.3px; margin-bottom:8px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:8px; border-bottom:1px dashed #1c2d58; font-size:14px; }
+    th { text-align:left; color:#8aa3c7; }
+    .small { color:#8aa3c7; font-size:12px; }
+  </style>
 </head>
+<body>
+  <header>
+    <div class="row">
+      <div class="badge">EURO_GOALS PRO+ <b>{{ version }}</b></div>
+      <div id="status-worker" class="badge">Worker: ...</div>
+      <div id="status-history" class="badge">History: ...</div>
+      <div id="status-matchplan" class="badge">Matchplan: ...</div>
+      <div id="status-standings" class="badge">Standings: ...</div>
+    </div>
+  </header>
 
-<body data-theme="dark">
+  <main>
+    <section class="card">
+      <div class="title">Ιστορικά Αποτελέσματα</div>
+      <div class="small" id="history-info">last update: -</div>
+      <table id="history-table">
+        <thead><tr><th>Ημερομηνία</th><th>Λίγκα</th><th>Αγώνας</th><th>Σκορ</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
 
-  <!-- ========================================================= -->
-  <!-- APP LOADING SPLASH (custom)                                -->
-  <!-- ========================================================= -->
-  <div id="splash-screen" style="
-    position:fixed;top:0;left:0;width:100%;height:100%;
-    background:#0a84ff;color:white;z-index:9999;
-    display:flex;flex-direction:column;justify-content:center;align-items:center;
-    font-family:'Inter',sans-serif;text-align:center;">
-    <img src="/static/icons/eurogoals_512.png" alt="EURO_GOALS Logo" style="width:120px;height:120px;margin-bottom:25px;">
-    <h2>EURO_GOALS PRO+</h2>
-    <p>Loading...</p>
-  </div>
+    <section class="card">
+      <div class="title">Πρόγραμμα Αγώνων</div>
+      <div class="small" id="matchplan-info">last update: -</div>
+      <table id="matchplan-table">
+        <thead><tr><th>Ημερομηνία</th><th>Λίγκα</th><th>Αγώνας</th><th>Κατάσταση</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
 
-  <script>
-    window.addEventListener("load", () => {
-      const splash = document.getElementById("splash-screen");
-      if (splash) splash.style.display = "none";
-    });
-  </script>
-
-  {% include "partials/unified_header.html" %}
-  <section class="system-summary mt-2">
-    {% include "partials/system_summary_bar_unified.html" %}
-  </section>
-
-  <!-- ========================================================= -->
-  <!-- DASHBOARD GRID PANELS                                      -->
-  <!-- ========================================================= -->
-  <main class="p-4">
-    <section class="grid-panels">
-
-      <!-- System Status -->
-      <article class="card col-4">
-        {% include "partials/system_status_panel.html" %}
-      </article>
-
-      <!-- GoalMatrix / SmartMoney -->
-      <article class="card col-4">
-        {% include "partials/goal_matrix_panel_unified.html" %}
-      </article>
-      <article class="card col-4">
-        {% include "partials/smartmoney_panel_unified.html" %}
-      </article>
-
-      <!-- Alerts -->
-      <article class="card col-6">
-        {% include "partials/alert_center_unified.html" %}
-      </article>
-
-      <!-- Heatmap -->
-      <article class="card col-6 bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md">
-        <h3 class="text-lg font-semibold text-sky-400 mb-2">🔥 Goal Heatmap</h3>
-        <iframe src="/heatmap"
-                loading="lazy"
-                style="width:100%;height:380px;border:0;border-radius:12px;"></iframe>
-      </article>
-
-      <!-- ========================================================= -->
-      <!-- 📜 Compact History Overview (Mini Stats + Button)          -->
-      <!-- ========================================================= -->
-      <article class="card col-12 bg-neutral-900/70 text-gray-100 rounded-xl shadow p-3 backdrop-blur-md" id="historyCompact">
-        <h3 class="text-lg font-semibold text-sky-400 mb-2">📜 Ιστορικά Δεδομένα (Σύνοψη)</h3>
-        <p class="text-gray-400 text-sm mb-3">
-          Τελευταίες ενημερώσεις από το ενοποιημένο σύστημα ιστορικών EURO_GOALS PRO+.
-        </p>
-        <div id="history_mini" style="max-height:280px;overflow-y:auto;">
-          <p>Φόρτωση δεδομένων...</p>
-        </div>
-        <div class="text-center mt-3">
-          <button onclick="window.location.href='/history_unified'"
-                  style="background:#00b7ff;color:#fff;border:none;padding:8px 18px;
-                         border-radius:10px;font-weight:600;cursor:pointer;
-                         transition:all .25s ease;">
-            🔍 Προβολή Πλήρους Ιστορικού
-          </button>
-        </div>
-      </article>
-
+    <section class="card">
+      <div class="title">Βαθμολογίες</div>
+      <div class="small" id="standings-info">last update: -</div>
+      <table id="standings-table">
+        <thead><tr><th>Λίγκα</th><th>Πηγή</th><th>Entries</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </section>
   </main>
 
-  <!-- ========================================================= -->
-  <!-- QUICK LINKS / FOOTER                                       -->
-  <!-- ========================================================= -->
-  <section class="text-center mt-6 mb-6 text-sm">
-    <a href="/goalmatrix_panel" class="text-sky-400 hover:underline">📊 GoalMatrix Panel</a> |
-    <a href="/heatmap" class="text-sky-400 hover:underline">🔥 Heatmap</a> |
-    <a href="/smartmoney_monitor" class="text-sky-400 hover:underline">💰 SmartMoney Monitor</a> |
-    <a href="/history_unified" class="text-sky-400 hover:underline">📜 Ιστορικά Δεδομένα</a>
-  </section>
-
-  {% include "partials/system_controls_modal.html" %}
-
-  <footer class="footer text-center text-xs text-gray-500 py-4">
-    © 2025 EURO_GOALS PRO+ | Unified Expansion Interface v9.6.8
-  </footer>
-
-  <!-- ========================================================= -->
-  <!-- SCRIPTS                                                    -->
-  <!-- ========================================================= -->
-  <script src="/static/js/ui_animations.js"></script>
-  <script src="/static/js/ui_controls.js"></script>
-  <script src="/static/js/system_summary.js"></script>
-  <script src="/static/js/goalmatrix_panel.js"></script>
-  <script src="/static/js/smartmoney_panel.js"></script>
-  <script src="/static/js/heatmap.js"></script>
-  <script src="/static/js/unified_expansion.js"></script>
-  <script src="/static/js/theme_toggle.js"></script>
-
-  <!-- ========================================================= -->
-  <!-- INLINE FETCHERS                                            -->
-  <!-- ========================================================= -->
   <script>
-    async function loadMiniHistory() {
-      const el = document.getElementById("history_mini");
+    function badge(el, status){
+      el.classList.remove('ok','warn','err');
+      if(status==='ok') el.classList.add('ok');
+      if(status==='warn') el.classList.add('warn');
+      if(status==='err') el.classList.add('err');
+    }
+    async function fetchJSON(url){ 
+      const r = await fetch(url); 
+      if(!r.ok) throw new Error('HTTP '+r.status); 
+      return await r.json(); 
+    }
+
+    async function refreshAll(){
+      // Worker status (via backend health)
       try {
-        const resp = await fetch("/api/history");
-        const data = await resp.json();
-        const items = data.history.slice(0, 10);
-        const total = data.history.length || 0;
-        el.innerHTML = `
-          <p class="text-xs text-gray-400 mb-2">Σύνολο διαθέσιμων: ${total} αγώνες</p>
-          <table class="w-full text-sm border-collapse">
-            <thead class="bg-gray-800 text-sky-400 sticky top-0">
-              <tr>
-                <th class="p-2 text-left">Διοργάνωση</th>
-                <th class="p-2 text-left">Αγώνας</th>
-                <th class="p-2 text-right">Αποτέλεσμα</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${items.map(m => `
-                <tr class="hover:bg-neutral-800/60 transition">
-                  <td class="p-2">${m.league || '-'}</td>
-                  <td class="p-2">${m.home_team || '-'} vs ${m.away_team || '-'}</td>
-                  <td class="p-2 text-right">${m.score || '-'}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>`;
-      } catch (err) {
-        el.innerHTML = `<p style="color:#f66;">⚠ Σφάλμα φόρτωσης δεδομένων ιστορικού.</p>`;
+        const sys = await fetchJSON('/api/system/check');
+        const worker = document.getElementById('status-worker');
+        worker.textContent = 'Worker: ' + (sys.proxy ? 'Online' : 'N/A');
+        badge(worker, sys.proxy ? 'ok' : 'warn');
+      } catch(e){ 
+        const worker = document.getElementById('status-worker');
+        worker.textContent = 'Worker: Error';
+        badge(worker, 'err');
+      }
+
+      // History
+      try {
+        const hist = await fetchJSON('/api/history');
+        document.getElementById('history-info').textContent = 'last update: ' + (hist.timestamp || '-');
+        const tb = document.querySelector('#history-table tbody');
+        tb.innerHTML = '';
+        (hist.history || []).slice(0,50).forEach(m => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${m.date||''}</td><td>${m.league||''}</td><td>${(m.home||'')+' - '+(m.away||'')}</td><td>${m.score||''}</td>`;
+          tb.appendChild(tr);
+        });
+        const b = document.getElementById('status-history');
+        b.textContent = 'History: OK (' + (hist.total||0) + ')';
+        badge(b, 'ok');
+      } catch(e){
+        const b = document.getElementById('status-history');
+        b.textContent = 'History: Error';
+        badge(b, 'err');
+      }
+
+      // Matchplan
+      try {
+        const mp = await fetchJSON('/api/matchplan/summary');
+        document.getElementById('matchplan-info').textContent = 'last update: ' + (mp.timestamp || '-');
+        const tb = document.querySelector('#matchplan-table tbody');
+        tb.innerHTML = '';
+        (mp.matches || []).slice(0,50).forEach(m => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${m.date||''}</td><td>${m.league||''}</td><td>${(m.home||'')+' - '+(m.away||'')}</td><td>${m.status||''}</td>`;
+          tb.appendChild(tr);
+        });
+        const b = document.getElementById('status-matchplan');
+        b.textContent = 'Matchplan: OK (' + ((mp.matches||[]).length) + ')';
+        badge(b, 'ok');
+      } catch(e){
+        const b = document.getElementById('status-matchplan');
+        b.textContent = 'Matchplan: Error';
+        badge(b, 'err');
+      }
+
+      // Standings
+      try {
+        const st = await fetchJSON('/api/standings/summary');
+        document.getElementById('standings-info').textContent = 'last update: ' + (st.timestamp || '-');
+        const tb = document.querySelector('#standings-table tbody');
+        tb.innerHTML = '';
+        (st.standings || []).forEach(s => {
+          const raw = s.raw || [];
+          const count = Array.isArray(raw) ? raw.length : (raw.table||[]).length || 0;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${s.league||''}</td><td>${s.source||''}</td><td>${count}</td>`;
+          tb.appendChild(tr);
+        });
+        const b = document.getElementById('status-standings');
+        b.textContent = 'Standings: OK (' + ((st.standings||[]).length) + ')';
+        badge(b, 'ok');
+      } catch(e){
+        const b = document.getElementById('status-standings');
+        b.textContent = 'Standings: Error';
+        badge(b, 'err');
       }
     }
-    window.addEventListener("load", loadMiniHistory);
+
+    refreshAll();
+    setInterval(refreshAll, 60*1000);
   </script>
-
-  <!-- ========================================================= -->
-  <!-- SERVICE WORKER REGISTRATION (Auto-Refresh Enabled) -->
-  <!-- ========================================================= -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", async () => {
-        try {
-          const reg = await navigator.serviceWorker.register("/static/service-worker.js");
-          console.log("[EURO_GOALS] ✅ Service Worker registered:", reg.scope);
-
-          // Έλεγχος για νέα έκδοση κάθε 30 λεπτά
-          setInterval(async () => {
-            if (reg.waiting) {
-              console.log("[EURO_GOALS] 🔁 Updating to new version...");
-              reg.waiting.postMessage({ type: "NEW_VERSION" });
-              window.location.reload(true);
-            } else {
-              await reg.update();
-            }
-          }, 30 * 60 * 1000);
-        } catch (err) {
-          console.warn("[EURO_GOALS] ⚠️ SW registration failed:", err);
-        }
-      });
-    }
-  </script>
-
 </body>
 </html>

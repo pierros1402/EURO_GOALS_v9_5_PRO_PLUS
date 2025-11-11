@@ -1,75 +1,69 @@
 # ============================================================
-# EURO_GOALS v9.6.6 PRO+ — MATCHPLAN ENGINE
-# ============================================================
-# Δημιουργεί πλάνο 15 ημερών με fixtures από FlashScore/SofaScore.
-# Περιλαμβάνει μόνο τις λίγκες που υπάρχουν στο leagues_list.
+# EURO_GOALS PRO+ — MATCHPLAN ENGINE (v9.6.9 Stable)
 # ============================================================
 
-import aiohttp
-import asyncio
-import time
+import os, aiohttp, asyncio
 from datetime import datetime, timedelta
-from random import uniform
+from dotenv import load_dotenv
 from services.leagues_list import LEAGUES
 
-CACHE = {"ts": 0, "data": []}
-CACHE_TTL = 60 * 60 * 3  # 3 ώρες
-
-BASE_URL = "https://www.sofascore.com/api/v1/sport/football/scheduled-events"
+load_dotenv()
+IS_DEV = os.getenv("IS_DEV", "false").lower() == "true"
+SPORTMONKS_API_KEY = os.getenv("SPORTMONKS_API_KEY", "").strip()
 
 async def fetch_json(session, url):
     try:
-        async with session.get(url, timeout=20) as r:
+        async with session.get(url, timeout=20, ssl=not IS_DEV) as r:
             if r.status != 200:
+                print(f"[MATCHPLAN] Bad response {r.status}: {url}")
                 return {}
             return await r.json()
     except Exception as e:
         print(f"[MATCHPLAN] fetch error: {e}")
         return {}
 
-async def get_matchplan_15d():
-    """Λήψη fixtures 15 ημερών από SofaScore (μόνο ενεργές λίγκες)."""
-    now = datetime.utcnow()
-    if time.time() - CACHE["ts"] < CACHE_TTL:
-        return CACHE["data"]
+async def get_from_sportmonks():
+    results = []
+    if not SPORTMONKS_API_KEY:
+        return results
 
-    all_matches = []
+    today = datetime.utcnow().date()
+    until = today + timedelta(days=7)
+    url = (
+        f"https://api.sportmonks.com/v3/football/fixtures/between/{today}/{until}"
+        f"?api_token={SPORTMONKS_API_KEY}&include=participants;league;season"
+    )
     async with aiohttp.ClientSession() as session:
-        for i in range(15):
-            date = (now + timedelta(days=i)).strftime("%Y-%m-%d")
-            url = f"{BASE_URL}/{date}"
-            data = await fetch_json(session, url)
-            if not data:
+        data = await fetch_json(session, url)
+        items = data.get("data", [])
+        for e in items:
+            try:
+                participants = e.get("participants", [])
+                home = next((p.get("name") for p in participants if p.get("meta", {}).get("location")=="home"), None)
+                away = next((p.get("name") for p in participants if p.get("meta", {}).get("location")=="away"), None)
+                league_name = (e.get("league") or {}).get("name")
+                start = e.get("starting_at") or {}
+                date = (start.get("date") or "").split("T")[0] or e.get("date")
+                results.append({
+                    "league": league_name,
+                    "home": home,
+                    "away": away,
+                    "date": date,
+                    "status": e.get("status"),
+                })
+            except Exception:
                 continue
-            events = data.get("events", [])
-            for e in events:
-                league = e.get("tournament", {}).get("name", "")
-                country = e.get("tournament", {}).get("category", {}).get("name", "")
-                league_path = f"{country.lower()}/{league.lower().replace(' ', '-')}"
-                if any(league_path.startswith(x.split("/")[0]) for x in LEAGUES.keys()):
-                    all_matches.append({
-                        "date": date,
-                        "time": datetime.utcfromtimestamp(e.get("startTimestamp", 0)).strftime("%H:%M"),
-                        "home": e.get("homeTeam", {}).get("name", ""),
-                        "away": e.get("awayTeam", {}).get("name", ""),
-                        "league": league,
-                        "country": country,
-                        "id": e.get("id"),
-                        "odds_home": round(uniform(1.5, 2.9), 2),
-                        "odds_draw": round(uniform(2.8, 4.0), 2),
-                        "odds_away": round(uniform(2.5, 4.5), 2)
-                    })
-            await asyncio.sleep(0.5)
+    return results
 
-    CACHE["ts"] = time.time()
-    CACHE["data"] = {"engine": "matchplan_engine", "days": 15, "fixtures": all_matches}
-    return CACHE["data"]
+async def get_matchplan_summary():
+    data = await get_from_sportmonks()
+    return {"timestamp": datetime.utcnow().isoformat(), "matches": data}
 
 async def background_refresher():
-    print("[MATCHPLAN] Background refresher active.")
     while True:
         try:
-            await get_matchplan_15d()
+            await get_matchplan_summary()
+            print("[MATCHPLAN] Background refresher active.")
         except Exception as e:
             print(f"[MATCHPLAN] refresher error: {e}")
-        await asyncio.sleep(CACHE_TTL)
+        await asyncio.sleep(1800)

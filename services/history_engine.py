@@ -1,126 +1,72 @@
 # ============================================================
-# EURO_GOALS v9.6.6 PRO+ — HISTORY ENGINE (FlashScore + SofaScore)
+# EURO_GOALS PRO+ — HISTORY ENGINE (v9.6.9 Unified Edition)
+# ============================================================
+# Συνδέεται με Cloudflare Worker v2.1:
+#  - /thesportsdb/history?league=<slug>
+#  - /flashscore/history?url=...
 # ============================================================
 
-import aiohttp
-import asyncio
-import time
-import json
-from bs4 import BeautifulSoup
+import os, asyncio, aiohttp
+from datetime import datetime
+from dotenv import load_dotenv
 from services.leagues_list import LEAGUES
 
-CACHE = {"flashscore": {"ts": 0, "data": []}, "sofascore": {"ts": 0, "data": []}}
-CACHE_TTL = 60 * 60 * 6  # 6 ώρες
-YEARS_BACK = 10
+load_dotenv()
 
-async def fetch_html(session, url):
+WORKER_BASE_RAW = os.getenv("LIVE_PROXY_URL", "").rstrip("/")
+WORKER_BASE = WORKER_BASE_RAW[:-5] if WORKER_BASE_RAW.endswith("/live") else WORKER_BASE_RAW
+IS_DEV = os.getenv("IS_DEV", "false").lower() == "true"
+
+async def _fetch_json(session, url):
     try:
-        async with session.get(url, timeout=20) as r:
-            return await r.text()
-    except:
-        return ""
+        async with session.get(url, timeout=20, ssl=not IS_DEV) as r:
+            if r.status != 200:
+                print(f"[HISTORY] Non-200 ({r.status}) για {url}")
+                return {}
+            return await r.json()
+    except Exception as e:
+        print(f"[HISTORY] Error στο fetch για {url}: {e}")
+        return {}
 
-async def fetch_json(session, url):
-    try:
-        async with session.get(url, timeout=20) as r:
-            return await r.text()
-    except:
-        return "{}"
+async def get_history():
+    if not WORKER_BASE:
+        return {"timestamp": datetime.utcnow().isoformat(), "history": [], "note": "LIVE_PROXY_URL missing"}
 
-def parse_flashscore(html):
-    soup = BeautifulSoup(html, "html.parser")
-    matches = []
-    for row in soup.select(".event__match"):
-        home = row.select_one(".event__participant--home")
-        away = row.select_one(".event__participant--away")
-        score_home = row.select_one(".event__score--home")
-        score_away = row.select_one(".event__score--away")
-        date = row.get("data-date", "")
-        league = row.get("data-league", "")
-        if home and away and score_home and score_away:
-            matches.append({
-                "league": league or "Unknown",
-                "date": date,
-                "home_team": home.text.strip(),
-                "away_team": away.text.strip(),
-                "score": f"{score_home.text.strip()} - {score_away.text.strip()}",
-                "source": "flashscore"
-            })
-    return matches
-
-def parse_sofascore(json_text):
-    try:
-        data = json.loads(json_text)
-    except:
-        return []
-    results = []
-    for e in data.get("events", []):
-        results.append({
-            "league": e.get("tournament", {}).get("name", ""),
-            "date": e.get("startTimestamp", ""),
-            "home_team": e.get("homeTeam", {}).get("name", ""),
-            "away_team": e.get("awayTeam", {}).get("name", ""),
-            "score": f"{e.get('homeScore', {}).get('current', '-')} - {e.get('awayScore', {}).get('current', '-')}",
-            "source": "sofascore"
-        })
-    return results
-
-async def get_flashscore_history():
-    if time.time() - CACHE["flashscore"]["ts"] < CACHE_TTL:
-        return CACHE["flashscore"]["data"]
-
-    base_url = "https://www.flashscore.com/football/"
-    all_data = []
+    history = []
     async with aiohttp.ClientSession() as session:
-        for path in LEAGUES.keys():
-            for year_offset in range(YEARS_BACK):
-                season_year = 2025 - year_offset
-                url = f"{base_url}{path}-{season_year}-{season_year+1}/results/"
-                html = await fetch_html(session, url)
-                all_data.extend(parse_flashscore(html))
-                await asyncio.sleep(0.4)
-    CACHE["flashscore"] = {"ts": time.time(), "data": all_data}
-    return all_data
+        jobs = []
+        for slug, meta in LEAGUES.items():
+            url = f"{WORKER_BASE}/thesportsdb/history?league={slug}"
+            jobs.append(_fetch_json(session, url))
 
-async def get_sofascore_history():
-    if time.time() - CACHE["sofascore"]["ts"] < CACHE_TTL:
-        return CACHE["sofascore"]["data"]
+        flashscore_url = os.getenv("FLASHCORE_URL", "").strip()
+        if flashscore_url:
+            jobs.append(_fetch_json(session, f"{WORKER_BASE}/flashscore/history?url={flashscore_url}"))
 
-    urls = [
-        "https://www.sofascore.com/api/v1/unique-tournament/17/season/52036/events",
-        "https://www.sofascore.com/api/v1/unique-tournament/8/season/52030/events"
-    ]
-    results = []
-    async with aiohttp.ClientSession() as session:
-        for url in urls:
-            txt = await fetch_json(session, url)
-            results.extend(parse_sofascore(txt))
-            await asyncio.sleep(0.4)
-    CACHE["sofascore"] = {"ts": time.time(), "data": results}
-    return results
+        results = await asyncio.gather(*jobs, return_exceptions=False)
 
-async def get_history(source="flashscore"):
-    flash_data, sofa_data = [], []
-    if source == "flashscore":
-        flash_data = await get_flashscore_history()
-        data = flash_data
-    elif source == "sofascore":
-        sofa_data = await get_sofascore_history()
-        data = sofa_data
-    else:
-        flash_data = await get_flashscore_history()
-        sofa_data = await get_sofascore_history()
-        data = flash_data + sofa_data
-    data.sort(key=lambda x: x.get("date", ""), reverse=True)
-    data = data[:2000]
-    return {"engine": "history_engine", "source": source, "history": data}
+        for res in results:
+            if not res or not isinstance(res, dict): 
+                continue
+            league = res.get("league")
+            for m in res.get("matches", []):
+                history.append({
+                    "league": league or m.get("league"),
+                    "date": m.get("date"),
+                    "home": m.get("home"),
+                    "away": m.get("away"),
+                    "score": m.get("score"),
+                    "id": m.get("id"),
+                })
+
+    history.sort(key=lambda x: (x.get("date") or ""), reverse=True)
+    return {"timestamp": datetime.utcnow().isoformat(), "total": len(history), "history": history}
 
 async def background_refresher():
-    print("[HISTORY] Background refresher active.")
     while True:
         try:
-            await get_flashscore_history()
-            await get_sofascore_history()
+            await get_history()
+            print("[HISTORY] Background refresher active ✅")
         except Exception as e:
             print(f"[HISTORY] refresher error: {e}")
-        await asyncio.sleep(CACHE_TTL)
+        await asyncio.sleep(1800)

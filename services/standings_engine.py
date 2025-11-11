@@ -1,104 +1,95 @@
 # ============================================================
-# EURO_GOALS v9.6.6 PRO+ — STANDINGS ENGINE
-# ============================================================
-# Συνδυάζει SportMonks + TheSportsDB (fallback)
+# EURO_GOALS PRO+ — STANDINGS ENGINE (v9.6.9, robust fix)
 # ============================================================
 
-import aiohttp
-import asyncio
 import os
-import time
+import asyncio
+import aiohttp
+from datetime import datetime
+from urllib.parse import quote
+from dotenv import load_dotenv
 from services.leagues_list import LEAGUES
 
-CACHE = {"ts": 0, "data": []}
-CACHE_TTL = 60 * 60 * 6  # 6 ώρες
+load_dotenv()
 
-SPORTMONKS_API_KEY = os.getenv("SPORTMONKS_API_KEY", "")
-THESPORTSDB_API_KEY = os.getenv("THESPORTSDB_API_KEY", "")
+IS_DEV = os.getenv("IS_DEV", "false").lower() == "true"
+THESPORTSDB_API_KEY = os.getenv("THESPORTSDB_API_KEY", "").strip() or "1"
+THESPORTSDB_BASE = os.getenv("THESPORTSDB_BASE", "https://www.thesportsdb.com/api/v1/json").rstrip("/")
 
-async def fetch_json(session, url):
+def slug_to_name(slug: str) -> str:
+    if not slug:
+        return ""
+    part = slug.split("/")[-1]
+    name = part.replace("-", " ").title()
+    return name
+
+async def _fetch_json(session: aiohttp.ClientSession, url: str):
     try:
-        async with session.get(url, timeout=25) as r:
+        async with session.get(url, timeout=20, ssl=not IS_DEV) as r:
             if r.status != 200:
+                print(f"[STANDINGS] Non-200 ({r.status}) για {url}")
                 return {}
             return await r.json()
     except Exception as e:
-        print(f"[STANDINGS] fetch error: {e}")
+        print(f"[STANDINGS] fetch error: {e}  url={url}")
         return {}
 
-async def get_from_sportmonks():
-    """Πλήρη standings από SportMonks"""
-    results = []
-    base_url = f"https://api.sportmonks.com/v3/football/standings?api_token={SPORTMONKS_API_KEY}"
-    async with aiohttp.ClientSession() as session:
-        data = await fetch_json(session, base_url)
-        for item in data.get("data", []):
-            league_name = item.get("name", "Unknown")
-            table = item.get("standings", [])
-            for team in table:
-                results.append({
-                    "league": league_name,
-                    "team": team.get("team", {}).get("name", ""),
-                    "position": team.get("position"),
-                    "points": team.get("overall", {}).get("points"),
-                    "played": team.get("overall", {}).get("games_played"),
-                    "won": team.get("overall", {}).get("won"),
-                    "drawn": team.get("overall", {}).get("drawn"),
-                    "lost": team.get("overall", {}).get("lost"),
-                    "goals_for": team.get("overall", {}).get("goals_scored"),
-                    "goals_against": team.get("overall", {}).get("goals_against"),
-                    "goal_diff": team.get("overall", {}).get("goal_difference"),
-                    "form": team.get("recent_form", "")
-                })
-        return results
-
-async def get_from_thesportsdb():
-    """Fallback standings από TheSportsDB"""
-    results = []
-    async with aiohttp.ClientSession() as session:
-        for league in LEAGUES.values():
-            url = f"https://www.thesportsdb.com/api/v1/json/{THESPORTSDB_API_KEY}/lookuptable.php?l={league.replace(' ', '%20')}&s=2024-2025"
-            data = await fetch_json(session, url)
-            table = data.get("table", [])
-            for t in table:
-                results.append({
-                    "league": league,
-                    "team": t.get("strTeam", ""),
-                    "position": t.get("intRank"),
-                    "played": t.get("intPlayed"),
-                    "points": t.get("intPoints"),
-                    "won": t.get("intWin"),
-                    "drawn": t.get("intDraw"),
-                    "lost": t.get("intLoss")
-                })
-            await asyncio.sleep(0.5)
-    return results
+async def _get_from_thesportsdb(session: aiohttp.ClientSession, league_name: str, season: str = "2024-2025"):
+    safe_name = quote(league_name)
+    urls = [
+        f"{THESPORTSDB_BASE}/{THESPORTSDB_API_KEY}/lookuptable.php?l={safe_name}&s={quote(season)}",
+        f"{THESPORTSDB_BASE}/{THESPORTSDB_API_KEY}/lookuptable.php?l={safe_name}&s=2023-2024",
+    ]
+    for u in urls:
+        data = await _fetch_json(session, u)
+        table = data.get("table") or data.get("Table") or []
+        if table:
+            return {"source": "thesportsdb", "data": table}
+    return {}
 
 async def get_standings():
-    """Unified standings με προτεραιότητα SportMonks"""
-    if time.time() - CACHE["ts"] < CACHE_TTL:
-        return CACHE["data"]
+    results = []
+    async with aiohttp.ClientSession() as session:
+        tasks = []
+        for slug, meta in LEAGUES.items():
+            league_name = (
+                (meta.get("name") if isinstance(meta, dict) else None)
+                or (meta.get("display_name") if isinstance(meta, dict) else None)
+                or slug_to_name(slug)
+            )
 
-    data = []
-    if SPORTMONKS_API_KEY:
-        try:
-            data = await get_from_sportmonks()
-        except Exception as e:
-            print(f"[STANDINGS] SportMonks error: {e}")
+            async def load_one(sl=slug, lm=league_name):
+                tsdb_data = await _get_from_thesportsdb(session, lm)
+                return {"slug": sl, "league": lm, "standings": tsdb_data, "source": tsdb_data.get("source") or "thesportsdb"}
 
-    if not data and THESPORTSDB_API_KEY:
-        print("[STANDINGS] Falling back to TheSportsDB...")
-        data = await get_from_thesportsdb()
+            tasks.append(load_one())
 
-    CACHE["ts"] = time.time()
-    CACHE["data"] = {"engine": "standings_engine", "count": len(data), "standings": data}
-    return CACHE["data"]
+        items = await asyncio.gather(*tasks, return_exceptions=True)
+
+    unified = []
+    for it in items:
+        if isinstance(it, Exception):
+            print(f"[STANDINGS] task error: {it}")
+            continue
+
+        league = it.get("league")
+        data = it.get("standings") or {}
+        source = it.get("source")
+        simplified = {
+            "league": league,
+            "source": source,
+            "updated": datetime.utcnow().isoformat(),
+            "raw": data.get("data") or data.get("table") or data,
+        }
+        unified.append(simplified)
+
+    return {"timestamp": datetime.utcnow().isoformat(), "count": len(unified), "standings": unified}
 
 async def background_refresher():
-    print("[STANDINGS] Background refresher active.")
     while True:
         try:
             await get_standings()
+            print("[STANDINGS] Background refresher active.")
         except Exception as e:
             print(f"[STANDINGS] refresher error: {e}")
-        await asyncio.sleep(CACHE_TTL)
+        await asyncio.sleep(1800)

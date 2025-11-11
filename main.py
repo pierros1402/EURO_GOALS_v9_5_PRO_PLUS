@@ -1,17 +1,17 @@
 # ============================================================
-# EURO_GOALS v9.6.8 PRO+ — UNIFIED MATCHPLAN + STANDINGS SYSTEM + PWA Health Check
+# EURO_GOALS v9.6.9 PRO+ — UNIFIED REAL DATA EDITION (Deploy Ready)
 # ============================================================
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import asyncio, os, sys, time, requests
+import asyncio, os, sys, time
 
-print("=== [EURO_GOALS] Unified App 9.6.8 PRO+ — AUTO-REFRESH PWA ACTIVE ===")
+print("=== [EURO_GOALS] Unified App v9.6.9 PRO+ — DEPLOY MODE ACTIVE ===")
 
 # ------------------------------------------------------------
-# SYSTEM PATH FIX
+# PATH FIX
 # ------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
@@ -25,122 +25,107 @@ from services import (
     matchplan_engine,
     standings_engine
 )
-from services.leagues_list import LEAGUES, EURO_COMPETITIONS
 
 # ------------------------------------------------------------
-# OPTIONAL LIVE PROXY (Cloudflare)
+# FASTAPI APP
 # ------------------------------------------------------------
-LIVE_PROXY_URL = os.getenv("LIVE_PROXY_URL", "https://eurogoals-live-proxy.pierros1402.workers.dev/live")
+app = FastAPI(title="EURO_GOALS PRO+ v9.6.9 Unified")
 
-def get_live_data():
-    """Retrieve unified live feed from Cloudflare Worker"""
-    try:
-        r = requests.get(LIVE_PROXY_URL, timeout=6)
-        return r.json() if r.status_code == 200 else {"status": "error", "code": r.status_code}
-    except Exception as e:
-        return {"status": "offline", "error": str(e)}
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # ------------------------------------------------------------
-# FASTAPI APP SETUP
+# GLOBAL INFO
 # ------------------------------------------------------------
-APP_VERSION = "9.6.8 PRO+ — Auto-Refresh PWA"
-app = FastAPI(title=f"EURO_GOALS {APP_VERSION}")
+APP_VERSION = "v9.6.9 PRO+"
+RAW_PROXY = os.getenv("LIVE_PROXY_URL", "").strip()
+# normalize: remove trailing '/live' if user set full path
+LIVE_PROXY_URL = RAW_PROXY[:-5] if RAW_PROXY.endswith("/live") else RAW_PROXY
+IS_DEV = os.getenv("IS_DEV", "false").lower() == "true"
 
-STATIC_DIR = os.path.join(BASE_DIR, "static")
-TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
+print(f"[EURO_GOALS] ⚙️  Proxy: {LIVE_PROXY_URL or 'No proxy configured'} (raw={RAW_PROXY})")
+print(f"[EURO_GOALS] ⚙️  Mode: {'DEV' if IS_DEV else 'PRODUCTION'}")
 
 # ------------------------------------------------------------
-# MAIN PAGES
+# STARTUP EVENT
+# ------------------------------------------------------------
+@app.on_event("startup")
+async def startup_event():
+    print(f"=== [EURO_GOALS] 🚀 Starting App {APP_VERSION} ===")
+    await asyncio.sleep(1)
+
+    # Launch background refreshers (non-blocking)
+    asyncio.create_task(history_engine.background_refresher())
+    asyncio.create_task(matchplan_engine.background_refresher())
+    asyncio.create_task(standings_engine.background_refresher())
+
+    print("[EURO_GOALS] Background refreshers active.")
+    print("===============================================")
+    print("")
+
+# ------------------------------------------------------------
+# ROOT ENDPOINT
 # ------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "version": APP_VERSION})
 
-@app.get("/plan", response_class=HTMLResponse)
-async def plan_page(request: Request):
-    return templates.TemplateResponse("plan.html", {"request": request, "version": APP_VERSION})
-
-@app.get("/standings", response_class=HTMLResponse)
-async def standings_page(request: Request):
-    return templates.TemplateResponse("standings_panel.html", {"request": request, "version": APP_VERSION})
-
-@app.get("/history_unified", response_class=HTMLResponse)
-async def history_page(request: Request):
-    return templates.TemplateResponse("history_unified.html", {"request": request, "version": APP_VERSION})
-
 # ------------------------------------------------------------
-# ✅ PWA HEALTH CHECK PAGE
+# HEALTH ENDPOINT
 # ------------------------------------------------------------
-@app.get("/pwa_health_check", response_class=HTMLResponse)
-async def pwa_health_check(request: Request):
-    return templates.TemplateResponse("pwa_health_check.html", {"request": request, "version": APP_VERSION})
-
-# ------------------------------------------------------------
-# API ENDPOINTS
-# ------------------------------------------------------------
-@app.get("/api/live")
-async def api_live_proxy():
-    return JSONResponse(get_live_data())
-
-@app.get("/api/history")
-async def api_history(source: str = "flashscore"):
-    return await history_engine.get_history(source)
-
-@app.get("/api/matchplan")
-async def api_matchplan():
-    return await matchplan_engine.get_matchplan_15d()
-
-@app.get("/api/standings")
-async def api_standings():
-    return await standings_engine.get_standings()
-
-@app.get("/api/leagues")
-async def api_leagues():
-    """Επιστρέφει τη λίστα όλων των λιγκών και διοργανώσεων."""
-    return {
+@app.get("/api/system/check")
+async def system_check():
+    return JSONResponse({
+        "status": "ok",
         "version": APP_VERSION,
-        "total_leagues": len(LEAGUES),
-        "total_competitions": len(EURO_COMPETITIONS),
-        "leagues": LEAGUES,
-        "euro_competitions": EURO_COMPETITIONS
-    }
-
-# ------------------------------------------------------------
-# SYSTEM CHECK ENDPOINT
-# ------------------------------------------------------------
-@app.get("/api/system/check", response_class=JSONResponse)
-async def api_system_check():
-    data = {
-        "version": APP_VERSION,
-        "timestamp": int(time.time()),
-        "status": "online",
+        "proxy": LIVE_PROXY_URL or None,
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         "engines": {
-            "history_engine": "ok",
-            "matchplan_engine": "ok",
-            "standings_engine": "ok"
+            "history": "active",
+            "matchplan": "active",
+            "standings": "active"
         }
-    }
-    return data
+    })
 
 # ------------------------------------------------------------
-# STARTUP EVENTS
+# HISTORY ENDPOINT
 # ------------------------------------------------------------
-@app.on_event("startup")
-async def startup_event():
-    print(f"[EURO_GOALS] 🚀 App v{APP_VERSION} launched")
-    try:
-        asyncio.create_task(history_engine.background_refresher())
-        asyncio.create_task(matchplan_engine.background_refresher())
-        asyncio.create_task(standings_engine.background_refresher())
-    except Exception as e:
-        print(f"[EURO_GOALS] ⚠️ Startup refresher error: {e}")
+@app.get("/api/history")
+async def get_history():
+    data = await history_engine.get_history()
+    return JSONResponse(data)
 
 # ------------------------------------------------------------
-# LOCAL RUN (for manual testing)
+# MATCHPLAN ENDPOINT
 # ------------------------------------------------------------
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.getenv("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+@app.get("/api/matchplan/summary")
+async def get_matchplan_summary():
+    data = await matchplan_engine.get_matchplan_summary()
+    return JSONResponse(data)
+
+# ------------------------------------------------------------
+# STANDINGS ENDPOINT
+# ------------------------------------------------------------
+@app.get("/api/standings/summary")
+async def get_standings_summary():
+    data = await standings_engine.get_standings()
+    return JSONResponse(data)
+
+# ------------------------------------------------------------
+# MANUAL REFRESH
+# ------------------------------------------------------------
+@app.get("/api/system/refresh")
+async def manual_refresh():
+    await asyncio.gather(
+        history_engine.get_history(),
+        matchplan_engine.get_matchplan_summary(),
+        standings_engine.get_standings(),
+    )
+    return {"status": "refreshed", "time": time.strftime("%H:%M:%S")}
+
+# ------------------------------------------------------------
+# PWA / OFFLINE TEST
+# ------------------------------------------------------------
+@app.get("/offline", response_class=HTMLResponse)
+async def offline_page(request: Request):
+    return templates.TemplateResponse("offline.html", {"request": request})
