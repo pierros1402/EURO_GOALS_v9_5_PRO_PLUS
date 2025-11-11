@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📅 Matchplan + 💰 SmartMoney — EURO_GOALS PRO+ v9.7.1</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --fg: #e6eefc;
+      --muted: #8aa3c7;
+      --accent: #0a84ff;
+    }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: ui-sans-serif, system-ui;
+      margin: 0;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      background: #0d1526ee;
+      border-bottom: 1px solid #0f1b33;
+      backdrop-filter: blur(6px);
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0c9dff;
+    }
+    main {
+      padding: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th,
+    td {
+      padding: 8px 6px;
+      border-bottom: 1px dashed #1c2d58;
+    }
+    th {
+      text-align: left;
+      color: var(--muted);
+      background: #0f1b33;
+      position: sticky;
+      top: 48px;
+      z-index: 5;
+    }
+    tr:hover {
+      background: #152449;
+    }
+    .empty {
+      text-align: center;
+      color: #8aa3c7;
+      padding: 20px;
+      font-style: italic;
+    }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      tr {
+        margin-bottom: 10px;
+        border: 1px solid #1a2a4d;
+        border-radius: 10px;
+        padding: 8px;
+      }
+      th {
+        display: none;
+      }
+      td {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 4px;
+        border: none;
+      }
+      td::before {
+        content: attr(data-label);
+        color: #9fc0ff;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>📅 Matchplan + 💰 SmartMoney</h2>
+    <button id="refresh">Ανανέωση</button>
+  </header>
+
+  <main>
+    <table id="matches">
+      <thead>
+        <tr>
+          <th>Ημερομηνία</th>
+          <th>Λίγκα</th>
+          <th>Αγώνας</th>
+          <th>Market</th>
+          <th>Odds</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="5" class="empty">Φόρτωση...</td></tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script>
+    async function load() {
+      try {
+        const res = await fetch("/api/matchplan/enriched");
+        const data = await res.json();
+        const tb = document.querySelector("#matches tbody");
+        tb.innerHTML = "";
+
+        if (!data.matches || data.matches.length === 0) {
+          tb.innerHTML = `<tr><td colspan="5" class="empty">Δεν υπάρχουν διαθέσιμοι αγώνες.</td></tr>`;
+          return;
+        }
+
+        data.matches.forEach(m => {
+          const odds = m.odds
+            ? Object.entries(m.odds)
+                .slice(0, 3)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(" | ")
+            : "-";
+
+          tb.innerHTML += `
+            <tr>
+              <td data-label="Ημερομηνία">${m.date || "-"}</td>
+              <td data-label="Λίγκα">${m.league || "-"}</td>
+              <td data-label="Αγώνας">${m.home || "?"} - ${m.away || "?"}</td>
+              <td data-label="Market">${m.marketName || "-"}</td>
+              <td data-label="Odds">${odds}</td>
+            </tr>`;
+        });
+      } catch (err) {
+        console.error("Fetch error:", err);
+        document.querySelector("#matches tbody").innerHTML =
+          `<tr><td colspan="5" class="empty">Σφάλμα φόρτωσης δεδομένων.</td></tr>`;
+      }
+    }
+
+    document.getElementById("refresh").onclick = load;
+    load();
+    setInterval(load, 60000);
+  </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EURO_GOALS PRO+ v9.6.9</title>
+  <title>EURO_GOALS PRO+ v9.7.1</title>
   <link rel="manifest" href="/static/manifest.json">
   <link rel="icon" href="/static/icons/eurogoals_192.png" sizes="192x192">
   <meta name="theme-color" content="#0a84ff" />
@@ -23,6 +23,19 @@
     th, td { padding:8px; border-bottom:1px dashed #1c2d58; font-size:14px; }
     th { text-align:left; color:#8aa3c7; }
     iframe { width:100%; height:380px; border:none; border-radius:12px; }
+
+    /* Νέο στυλ κουμπιών */
+    button.link {
+      background:#0a84ff;
+      border:none;
+      color:white;
+      padding:6px 10px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:13px;
+      margin-bottom:6px;
+    }
+    button.link:hover { background:#0c9dff; }
   </style>
 </head>
 <body>
@@ -34,6 +47,11 @@
       <div id="status-matchplan" class="badge">Matchplan: ...</div>
       <div id="status-standings" class="badge">Standings: ...</div>
       <div id="status-smartmoney" class="badge">SmartMoney: ...</div>
+
+      <!-- ✅ Νέο κουμπί στο header -->
+      <button class="link" onclick="location.href='/smartmoney/matchplan'">
+        📅 Matchplan + 💰 SmartMoney
+      </button>
     </div>
   </header>
 
@@ -50,6 +68,12 @@
 
     <section class="card">
       <div class="title">Πρόγραμμα Αγώνων</div>
+
+      <!-- ✅ Νέο κουμπί μέσα στο section -->
+      <button class="link" onclick="location.href='/smartmoney/matchplan'">
+        Άνοιγμα πλήρους προβολής
+      </button>
+
       <table id="matchplan-table"><thead><tr><th>Ημερομηνία</th><th>Λίγκα</th><th>Αγώνας</th><th>Κατάσταση</th></tr></thead><tbody></tbody></table>
     </section>
 
