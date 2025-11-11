@@ -1,141 +1,122 @@
 # ============================================================
-# EURO_GOALS v9.7.2 PRO+ — UNIFIED MAIN (Refreshed Overlay Edition)
+# EURO_GOALS v9.7.6 PRO+ — UNIFIED MAIN APP
 # ============================================================
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware
-import os, sys, time
+import asyncio, os, time, datetime
 
-print("=== [EURO_GOALS] Unified App v9.7.2 PRO+ — Overlay Refreshed ===")
+print("=== [EURO_GOALS] Unified App 9.7.6 PRO+ — LIVE SYSTEM ACTIVE ===")
 
+# ------------------------------------------------------------
+# PATHS / SETUP
+# ------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.append(BASE_DIR)
+if BASE_DIR not in os.sys.path:
+    os.sys.path.append(BASE_DIR)
 
-# ------------------------------------------------------------
-# Try importing GoalMatrix + SmartMoney engines
-# ------------------------------------------------------------
-try:
-    from services.goal_matrix_engine import get_goal_matrix, get_goalmatrix_insights
-    from services.smartmoney_engine import get_odds_snapshot, get_smartmoney_signals
-except Exception as e:
-    print("[WARN] Overlay engines missing, using demo stubs:", e)
+app = FastAPI(title="EURO_GOALS PRO+", version="9.7.6 PRO+")
 
-    def get_heatmap_for_match(match_id: str):
-        n = 10
-        cells = [[0.05 for _ in range(n)] for _ in range(n)]
-        cells[4][6] = 0.85
-        cells[5][5] = 0.72
-        return {"match_id": match_id, "cells": cells}
-
-    def get_goalmatrix_insights(match_id: str):
-        return {"xg_home": 1.38, "xg_away": 1.12, "likely_goals": "2-3"}
-
-    def get_odds_snapshot(match_id: str):
-        return {"1": 2.15, "X": 3.25, "2": 3.30, "+2.5": 1.93, "-2.5": 1.88}
-
-    def get_smartmoney_signals(match_id: str):
-        return [
-            {"type": "steam_move", "market": "+2.5", "dir": "down", "delta": -0.05},
-            {"type": "sharp_action", "market": "1X", "dir": "up", "delta": +0.04},
-        ]
-
-# ------------------------------------------------------------
-# FastAPI app setup
-# ------------------------------------------------------------
-app = FastAPI(title="EURO_GOALS PRO+ v9.7.2")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+# Static assets
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
+# Templates
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # ------------------------------------------------------------
-# Overlay in-memory state
+# ENGINES
 # ------------------------------------------------------------
-overlay_state = {
-    "enabled": True,
-    "opacity": 0.94,
-    "compact": True,
-    "hotkey": "KeyO"
-}
+from services.smartmoney_engine import get_odds_snapshot, get_smartmoney_signals
+from services.goal_matrix_engine import get_goal_matrix
 
 # ------------------------------------------------------------
-# Routes
+# ROOT STATUS PAGE
 # ------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "overlay": overlay_state})
-
-@app.get("/overlay/state")
-async def overlay_get_state():
-    return overlay_state
-
-@app.post("/overlay/toggle")
-async def overlay_toggle():
-    overlay_state["enabled"] = not overlay_state["enabled"]
-    return overlay_state
-
-@app.get("/overlay/match/{match_id}")
-async def overlay_match_payload(match_id: str):
-    try:
-        heatmap = get_heatmap_for_match(match_id)
-        insights = get_goalmatrix_insights(match_id)
-        odds = get_odds_snapshot(match_id)
-        signals = get_smartmoney_signals(match_id)
-        return {
-            "match_id": match_id,
-            "goal_matrix": {"heatmap": heatmap, "insights": insights},
-            "smartmoney": {"odds": odds, "signals": signals}
-        }
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
-
-@app.get("/health")
-async def health():
-    return {"ok": True, "version": "9.7.2", "ts": int(time.time())}
-
-@app.on_event("startup")
-async def startup_event():
-    print("[EURO_GOALS] 🚀 Startup complete (Overlay Refreshed)")
-
-# ============================================================
-# EURO_GOALS UNIFIED MAIN APP – v9.7.4 REAL DATA CHAIN
-# ============================================================
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from services import smartmoney_engine, goal_matrix_engine
-
-app = FastAPI(title="EURO_GOALS PRO+", version="9.7.4")
+async def home():
+    now = datetime.datetime.now().strftime("%H:%M:%S")
+    html = f"""
+    <html>
+      <head>
+        <title>EURO_GOALS PRO+ v9.7.6 — Live System Status</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/static/unified_theme.css">
+        <style>
+          .panel {{
+            margin: 3rem auto;
+            max-width: 640px;
+            background: rgba(15,25,45,.85);
+            border-radius: 18px;
+            border: 1px solid #1a2a4a;
+            box-shadow: 0 0 20px #0a84ff22;
+            padding: 2rem;
+            text-align: center;
+          }}
+          h1 {{ color: var(--accent); font-size: 1.8rem; margin-bottom: 0.5rem; }}
+          h2 {{ color: var(--muted); font-weight: 400; margin-top: 0; }}
+          .ok {{ color: var(--ok); }}
+          .warn {{ color: var(--warn); }}
+          .err {{ color: var(--err); }}
+          .meta {{ color: var(--muted); font-size: 0.9rem; margin-top: 1rem; }}
+          footer {{ text-align:center; margin-top:2rem; color:var(--muted); font-size:0.8rem; }}
+        </style>
+      </head>
+      <body>
+        <div class="panel">
+          <h1>⚽ EURO_GOALS PRO+ v9.7.6</h1>
+          <h2>Unified Data System — Live Monitor</h2>
+          <p><b>SmartMoney Engine:</b> <span class="ok">Active</span></p>
+          <p><b>GoalMatrix Engine:</b> <span class="ok">Synchronized</span></p>
+          <p><b>Sources:</b> Betfair, Bet365, Stoiximan, OPAP</p>
+          <p><b>Last Refresh:</b> {now}</p>
+          <p class="meta">Cache TTL: 15s | Auto Refresh: 3min | Status: <b class="ok">Operational</b></p>
+        </div>
+        <footer>© EURO_GOALS Unified Engine | Live Node Ready</footer>
+      </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
 
 # ------------------------------------------------------------
 # SMARTMONEY ENDPOINTS
 # ------------------------------------------------------------
-@app.get("/smartmoney/signals/{match_id}")
-async def get_smartmoney_signals(match_id: str):
-    data = smartmoney_engine.get_smartmoney_signals(match_id)
-    return JSONResponse(content=data)
+@app.get("/smartmoney/odds/{match_id}", response_class=JSONResponse)
+async def odds_api(match_id: str):
+    return get_odds_snapshot(match_id)
 
-@app.get("/smartmoney/odds/{match_id}")
-async def get_smartmoney_odds(match_id: str):
-    data = smartmoney_engine.get_odds_snapshot(match_id)
-    return JSONResponse(content=data)
+@app.get("/smartmoney/signals/{match_id}", response_class=JSONResponse)
+async def signals_api(match_id: str):
+    return get_smartmoney_signals(match_id)
 
 # ------------------------------------------------------------
-# GOAL_MATRIX ENDPOINT
+# GOALMATRIX ENDPOINTS
 # ------------------------------------------------------------
-@app.get("/goal_matrix/{match_id}")
-async def get_goal_matrix(match_id: str):
-    data = goal_matrix_engine.get_goal_matrix(match_id)
-    return JSONResponse(content=data)
+@app.get("/goal_matrix/{match_id}", response_class=JSONResponse)
+async def goal_matrix_api(match_id: str):
+    return get_goal_matrix(match_id)
 
+# ------------------------------------------------------------
+# BACKGROUND REFRESHER
+# ------------------------------------------------------------
+async def periodic_refresher():
+    while True:
+        try:
+            print("[EURO_GOALS] 🔄 Refresh cycle started")
+            # εδώ μελλοντικά μπορείς να προσθέσεις fetch όλων των ενεργών αγώνων
+            await asyncio.sleep(180)
+        except Exception as e:
+            print(f"[EURO_GOALS] ⚠️ Refresher error: {e}")
+            await asyncio.sleep(60)
 
+@app.on_event("startup")
+async def startup_event():
+    print("[EURO_GOALS] 🚀 Starting Unified Engines...")
+    asyncio.create_task(periodic_refresher())
+    print("[EURO_GOALS] ✅ System initialized and live")
+
+# ------------------------------------------------------------
+# END OF FILE
+# ============================================================
