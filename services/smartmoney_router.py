@@ -1,22 +1,27 @@
 # ============================================================
-# SmartMoney API Router – συνδέεται με smartmoney_engine
+# SmartMoney API Router v2.0
 # ============================================================
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from . import smartmoney_engine
 
 router = APIRouter()
 
 @router.get("/summary")
-async def smartmoney_summary():
-    """Επιστρέφει σύνοψη SmartMoney"""
-    if smartmoney_engine.cache.is_fresh:
-        return smartmoney_engine.cache.get_summary()
-    await smartmoney_engine.refresh_smartmoney_once()
-    return smartmoney_engine.cache.get_summary()
+async def summary():
+    return await smartmoney_engine.get_summary()
 
 @router.get("/alerts")
-async def smartmoney_alerts():
-    """Επιστρέφει λίστα SmartMoney alerts"""
-    if not smartmoney_engine.cache.is_fresh:
-        await smartmoney_engine.refresh_smartmoney_once()
-    return {"alerts": smartmoney_engine.cache.get_alerts()}
+async def alerts():
+    return {"alerts": await smartmoney_engine.get_alerts()}
+
+@router.get("/markets")
+async def markets(league: str = Query("", description="optional league filter")):
+    return {"markets": await smartmoney_engine.get_markets_api(league)}
+
+@router.get("/odds")
+async def odds(market: str = Query(..., description="Betfair market id")):
+    return await smartmoney_engine.get_odds_api(market)
+
+@router.get("/trends")
+async def trends(league: str = Query("", description="optional league for trends")):
+    return await smartmoney_engine.get_trends_api(league)

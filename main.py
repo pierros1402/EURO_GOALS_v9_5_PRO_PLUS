@@ -1,5 +1,5 @@
 # ============================================================
-# EURO_GOALS v9.6.9 PRO+ — UNIFIED REAL DATA EDITION (Deploy Ready)
+# EURO_GOALS v9.6.9 PRO+ — UNIFIED REAL DATA EDITION + SMARTMONEY ENGINE
 # ============================================================
 
 from fastapi import FastAPI, Request
@@ -23,8 +23,10 @@ if BASE_DIR not in sys.path:
 from services import (
     history_engine,
     matchplan_engine,
-    standings_engine
+    standings_engine,
+    smartmoney_engine  # ✅ ΝΕΟ MODULE
 )
+from services.smartmoney_router import router as smartmoney_router
 
 # ------------------------------------------------------------
 # FASTAPI APP
@@ -39,12 +41,11 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 # ------------------------------------------------------------
 APP_VERSION = "v9.6.9 PRO+"
 RAW_PROXY = os.getenv("LIVE_PROXY_URL", "").strip()
-# normalize: remove trailing '/live' if user set full path
 LIVE_PROXY_URL = RAW_PROXY[:-5] if RAW_PROXY.endswith("/live") else RAW_PROXY
 IS_DEV = os.getenv("IS_DEV", "false").lower() == "true"
 
-print(f"[EURO_GOALS] ⚙️  Proxy: {LIVE_PROXY_URL or 'No proxy configured'} (raw={RAW_PROXY})")
-print(f"[EURO_GOALS] ⚙️  Mode: {'DEV' if IS_DEV else 'PRODUCTION'}")
+print(f"[EURO_GOALS] ⚙️ Proxy: {LIVE_PROXY_URL or 'No proxy configured'} (raw={RAW_PROXY})")
+print(f"[EURO_GOALS] ⚙️ Mode: {'DEV' if IS_DEV else 'PRODUCTION'}")
 
 # ------------------------------------------------------------
 # STARTUP EVENT
@@ -54,10 +55,10 @@ async def startup_event():
     print(f"=== [EURO_GOALS] 🚀 Starting App {APP_VERSION} ===")
     await asyncio.sleep(1)
 
-    # Launch background refreshers (non-blocking)
     asyncio.create_task(history_engine.background_refresher())
     asyncio.create_task(matchplan_engine.background_refresher())
     asyncio.create_task(standings_engine.background_refresher())
+    asyncio.create_task(smartmoney_engine.background_refresher())  # ✅ SmartMoney background task
 
     print("[EURO_GOALS] Background refreshers active.")
     print("===============================================")
@@ -69,6 +70,22 @@ async def startup_event():
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "version": APP_VERSION})
+
+# ------------------------------------------------------------
+# SMARTMONEY PANELS
+# ------------------------------------------------------------
+@app.get("/smartmoney", response_class=HTMLResponse)
+async def smartmoney_panel(request: Request):
+    return templates.TemplateResponse("smartmoney_panel.html", {"request": request})
+
+@app.get("/smartmoney/study", response_class=HTMLResponse)
+async def smartmoney_study(request: Request):
+    return templates.TemplateResponse("smartmoney_study.html", {"request": request})
+
+# ------------------------------------------------------------
+# API ROUTERS
+# ------------------------------------------------------------
+app.include_router(smartmoney_router, prefix="/api/smartmoney", tags=["smartmoney"])
 
 # ------------------------------------------------------------
 # HEALTH ENDPOINT
@@ -83,29 +100,24 @@ async def system_check():
         "engines": {
             "history": "active",
             "matchplan": "active",
-            "standings": "active"
+            "standings": "active",
+            "smartmoney": "active"
         }
     })
 
 # ------------------------------------------------------------
-# HISTORY ENDPOINT
+# HISTORY / MATCHPLAN / STANDINGS
 # ------------------------------------------------------------
 @app.get("/api/history")
 async def get_history():
     data = await history_engine.get_history()
     return JSONResponse(data)
 
-# ------------------------------------------------------------
-# MATCHPLAN ENDPOINT
-# ------------------------------------------------------------
 @app.get("/api/matchplan/summary")
 async def get_matchplan_summary():
     data = await matchplan_engine.get_matchplan_summary()
     return JSONResponse(data)
 
-# ------------------------------------------------------------
-# STANDINGS ENDPOINT
-# ------------------------------------------------------------
 @app.get("/api/standings/summary")
 async def get_standings_summary():
     data = await standings_engine.get_standings()
@@ -120,6 +132,7 @@ async def manual_refresh():
         history_engine.get_history(),
         matchplan_engine.get_matchplan_summary(),
         standings_engine.get_standings(),
+        smartmoney_engine.refresh_smartmoney_once()
     )
     return {"status": "refreshed", "time": time.strftime("%H:%M:%S")}
 

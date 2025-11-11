@@ -1,28 +1,25 @@
 # ============================================================
-# SMARTMONEY SERVICE – Connector to external SmartMoney Engine
+# SMARTMONEY SERVICE (optional external engine caller)
 # ============================================================
-import httpx, os, asyncio
+import os
+import aiohttp
 
-SMARTMONEY_ENGINE_URL = os.getenv("SMARTMONEY_ENGINE_URL", "https://smartmoney-engine-v1-0-0.onrender.com")
+SMARTMONEY_ENGINE_URL = os.getenv("SMARTMONEY_ENGINE_URL", "").rstrip("/")
+
+async def _fetch_json(url: str):
+    if not url:
+        return {}
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=20) as r:
+                if r.status != 200:
+                    return {}
+                return await r.json()
+    except Exception:
+        return {}
 
 async def fetch_smartmoney_summary():
-    """Λήψη συνοπτικών στοιχείων SmartMoney"""
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            res = await client.get(f"{SMARTMONEY_ENGINE_URL}/api/smartmoney/summary")
-            if res.status_code == 200:
-                return res.json()
-    except Exception as e:
-        print(f"[SMARTMONEY] ⚠️ {e}")
-    return None
+    return await _fetch_json(f"{SMARTMONEY_ENGINE_URL}/api/smartmoney/summary") if SMARTMONEY_ENGINE_URL else {}
 
 async def fetch_smartmoney_alerts():
-    """Λήψη ενεργών alerts"""
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            res = await client.get(f"{SMARTMONEY_ENGINE_URL}/api/smartmoney/alerts")
-            if res.status_code == 200:
-                return res.json()
-    except Exception as e:
-        print(f"[SMARTMONEY] ⚠️ {e}")
-    return []
+    return await _fetch_json(f"{SMARTMONEY_ENGINE_URL}/api/smartmoney/alerts") if SMARTMONEY_ENGINE_URL else {}

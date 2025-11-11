@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmartMoney Study</title>
+  <style>
+    body{background:#0b1220;color:#e6eefc;font-family:ui-sans-serif,system-ui;margin:0}
+    header{padding:12px 16px;border-bottom:1px solid #152449;background:#0d1526}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .badge{background:#0f1b33;border:1px solid #152449;border-radius:10px;padding:6px 10px;color:#8aa3c7;font-size:12px}
+    main{padding:14px}
+    input,button{background:#0f1b33;border:1px solid #152449;border-radius:8px;color:#e6eefc;padding:6px 8px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{padding:8px;border-bottom:1px dashed #1c2d58;font-size:14px}
+    th{text-align:left;color:#8aa3c7}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="row">
+      <a href="/smartmoney" class="badge">← Back</a>
+      <div class="badge">Study Mode</div>
+      <input id="league" placeholder="league slug e.g. premier-league"/>
+      <button onclick="loadMarkets()">Load Markets</button>
+    </div>
+  </header>
+  <main>
+    <h3>Markets</h3>
+    <table>
+      <thead><tr><th>Market</th><th>Event</th><th>ID</th><th></th></tr></thead>
+      <tbody id="mk"></tbody>
+    </table>
+
+    <h3>Odds (selected)</h3>
+    <pre id="odds" style="background:#0f1b33;border:1px solid #152449;border-radius:10px;padding:10px;white-space:pre-wrap"></pre>
+  </main>
+  <script>
+    async function j(u){ const r=await fetch(u); if(!r.ok) throw 0; return r.json(); }
+    async function loadMarkets(){
+      const lg = document.getElementById('league').value || '';
+      const data = await j('/api/smartmoney/markets'+(lg?('?league='+encodeURIComponent(lg)):""));
+      const tb = document.getElementById('mk'); tb.innerHTML='';
+      (data.markets||[]).slice(0,50).forEach(m=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${m.marketName||m.name||''}</td><td>${m.eventName||m.event||''}</td><td>${m.marketId||m.id||''}</td>
+                        <td><button onclick="loadOdds('${'${'}m.marketId||m.id||''${'}'}')">Odds</button></td>`;
+        tb.appendChild(tr);
+      });
+    }
+    async function loadOdds(mid){
+      const data = await j('/api/smartmoney/odds?market='+encodeURIComponent(mid));
+      document.getElementById('odds').textContent = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
