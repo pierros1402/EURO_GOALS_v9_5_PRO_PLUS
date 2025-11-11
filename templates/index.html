@@ -7,14 +7,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>EURO_GOALS PRO+ v9.6.2 — Unified Live Expansion</title>
+  <title>EURO_GOALS PRO+ v9.6.8 — Unified Auto-Refresh PWA</title>
   <meta name="description"
-        content="EURO_GOALS PRO+ v9.6.2 — Unified Expansion Platform integrating SmartMoney, GoalMatrix, Heatmap & History Engines" />
+        content="EURO_GOALS PRO+ v9.6.8 — Unified Expansion Platform integrating SmartMoney, GoalMatrix, Heatmap & History Engines" />
   <meta name="theme-color" content="#0a84ff" />
 
+  <!-- ========================================================= -->
+  <!-- ICONS / MANIFEST / APPLE SPLASH -->
+  <!-- ========================================================= -->
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="icon" href="/static/icons/eurogoals_512.png" sizes="512x512" />
-  <link rel="apple-touch-icon" href="/static/icons/eurogoals_512.png" />
+  <link rel="apple-touch-icon" href="/static/icons/apple_touch_icon.png" />
+  <link rel="apple-touch-startup-image" href="/static/icons/apple_splash.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="EURO_GOALS PRO+" />
 
   <!-- ========================================================= -->
   <!-- FONTS & STYLES                                             -->
@@ -28,6 +35,27 @@
 </head>
 
 <body data-theme="dark">
+
+  <!-- ========================================================= -->
+  <!-- APP LOADING SPLASH (custom)                                -->
+  <!-- ========================================================= -->
+  <div id="splash-screen" style="
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:#0a84ff;color:white;z-index:9999;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    font-family:'Inter',sans-serif;text-align:center;">
+    <img src="/static/icons/eurogoals_512.png" alt="EURO_GOALS Logo" style="width:120px;height:120px;margin-bottom:25px;">
+    <h2>EURO_GOALS PRO+</h2>
+    <p>Loading...</p>
+  </div>
+
+  <script>
+    window.addEventListener("load", () => {
+      const splash = document.getElementById("splash-screen");
+      if (splash) splash.style.display = "none";
+    });
+  </script>
+
   {% include "partials/unified_header.html" %}
   <section class="system-summary mt-2">
     {% include "partials/system_summary_bar_unified.html" %}
@@ -102,7 +130,7 @@
   {% include "partials/system_controls_modal.html" %}
 
   <footer class="footer text-center text-xs text-gray-500 py-4">
-    © 2025 EURO_GOALS PRO+ | Unified Expansion Interface v9.6.2
+    © 2025 EURO_GOALS PRO+ | Unified Expansion Interface v9.6.8
   </footer>
 
   <!-- ========================================================= -->
@@ -126,7 +154,7 @@
       try {
         const resp = await fetch("/api/history");
         const data = await resp.json();
-        const items = data.history.slice(0, 10); // μόνο 10 για compact view
+        const items = data.history.slice(0, 10);
         const total = data.history.length || 0;
         el.innerHTML = `
           <p class="text-xs text-gray-400 mb-2">Σύνολο διαθέσιμων: ${total} αγώνες</p>
@@ -155,17 +183,31 @@
   </script>
 
   <!-- ========================================================= -->
-  <!-- SERVICE WORKER REGISTRATION                                -->
+  <!-- SERVICE WORKER REGISTRATION (Auto-Refresh Enabled) -->
   <!-- ========================================================= -->
   <script>
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("/static/service-worker.js")
-          .then(reg => console.log("[EURO_GOALS] ✅ Service Worker:", reg.scope))
-          .catch(err => console.warn("[EURO_GOALS] ⚠️ SW registration failed:", err));
+      window.addEventListener("load", async () => {
+        try {
+          const reg = await navigator.serviceWorker.register("/static/service-worker.js");
+          console.log("[EURO_GOALS] ✅ Service Worker registered:", reg.scope);
+
+          // Έλεγχος για νέα έκδοση κάθε 30 λεπτά
+          setInterval(async () => {
+            if (reg.waiting) {
+              console.log("[EURO_GOALS] 🔁 Updating to new version...");
+              reg.waiting.postMessage({ type: "NEW_VERSION" });
+              window.location.reload(true);
+            } else {
+              await reg.update();
+            }
+          }, 30 * 60 * 1000);
+        } catch (err) {
+          console.warn("[EURO_GOALS] ⚠️ SW registration failed:", err);
+        }
       });
     }
   </script>
+
 </body>
 </html>

@@ -1,5 +1,5 @@
 # ============================================================
-# EURO_GOALS v9.6.6 PRO+ — UNIFIED MATCHPLAN + STANDINGS SYSTEM
+# EURO_GOALS v9.6.8 PRO+ — UNIFIED MATCHPLAN + STANDINGS SYSTEM + PWA Health Check
 # ============================================================
 
 from fastapi import FastAPI, Request
@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import asyncio, os, sys, time, requests
 
-print("=== [EURO_GOALS] Unified App 9.6.6 PRO+ — FULL EXPANSION ACTIVE ===")
+print("=== [EURO_GOALS] Unified App 9.6.8 PRO+ — AUTO-REFRESH PWA ACTIVE ===")
 
 # ------------------------------------------------------------
 # SYSTEM PATH FIX
@@ -27,7 +27,9 @@ from services import (
 )
 from services.leagues_list import LEAGUES, EURO_COMPETITIONS
 
-# Optional live proxy (Cloudflare)
+# ------------------------------------------------------------
+# OPTIONAL LIVE PROXY (Cloudflare)
+# ------------------------------------------------------------
 LIVE_PROXY_URL = os.getenv("LIVE_PROXY_URL", "https://eurogoals-live-proxy.pierros1402.workers.dev/live")
 
 def get_live_data():
@@ -39,9 +41,9 @@ def get_live_data():
         return {"status": "offline", "error": str(e)}
 
 # ------------------------------------------------------------
-# FASTAPI APP
+# FASTAPI APP SETUP
 # ------------------------------------------------------------
-APP_VERSION = "9.6.6 PRO+ — Unified Expansion"
+APP_VERSION = "9.6.8 PRO+ — Auto-Refresh PWA"
 app = FastAPI(title=f"EURO_GOALS {APP_VERSION}")
 
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -69,6 +71,13 @@ async def history_page(request: Request):
     return templates.TemplateResponse("history_unified.html", {"request": request, "version": APP_VERSION})
 
 # ------------------------------------------------------------
+# ✅ PWA HEALTH CHECK PAGE
+# ------------------------------------------------------------
+@app.get("/pwa_health_check", response_class=HTMLResponse)
+async def pwa_health_check(request: Request):
+    return templates.TemplateResponse("pwa_health_check.html", {"request": request, "version": APP_VERSION})
+
+# ------------------------------------------------------------
 # API ENDPOINTS
 # ------------------------------------------------------------
 @app.get("/api/live")
@@ -89,7 +98,7 @@ async def api_standings():
 
 @app.get("/api/leagues")
 async def api_leagues():
-    """Επιστρέφει τη λίστα όλων των λιγκών και διοργανώσεων (για test & validation)."""
+    """Επιστρέφει τη λίστα όλων των λιγκών και διοργανώσεων."""
     return {
         "version": APP_VERSION,
         "total_leagues": len(LEAGUES),
@@ -97,8 +106,9 @@ async def api_leagues():
         "leagues": LEAGUES,
         "euro_competitions": EURO_COMPETITIONS
     }
+
 # ------------------------------------------------------------
-# SYSTEM CHECK
+# SYSTEM CHECK ENDPOINT
 # ------------------------------------------------------------
 @app.get("/api/system/check", response_class=JSONResponse)
 async def api_system_check():
@@ -115,17 +125,20 @@ async def api_system_check():
     return data
 
 # ------------------------------------------------------------
-# STARTUP
+# STARTUP EVENTS
 # ------------------------------------------------------------
 @app.on_event("startup")
 async def startup_event():
     print(f"[EURO_GOALS] 🚀 App v{APP_VERSION} launched")
-    asyncio.create_task(history_engine.background_refresher())
-    asyncio.create_task(matchplan_engine.background_refresher())
-    asyncio.create_task(standings_engine.background_refresher())
+    try:
+        asyncio.create_task(history_engine.background_refresher())
+        asyncio.create_task(matchplan_engine.background_refresher())
+        asyncio.create_task(standings_engine.background_refresher())
+    except Exception as e:
+        print(f"[EURO_GOALS] ⚠️ Startup refresher error: {e}")
 
 # ------------------------------------------------------------
-# LOCAL RUN
+# LOCAL RUN (for manual testing)
 # ------------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn

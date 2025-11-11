@@ -327,3 +327,8 @@ html {
   opacity: 0;
   transition: opacity 0.4s ease;
 }
+button#open-controls-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(10,132,255,0.8);
+  transition: all 0.2s ease-in-out;
+}

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PWA Health Check — EURO_GOALS PRO+</title>
+  <link rel="stylesheet" href="/static/css/unified_theme.css" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body {
+      font-family: "Inter", sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      padding: 2rem;
+    }
+    .card {
+      background: #111a22;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+    .ok { color: #00ff88; font-weight: bold; }
+    .fail { color: #ff5555; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1 class="text-2xl font-bold text-sky-400 mb-4">⚙️ PWA Health Check — EURO_GOALS PRO+</h1>
+
+  <div id="results" class="card">
+    <p>Έλεγχος στοιχείων PWA...</p>
+  </div>
+
+  <script>
+    async function runCheck() {
+      const results = [];
+
+      // Έλεγχος Manifest
+      try {
+        const manifest = await fetch("/static/manifest.json");
+        results.push(manifest.ok
+          ? "📄 Manifest: <span class='ok'>OK</span>"
+          : "📄 Manifest: <span class='fail'>Σφάλμα</span>");
+      } catch {
+        results.push("📄 Manifest: <span class='fail'>Σφάλμα</span>");
+      }
+
+      // Έλεγχος Service Worker
+      if ("serviceWorker" in navigator) {
+        try {
+          const reg = await navigator.serviceWorker.getRegistration();
+          if (reg) {
+            results.push(`🔧 Service Worker: <span class='ok'>Ενεργός (${reg.scope})</span>`);
+          } else {
+            results.push("🔧 Service Worker: <span class='fail'>Ανενεργός</span>");
+          }
+        } catch {
+          results.push("🔧 Service Worker: <span class='fail'>Σφάλμα</span>");
+        }
+      } else {
+        results.push("🔧 Service Worker: <span class='fail'>Δεν υποστηρίζεται</span>");
+      }
+
+      // Έλεγχος Icons
+      const icon192 = new Image();
+      icon192.src = "/static/icons/eurogoals_192.png";
+      icon192.onload = () => results.push("🖼️ Icon 192x192: <span class='ok'>OK</span>");
+      icon192.onerror = () => results.push("🖼️ Icon 192x192: <span class='fail'>Σφάλμα</span>");
+
+      const icon512 = new Image();
+      icon512.src = "/static/icons/eurogoals_512.png";
+      icon512.onload = () => results.push("🖼️ Icon 512x512: <span class='ok'>OK</span>");
+      icon512.onerror = () => results.push("🖼️ Icon 512x512: <span class='fail'>Σφάλμα</span>");
+
+      // Έλεγχος Cache API
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        if (keys.length > 0) {
+          results.push(`💾 Cache: <span class='ok'>${keys.join(", ")}</span>`);
+        } else {
+          results.push("💾 Cache: <span class='fail'>Κενό</span>");
+        }
+      } else {
+        results.push("💾 Cache API: <span class='fail'>Δεν υποστηρίζεται</span>");
+      }
+
+      // Εμφάνιση αποτελεσμάτων
+      document.getElementById("results").innerHTML = `
+        <h2 class="text-lg mb-3 text-sky-400">Αποτελέσματα Ελέγχου:</h2>
+        <ul>${results.map(r => `<li class="mb-1">${r}</li>`).join("")}</ul>
+      `;
+    }
+
+    runCheck();
+  </script>
+</body>
+</html>

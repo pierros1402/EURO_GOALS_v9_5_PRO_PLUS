@@ -1,90 +1,108 @@
-<!-- ============================================================
-     EURO_GOALS PRO+ v9.6.7 — System Controls Modal (Full UI)
-     ============================================================ -->
-<div id="systemControlsModal"
-     class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center hidden z-50">
-  <div class="bg-neutral-900 text-gray-100 rounded-xl shadow-lg p-6 w-[720px] max-h-[90vh] overflow-y-auto border border-gray-800">
-    <header class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-semibold text-sky-400">⚙️ System Controls</h2>
-      <button class="text-gray-400 hover:text-red-400"
-              onclick="this.closest('#systemControlsModal').classList.add('hidden')">✖</button>
-    </header>
+<!-- ========================================================= -->
+<!-- EURO_GOALS PRO+ — SYSTEM CONTROLS MODAL (v9.6.8 + PWA Tools) -->
+<!-- ========================================================= -->
 
-    <!-- REFRESH INTERVALS -->
-    <section class="mb-5">
-      <h3 class="text-sky-300 mb-2 font-semibold">🔁 Refresh Intervals (seconds)</h3>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-        <label class="flex flex-col text-sm">💰 SmartMoney
-          <input id="refresh_smartmoney" type="number" value="30"
-                 class="mt-1 p-2 bg-neutral-800 border border-gray-700 rounded text-center" />
-        </label>
-        <label class="flex flex-col text-sm">🎯 GoalMatrix
-          <input id="refresh_goalmatrix" type="number" value="60"
-                 class="mt-1 p-2 bg-neutral-800 border border-gray-700 rounded text-center" />
-        </label>
-        <label class="flex flex-col text-sm">🔥 Heatmap
-          <input id="refresh_heatmap" type="number" value="90"
-                 class="mt-1 p-2 bg-neutral-800 border border-gray-700 rounded text-center" />
-        </label>
-        <label class="flex flex-col text-sm">📜 History
-          <input id="refresh_history" type="number" value="3600"
-                 class="mt-1 p-2 bg-neutral-800 border border-gray-700 rounded text-center" />
-        </label>
-        <label class="flex flex-col text-sm">🎲 Odds
-          <input id="refresh_odds" type="number" value="60"
-                 class="mt-1 p-2 bg-neutral-800 border border-gray-700 rounded text-center" />
-        </label>
-      </div>
-    </section>
+<div id="system-controls-modal"
+     class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+  <div class="bg-neutral-900 rounded-2xl shadow-xl p-6 w-[90%] max-w-md text-gray-200">
+    <h3 class="text-lg font-semibold text-sky-400 mb-4">⚙️ EURO_GOALS PRO+ — System Controls</h3>
 
-    <!-- ACTION BUTTONS -->
-    <section class="mb-5">
-      <h3 class="text-sky-300 mb-2 font-semibold">⚡ Actions</h3>
-      <div class="flex flex-wrap gap-3 mb-3">
-        <button id="btnSaveConfig"
-                class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-md font-semibold flex items-center gap-2">
-          💾 Save Config
-        </button>
-        <button id="btnForceRefresh"
-                class="px-4 py-2 bg-sky-700 hover:bg-sky-600 rounded-md font-semibold flex items-center gap-2">
-          🔁 Force Refresh
-        </button>
-        <button id="btnClearCache"
-                class="px-4 py-2 bg-rose-700 hover:bg-rose-600 rounded-md font-semibold flex items-center gap-2">
-          🧹 Clear Cache
-        </button>
-      </div>
+    <div class="flex flex-col gap-3">
 
-      <!-- ✅ SUCCESS MESSAGES -->
-      <div id="bannerSuccess" class="hidden text-center text-emerald-400 font-semibold text-sm mb-1">
-        ✅ Ρυθμίσεις αποθηκεύτηκαν επιτυχώς!
-      </div>
-      <div id="bannerRefresh" class="hidden text-center text-sky-400 font-semibold text-sm mb-1">
-        🔁 Ανανεώθηκε επιτυχώς!
-      </div>
-      <div id="bannerClear" class="hidden text-center text-rose-400 font-semibold text-sm">
-        🧹 Ο προσωρινός χώρος καθαρίστηκε!
-      </div>
-    </section>
+      <!-- 🔁 Refresh All Engines -->
+      <button onclick="refreshAllEngines()" class="py-2 px-4 rounded bg-emerald-600 text-black font-semibold hover:bg-emerald-500 transition">
+        🔁 Refresh Engines
+      </button>
 
-    <footer class="text-xs text-gray-500 border-t border-gray-800 pt-3 mt-4">
-      ✅ EURO_GOALS PRO+ Unified Expansion v9.6.7<br />
-      Όλες οι ρυθμίσεις συγχρονίζονται αυτόματα με τις μεταβλητές του Render.
-    </footer>
+      <!-- 📦 Reload Matchplan -->
+      <button onclick="reloadMatchplan()" class="py-2 px-4 rounded bg-sky-500 text-black font-semibold hover:bg-sky-400 transition">
+        📦 Reload Matchplan
+      </button>
+
+      <!-- 📊 Reload Standings -->
+      <button onclick="reloadStandings()" class="py-2 px-4 rounded bg-indigo-500 text-black font-semibold hover:bg-indigo-400 transition">
+        📊 Reload Standings
+      </button>
+
+      <!-- 🧹 NEW: Clear PWA Cache -->
+      <button onclick="clearPWACache()" class="py-2 px-4 rounded bg-amber-400 text-black font-semibold hover:bg-amber-300 transition">
+        🧹 Clear PWA Cache / Reload App
+      </button>
+
+      <!-- ❌ Close Button -->
+      <button onclick="toggleControls(false)" class="py-2 px-4 rounded bg-red-600 text-white font-semibold hover:bg-red-500 transition">
+        ❌ Close
+      </button>
+    </div>
   </div>
 </div>
 
+<!-- ========================================================= -->
+<!-- JS LOGIC -->
+<!-- ========================================================= -->
 <script>
-  const showBanner = id => {
-    const el = document.getElementById(id);
-    el.classList.remove("hidden");
-    el.style.opacity = 1;
-    setTimeout(() => {
-      el.style.opacity = 0;
-      setTimeout(() => el.classList.add("hidden"), 500);
-    }, 2500);
-  };
-  document.getElementById("btnSaveConfig")?.addEventListener("click", () => showBanner("bannerSuccess"));
-  document.getElementById("btnForceRefresh")?.addEventListener("click", () => showBanner("bannerRefresh"));
-  document.getElementById("btnClearCache")?.addEventListener("click", () => showBanner("bannerClear"));
+  function toggleControls(show = true) {
+    document.getElementById("system-controls-modal").style.display = show ? "flex" : "none";
+  }
+
+  async function refreshAllEngines() {
+    alert("🔄 Refreshing all active engines...");
+    try {
+      await fetch("/api/history");
+      await fetch("/api/matchplan");
+      await fetch("/api/standings");
+      alert("✅ Engines refreshed successfully!");
+    } catch (e) {
+      alert("⚠️ Error refreshing engines: " + e.message);
+    }
+  }
+
+  async function reloadMatchplan() {
+    try {
+      const res = await fetch("/api/matchplan");
+      if (res.ok) alert("✅ Matchplan reloaded.");
+      else alert("⚠️ Matchplan reload failed.");
+    } catch {
+      alert("⚠️ Matchplan reload error.");
+    }
+  }
+
+  async function reloadStandings() {
+    try {
+      const res = await fetch("/api/standings");
+      if (res.ok) alert("✅ Standings reloaded.");
+      else alert("⚠️ Standings reload failed.");
+    } catch {
+      alert("⚠️ Standings reload error.");
+    }
+  }
+
+  // ------------------------------------------------------------
+  // 🧹 Clear PWA Cache + Force Reload
+  // ------------------------------------------------------------
+  async function clearPWACache() {
+    const confirmClear = confirm("Θες να καθαρίσεις το PWA cache και να γίνει επανεκκίνηση;");
+    if (!confirmClear) return;
+
+    // Διαγραφή Service Worker
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      for (let reg of regs) {
+        await reg.unregister();
+        console.log("[EURO_GOALS] 🧹 Unregistered SW:", reg.scope);
+      }
+    }
+
+    // Διαγραφή Cache Storage
+    if ("caches" in window) {
+      const names = await caches.keys();
+      for (let name of names) {
+        await caches.delete(name);
+        console.log("[EURO_GOALS] 🧹 Deleted cache:", name);
+      }
+    }
+
+    alert("✅ Cache καθαρίστηκε. Επαναφόρτωση...");
+    window.location.reload(true);
+  }
 </script>

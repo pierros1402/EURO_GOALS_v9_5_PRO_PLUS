@@ -1,14 +1,14 @@
 {
-  "name": "EURO_GOALS PRO+ Unified",
+  "name": "EURO_GOALS PRO+",
   "short_name": "EURO_GOALS",
-  "description": "EURO_GOALS PRO+ v9.6.1 — Unified Expansion integrating SmartMoney, GoalMatrix, Heatmap & Historical Engines.",
+  "description": "EURO_GOALS PRO+ v9.6.8 — Unified Expansion integrating SmartMoney, GoalMatrix, Heatmap & History Engines.",
   "lang": "el",
-  "start_url": "/",
+  "start_url": "https://eurogoals-unified-pro954.onrender.com/",
+  "scope": "https://eurogoals-unified-pro954.onrender.com/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0a0a0a",
   "theme_color": "#0a84ff",
-  "orientation": "any",
-  "scope": "/",
   "icons": [
     {
       "src": "/static/icons/eurogoals_192.png",
@@ -19,26 +19,37 @@
       "src": "/static/icons/eurogoals_512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "/static/icons/apple_touch_icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/apple_splash.png",
+      "sizes": "2048x2732",
+      "type": "image/png"
     }
   ],
   "shortcuts": [
     {
-      "name": "SmartMoney Monitor",
+      "name": "💰 SmartMoney Monitor",
       "url": "/smartmoney_monitor",
       "icons": [{ "src": "/static/icons/eurogoals_192.png", "sizes": "192x192" }]
     },
     {
-      "name": "GoalMatrix Panel",
+      "name": "📊 GoalMatrix Panel",
       "url": "/goalmatrix_panel",
       "icons": [{ "src": "/static/icons/eurogoals_192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Heatmap",
+      "name": "🔥 Heatmap",
       "url": "/heatmap",
       "icons": [{ "src": "/static/icons/eurogoals_192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Ιστορικά Δεδομένα",
+      "name": "📜 Ιστορικά Δεδομένα",
       "url": "/history_unified",
       "icons": [{ "src": "/static/icons/eurogoals_192.png", "sizes": "192x192" }]
     }
