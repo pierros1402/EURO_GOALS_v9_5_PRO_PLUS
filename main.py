@@ -87,6 +87,16 @@ async def api_matchplan():
 async def api_standings():
     return await standings_engine.get_standings()
 
+@app.get("/api/leagues")
+async def api_leagues():
+    """Επιστρέφει τη λίστα όλων των λιγκών και διοργανώσεων (για test & validation)."""
+    return {
+        "version": APP_VERSION,
+        "total_leagues": len(LEAGUES),
+        "total_competitions": len(EURO_COMPETITIONS),
+        "leagues": LEAGUES,
+        "euro_competitions": EURO_COMPETITIONS
+    }
 # ------------------------------------------------------------
 # SYSTEM CHECK
 # ------------------------------------------------------------
