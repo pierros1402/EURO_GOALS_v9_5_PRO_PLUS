@@ -1,167 +1,107 @@
 # ============================================================
-# SMARTMONEY ENGINE v2.0 — EURO_GOALS PRO+ (Betfair Public via Worker)
+# EURO_GOALS SMARTMONEY ENGINE — v9.7.4 UNIFIED WORKER LINK
 # ============================================================
-import os, time, asyncio
-from typing import Any, Dict, List, Optional
-import aiohttp
 
-SMARTMONEY_ENABLED = os.getenv("SMARTMONEY_ENABLED", "true").lower() == "true"
-SMARTMONEY_REFRESH_INTERVAL = int(os.getenv("SMARTMONEY_REFRESH_INTERVAL", "30"))
-RAW_PROXY = os.getenv("SMARTMONEY_PROXY_URL", "").strip()
-SMARTMONEY_PROXY_URL = RAW_PROXY[:-1] if RAW_PROXY.endswith("/") else RAW_PROXY
+import os, time, json, requests
 
-class _Cache:
-    def __init__(self) -> None:
-        self.summary: Dict[str, Any] = {
-            "enabled": SMARTMONEY_ENABLED,
-            "status": "Initializing",
-            "count": 0,
-            "last_updated_ts": 0,
-            "proxy": SMARTMONEY_PROXY_URL or None,
-        }
-        self.alerts: List[Dict[str, Any]] = []
-        self.markets: List[Dict[str, Any]] = []
-        self.last_markets_ts: int = 0
+WORKER_BASE = os.getenv("SMARTMONEY_WORKER_URL", "").rstrip("/")
+REQUEST_TIMEOUT = float(os.getenv("SM_REQUEST_TIMEOUT", "8"))
+CACHE_TTL_SEC = int(os.getenv("SM_CACHE_TTL", "15"))
 
-    @property
-    def is_fresh(self) -> bool:
-        return (time.time() - self.summary.get("last_updated_ts", 0)) < SMARTMONEY_REFRESH_INTERVAL
+_cache, _cache_ts = {}, {}
 
-cache = _Cache()
+def _cache_get(k, ttl=CACHE_TTL_SEC):
+    ts = _cache_ts.get(k, 0)
+    if time.time() - ts < ttl:
+        return _cache.get(k)
+    return None
 
-async def _fetch_json(session: aiohttp.ClientSession, url: str) -> Dict[str, Any]:
-    try:
-        async with session.get(url, timeout=20) as r:
-            if r.status != 200:
-                print(f"[SMARTMONEY] HTTP {r.status} for {url}")
-                return {}
-            return await r.json()
-    except Exception as e:
-        print(f"[SMARTMONEY] fetch error: {e}")
-        return {}
+def _cache_set(k, v):
+    _cache[k], _cache_ts[k] = v, time.time()
 
-def _base() -> Optional[str]:
-    return SMARTMONEY_PROXY_URL or None
+def _get(url):
+    r = requests.get(url, headers={"User-Agent": "EURO_GOALS/SmartMoney"}, timeout=REQUEST_TIMEOUT)
+    r.raise_for_status()
+    return r.json()
 
-async def fetch_markets(league: str = "") -> List[Dict[str, Any]]:
-    if not _base():
-        return []
-    url = f"{_base()}/betfair/markets"
-    if league:
-        url += f"?league={league}"
-    async with aiohttp.ClientSession() as session:
-        data = await _fetch_json(session, url)
-        items = data.get("markets") or data.get("data") or []
-        cache.markets = items
-        cache.last_markets_ts = int(time.time())
-        return items
+# ------------------------------------------------------------
+# Main Odds Aggregator (reads from unified Worker)
+# ------------------------------------------------------------
+def get_odds_snapshot(match_id: str):
+    """
+    Fetch odds from Cloudflare unified Worker (v4.0)
+    Combines Betfair + Bet365 + Stoiximan + OPAP + GoalMatrix
+    """
+    key = f"sm:odds:{match_id}"
+    cached = _cache_get(key)
+    if cached:
+        return cached
 
-async def fetch_odds(market_id: str) -> Dict[str, Any]:
-    if not _base():
-        return {}
-    url = f"{_base()}/betfair/odds?market={market_id}"
-    async with aiohttp.ClientSession() as session:
-        data = await _fetch_json(session, url)
-        return data
+    if not WORKER_BASE:
+        return {"error": "Worker URL missing"}
 
-async def fetch_trends(league: str = "") -> Dict[str, Any]:
-    if not _base():
-        return {}
-    url = f"{_base()}/betfair/trends"
-    if league:
-        url += f"?league={league}"
-    async with aiohttp.ClientSession() as session:
-        data = await _fetch_json(session, url)
-        return data
-
-def _estimate_movement(runner: Dict[str, Any]) -> float:
-    open_price = runner.get("open") or runner.get("openPrice")
-    cur_price = runner.get("price") or runner.get("lastPriceTraded") or runner.get("current")
-    if open_price and cur_price:
+    # --- call each source from Worker ---
+    sources = []
+    endpoints = [
+        f"{WORKER_BASE}/betfair/odds?market={match_id}",
+        f"{WORKER_BASE}/bet365/odds?match={match_id}",
+        f"{WORKER_BASE}/stoiximan/odds?match={match_id}",
+        f"{WORKER_BASE}/opap/odds?match={match_id}"
+    ]
+    for url in endpoints:
         try:
-            return float(cur_price) - float(open_price)
+            data = _get(url)
+            if "odds" in data:
+                src = data.get("source", url.split('/')[-2])
+                sources.append({"source": src, "odds": data["odds"]})
         except Exception:
-            return 0.0
-    prices = runner.get("prices") or runner.get("ex", {}).get("availableToBack")
-    if isinstance(prices, list) and len(prices) >= 2:
-        try:
-            return float(prices[0].get("price")) - float(prices[1].get("price"))
-        except Exception:
-            return 0.0
-    return 0.0
+            continue
 
-async def refresh_smartmoney_once() -> None:
-    if not SMARTMONEY_ENABLED:
-        cache.summary["status"] = "Disabled"
-        cache.summary["last_updated_ts"] = int(time.time())
-        return
-    if not _base():
-        cache.summary["status"] = "NoProxy"
-        cache.summary["last_updated_ts"] = int(time.time())
-        return
+    # --- aggregate (median per market) ---
+    buckets = {}
+    for s in sources:
+        for k, v in (s.get("odds") or {}).items():
+            try:
+                v = float(v)
+                buckets.setdefault(k, []).append(v)
+            except Exception:
+                pass
 
-    now = int(time.time())
-    if now - cache.last_markets_ts > 120:
-        await fetch_markets()
+    unified = {}
+    for k, arr in buckets.items():
+        arr = sorted(arr)
+        mid = arr[len(arr)//2]
+        unified[k] = round(mid, 3)
 
-    sample = (cache.markets or [])[:12]
-    alerts: List[Dict[str, Any]] = []
+    result = {
+        "unified": unified,
+        "per_source": {s["source"]: s["odds"] for s in sources if "source" in s},
+        "sources": [s["source"] for s in sources],
+    }
+    _cache_set(key, result)
+    return result
 
-    async with aiohttp.ClientSession() as session:
-        for m in sample:
-            mid = m.get("marketId") or m.get("id")
-            if not mid:
-                continue
-            data = await _fetch_json(session, f"{_base()}/betfair/odds?market={mid}")
-            runners = data.get("runners") or []
-            for r in runners:
-                mv = _estimate_movement(r)
-                if abs(mv) >= 0.15:
-                    alerts.append({
-                        "league": m.get("competition") or m.get("league"),
-                        "market": m.get("marketName") or m.get("name") or "Unknown",
-                        "event": m.get("eventName") or m.get("event") or "",
-                        "runner": r.get("name") or r.get("runnerName") or "",
-                        "movement": round(mv, 3),
-                        "current": r.get("price") or r.get("lastPriceTraded"),
-                        "open": r.get("open") or r.get("openPrice"),
-                        "marketId": mid,
-                        "ts": now,
-                    })
+# ------------------------------------------------------------
+# SmartMoney signals (basic heuristics)
+# ------------------------------------------------------------
+def get_smartmoney_signals(match_id: str):
+    snapshot = get_odds_snapshot(match_id)
+    odds = snapshot.get("unified", {})
+    signals = []
 
-    cache.alerts = alerts
-    cache.summary.update({
-        "enabled": SMARTMONEY_ENABLED,
-        "status": "OK" if alerts else "Idle",
-        "count": len(alerts),
-        "last_updated_ts": int(time.time()),
-        "proxy": _base(),
-    })
+    if _lt(odds.get("1"), 2.0):
+        signals.append({"type": "sharp_action", "market": "1", "dir": "down", "delta": -0.05})
+    if _gt(odds.get("2"), 4.0):
+        signals.append({"type": "steam_move", "market": "2", "dir": "up", "delta": +0.07})
+    if odds.get("+2.5") and 1.60 <= float(odds["+2.5"]) <= 1.95:
+        signals.append({"type": "total_goals_bias", "market": "+2.5", "dir": "down", "delta": -0.03})
 
-async def get_summary():
-    if not cache.is_fresh:
-        await refresh_smartmoney_once()
-    return cache.summary
+    return signals
 
-async def get_alerts():
-    if not cache.is_fresh:
-        await refresh_smartmoney_once()
-    return cache.alerts
+def _lt(x, thr): 
+    try: return float(x) < thr
+    except: return False
 
-async def get_markets_api(league: str = ""):
-    return await fetch_markets(league)
-
-async def get_odds_api(market: str):
-    return await fetch_odds(market)
-
-async def get_trends_api(league: str = ""):
-    return await fetch_trends(league)
-
-async def background_refresher():
-    print("💰 SMARTMONEY ENGINE v2.0 ACTIVE (worker-proxy mode)")
-    while True:
-        try:
-            await refresh_smartmoney_once()
-        except Exception as e:
-            print(f"[SMARTMONEY] refresher error: {e}")
-        await asyncio.sleep(SMARTMONEY_REFRESH_INTERVAL)
+def _gt(x, thr): 
+    try: return float(x) > thr
+    except: return False

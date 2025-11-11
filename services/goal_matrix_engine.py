@@ -1,142 +1,107 @@
 # ============================================================
-# GOALMATRIX ENGINE v1.0.1 — EURO_GOALS PRO+ Unified
-# Predictive goal analytics based on xG (expected goals)
+# EURO_GOALS GOAL_MATRIX ENGINE — v9.7.4 REAL DATA CHAIN
 # ============================================================
 
-import asyncio
-import time
-from typing import List, Dict, Optional
+import os, time, math, requests
+from .smartmoney_engine import get_odds_snapshot
+
+WORKER_BASE = os.getenv("SMARTMONEY_WORKER_URL", "").rstrip("/")
+REQUEST_TIMEOUT = float(os.getenv("SM_REQUEST_TIMEOUT", "8"))
+CACHE_TTL_SEC = int(os.getenv("SM_CACHE_TTL", "15"))
+
+_cache, _cache_ts = {}, {}
 
 # ------------------------------------------------------------
-# CONFIG
+# CACHE HELPERS
 # ------------------------------------------------------------
-GOALMATRIX_ENABLED = True
-GOALMATRIX_REFRESH_INTERVAL = 60  # seconds
+def _cache_get(k, ttl=CACHE_TTL_SEC):
+    ts = _cache_ts.get(k, 0)
+    if time.time() - ts < ttl:
+        return _cache.get(k)
+    return None
 
-# ------------------------------------------------------------
-# CACHE CLASS
-# ------------------------------------------------------------
-class GoalMatrixCache:
-    def __init__(self):
-        self._summary = {
-            "enabled": GOALMATRIX_ENABLED,
-            "status": "Initializing",
-            "last_updated_ts": 0,
-            "total_matches": 0,
-            "avg_goals": 0.0,
-        }
-        self._items: List[dict] = []
-        self._ttl = 60
+def _cache_set(k, v):
+    _cache[k], _cache_ts[k] = v, time.time()
 
-    @property
-    def is_fresh(self) -> bool:
-        return (time.time() - self._summary.get("last_updated_ts", 0)) < self._ttl
-
-    def set(self, items: List[dict], status: str):
-        avg_goals = 0.0
-        if items:
-            avg_goals = sum(i.get("expected_goals", 0.0) for i in items) / len(items)
-        self._summary = {
-            "enabled": GOALMATRIX_ENABLED,
-            "status": status,
-            "last_updated_ts": int(time.time()),
-            "total_matches": len(items),
-            "avg_goals": round(avg_goals, 2),
-        }
-        self._items = items
-
-    def get_summary(self) -> dict:
-        return self._summary
-
-    def get_items(self) -> List[dict]:
-        return self._items
-
-    def get_data(self) -> dict:
-        """Unified interface for compatibility"""
-        return {"summary": self._summary, "items": self._items}
-
+def _get(url):
+    r = requests.get(url, headers={"User-Agent": "EURO_GOALS/Goal_Matrix"}, timeout=REQUEST_TIMEOUT)
+    r.raise_for_status()
+    return r.json()
 
 # ------------------------------------------------------------
-# GLOBAL CACHE INSTANCE
+# MAIN ENTRY
 # ------------------------------------------------------------
-cache = GoalMatrixCache()
-
-# ------------------------------------------------------------
-# FETCHER (Dummy for now — future: connect real API)
-# ------------------------------------------------------------
-async def _fetch_data() -> Optional[dict]:
+def get_goal_matrix(match_id: str):
     """
-    Dummy fetcher – εδώ θα συνδεθεί αργότερα με πραγματικό feed
-    (π.χ. Sofascore / Football-Data.org / SportMonks)
+    Fetch goal data directly from Worker (/goal_matrix),
+    or compute locally from SmartMoney odds if not available.
     """
-    await asyncio.sleep(0.5)
-    # Mock data
-    return {
-        "matches": [
-            {"match_id": 1001, "league": "Premier League", "home": "Arsenal", "away": "Chelsea", "xg_home": 1.9, "xg_away": 1.2},
-            {"match_id": 1002, "league": "Serie A", "home": "Milan", "away": "Napoli", "xg_home": 1.4, "xg_away": 1.7},
-            {"match_id": 1003, "league": "La Liga", "home": "Real Madrid", "away": "Barcelona", "xg_home": 2.1, "xg_away": 1.8},
-        ]
-    }
+    key = f"gm:insights:{match_id}"
+    cached = _cache_get(key)
+    if cached:
+        return cached
+
+    data = None
+    if WORKER_BASE:
+        try:
+            data = _get(f"{WORKER_BASE}/goal_matrix?match={match_id}")
+        except Exception:
+            data = None
+
+    if data and isinstance(data, dict) and "xg_home" in data:
+        result = {
+            "xg_home": round(data.get("xg_home", 1.2), 2),
+            "xg_away": round(data.get("xg_away", 1.1), 2),
+            "likely_goals": data.get("likely_goals", "2-3"),
+            "heatmap": data.get("heatmap", [])
+        }
+    else:
+        # Fallback: local calculation from odds
+        snap = get_odds_snapshot(match_id)
+        odds = snap.get("unified", {})
+        p1 = _inv(odds.get("1"))
+        p2 = _inv(odds.get("2"))
+        o25 = _num(odds.get("+2.5")) or 1.9
+        mu = 0.8 + 3.2 * (1 / o25)
+        xh = mu * (p1 / (p1 + p2 + 1e-6))
+        xa = mu - xh
+        likely = "0-2" if mu < 2.0 else ("2-3" if mu < 2.8 else "3-4+")
+        result = {
+            "xg_home": round(xh, 2),
+            "xg_away": round(xa, 2),
+            "likely_goals": likely,
+            "heatmap": _build_heatmap(mu)
+        }
+
+    _cache_set(key, result)
+    return result
 
 # ------------------------------------------------------------
-# ANALYZER
+# HELPERS
 # ------------------------------------------------------------
-def _analyze_goals(raw_data: dict) -> List[dict]:
-    items = []
-    if not raw_data:
-        return items
-
-    for m in raw_data.get("matches", []):
-        xg_home = float(m.get("xg_home", 0))
-        xg_away = float(m.get("xg_away", 0))
-        expected_goals = xg_home + xg_away
-        tendency = "Over 2.5" if expected_goals >= 2.5 else "Under 2.5"
-        items.append({
-            "match_id": m["match_id"],
-            "league": m["league"],
-            "home": m["home"],
-            "away": m["away"],
-            "xg_home": xg_home,
-            "xg_away": xg_away,
-            "expected_goals": expected_goals,
-            "tendency": tendency
-        })
-    return items
-
-# ------------------------------------------------------------
-# REFRESH FUNCTION
-# ------------------------------------------------------------
-async def refresh_goalmatrix_once():
+def _inv(o):
     try:
-        data = await _fetch_data()
-        items = _analyze_goals(data)
-        status = "OK" if items else "No Data"
-        cache.set(items, status)
-    except Exception as e:
-        print(f"[GOALMATRIX] Error: {e}")
-        cache.set([], "Failing")
-    return cache.get_summary()
+        return 1 / float(o)
+    except:
+        return 0.0
+
+def _num(o):
+    try:
+        return float(o)
+    except:
+        return None
+
+def _build_heatmap(mu):
+    n = 10
+    cells = [[0.05 for _ in range(n)] for _ in range(n)]
+    boost = min(1.0, (mu - 1.8) / 2.2 + 0.3)
+    cells[4][5] = min(1.0, 0.6 + 0.4 * boost)
+    cells[5][5] = min(1.0, 0.55 + 0.45 * boost)
+    cells[4][6] = min(1.0, 0.65 + 0.35 * boost)
+    return cells
 
 # ------------------------------------------------------------
-# BACKGROUND TASK
+# BACKWARD COMPATIBILITY
 # ------------------------------------------------------------
-async def background_refresher():
-    """Auto-refresh GoalMatrix engine every interval."""
-    print("⚽ GOALMATRIX ENGINE ACTIVE (looping)...")
-    while True:
-        await refresh_goalmatrix_once()
-        await asyncio.sleep(GOALMATRIX_REFRESH_INTERVAL)
-
-# ------------------------------------------------------------
-# API-LIKE ACCESSORS (for main.py)
-# ------------------------------------------------------------
-async def get_summary():
-    return cache.get_summary()
-
-async def get_alerts():
-    """GoalMatrix δεν έχει alerts — επιστρέφει κενή λίστα για συμβατότητα."""
-    return []
-
-async def get_data():
-    return cache.get_data()
+# Παλιά έκδοση που χρησιμοποιούσε το όνομα get_goalmatrix_insights
+get_goalmatrix_insights = get_goal_matrix

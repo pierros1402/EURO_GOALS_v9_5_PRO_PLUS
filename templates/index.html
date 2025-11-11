@@ -1,111 +1,75 @@
 <!doctype html>
 <html lang="el">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EURO_GOALS PRO+ v9.7.1</title>
-  <link rel="manifest" href="/static/manifest.json">
-  <link rel="icon" href="/static/icons/eurogoals_192.png" sizes="192x192">
+  <title>EURO_GOALS PRO+ v9.7.2</title>
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="icon" href="/static/icons/eurogoals_192.png" />
+  <link rel="apple-touch-icon" href="/static/icons/eurogoals_512.png" />
   <meta name="theme-color" content="#0a84ff" />
-  <style>
-    :root { --bg: #0b1220; --fg: #e6eefc; --muted:#8aa3c7; --accent:#0a84ff; --ok:#2ecc71; --warn:#f1c40f; --err:#ff6b6b; }
-    body { margin:0; background:var(--bg); color:var(--fg); font-family:ui-sans-serif, system-ui; }
-    header { position:sticky; top:0; background:#0d1526cc; backdrop-filter: blur(6px); border-bottom:1px solid #0f1b33; padding:10px 14px; z-index:5; }
-    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .badge { padding:6px 10px; border-radius:10px; background:#0f1b33; border:1px solid #132042; font-size:12px; color:var(--muted); }
-    .badge.ok { color:#c8f7dc; border-color:#1f6d4d; background:#113a2d; }
-    .badge.warn { color:#ffeaa7; border-color:#574d1a; background:#352f10; }
-    .badge.err { color:#ffd6d6; border-color:#5c1c1c; background:#301111; }
-    main { padding:14px; display:grid; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); gap:14px; }
-    .card { background:#0f1b33; border:1px solid #152449; border-radius:14px; padding:14px; }
-    .title { font-weight:700; letter-spacing:.3px; margin-bottom:8px; }
-    table { width:100%; border-collapse: collapse; }
-    th, td { padding:8px; border-bottom:1px dashed #1c2d58; font-size:14px; }
-    th { text-align:left; color:#8aa3c7; }
-    iframe { width:100%; height:380px; border:none; border-radius:12px; }
-
-    /* Νέο στυλ κουμπιών */
-    button.link {
-      background:#0a84ff;
-      border:none;
-      color:white;
-      padding:6px 10px;
-      border-radius:8px;
-      cursor:pointer;
-      font-size:13px;
-      margin-bottom:6px;
-    }
-    button.link:hover { background:#0c9dff; }
-  </style>
+  <link rel="stylesheet" href="/static/css/unified_theme.css" />
 </head>
-<body>
-  <header>
-    <div class="row">
-      <div class="badge">EURO_GOALS PRO+ <b>{{ version }}</b></div>
-      <div id="status-worker" class="badge">Worker: ...</div>
-      <div id="status-history" class="badge">History: ...</div>
-      <div id="status-matchplan" class="badge">Matchplan: ...</div>
-      <div id="status-standings" class="badge">Standings: ...</div>
-      <div id="status-smartmoney" class="badge">SmartMoney: ...</div>
 
-      <!-- ✅ Νέο κουμπί στο header -->
-      <button class="link" onclick="location.href='/smartmoney/matchplan'">
-        📅 Matchplan + 💰 SmartMoney
-      </button>
+<body>
+  <header class="eg-header">
+    <div class="title">EURO_GOALS PRO+ <span class="ver">v9.7.2</span></div>
+    <div class="actions">
+      <button id="btnToggleOverlay" class="ghost">Overlay</button>
+      <button id="btnRefresh" class="ghost" onclick="location.reload()">Refresh</button>
     </div>
   </header>
 
-  <main>
-    <section class="card">
-      <div class="title">SmartMoney Monitor</div>
-      <iframe src="/smartmoney"></iframe>
-    </section>
-
-    <section class="card">
-      <div class="title">Ιστορικά Αποτελέσματα</div>
-      <table id="history-table"><thead><tr><th>Ημερομηνία</th><th>Λίγκα</th><th>Αγώνας</th><th>Σκορ</th></tr></thead><tbody></tbody></table>
-    </section>
-
-    <section class="card">
-      <div class="title">Πρόγραμμα Αγώνων</div>
-
-      <!-- ✅ Νέο κουμπί μέσα στο section -->
-      <button class="link" onclick="location.href='/smartmoney/matchplan'">
-        Άνοιγμα πλήρους προβολής
-      </button>
-
-      <table id="matchplan-table"><thead><tr><th>Ημερομηνία</th><th>Λίγκα</th><th>Αγώνας</th><th>Κατάσταση</th></tr></thead><tbody></tbody></table>
-    </section>
-
-    <section class="card">
-      <div class="title">Βαθμολογίες</div>
-      <table id="standings-table"><thead><tr><th>Λίγκα</th><th>Πηγή</th><th>Entries</th></tr></thead><tbody></tbody></table>
+  <main class="eg-main">
+    <section class="placeholder">
+      <h2>Matchplan / Standings</h2>
+      <p>Δείγμα σελίδας για έλεγχο overlay.</p>
+      <div class="sample-matches">
+        <button class="m-btn" data-mid="EPL_2025_ARS_BHA">ARS vs BHA</button>
+        <button class="m-btn" data-mid="GRE_2025_PAO_AEK">PAO vs AEK</button>
+      </div>
     </section>
   </main>
 
+  <!-- Overlay UI -->
+  <div id="eg-overlay" class="eg-overlay hidden" style="opacity:0.94">
+    <div class="overlay-header">
+      <div>GoalMatrix + SmartMoney</div>
+      <div class="mini-actions">
+        <button id="ovCompact" title="Compact">◐</button>
+        <button id="ovClose" title="Close">✕</button>
+      </div>
+    </div>
+    <div id="ovContent" class="overlay-content">
+      <div class="ov-col">
+        <h4>GoalMatrix</h4>
+        <canvas id="ovHeatmap" width="220" height="220"></canvas>
+        <div id="ovInsights" class="kv"></div>
+      </div>
+      <div class="ov-col">
+        <h4>SmartMoney</h4>
+        <div id="ovOdds" class="table"></div>
+        <div id="ovSignals" class="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/overlay.js"></script>
   <script>
-    function badge(el, status){
-      el.classList.remove('ok','warn','err');
-      if(status==='ok') el.classList.add('ok');
-      if(status==='warn') el.classList.add('warn');
-      if(status==='err') el.classList.add('err');
-    }
-    async function fetchJSON(url){ const r=await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); }
+    document.querySelectorAll('.m-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const mid = btn.dataset.mid;
+        const payload = await fetch(`/overlay/match/${encodeURIComponent(mid)}`).then(r=>r.json());
+        window.egOverlay?.showWithPayload(payload);
+      });
+    });
 
-    async function refreshAll(){
-      try {
-        const sys = await fetchJSON('/api/system/check');
-        const worker = document.getElementById('status-worker');
-        worker.textContent = 'Worker: ' + (sys.proxy ? 'Online' : 'N/A');
-        badge(worker, sys.proxy ? 'ok' : 'warn');
-
-        const sm = document.getElementById('status-smartmoney');
-        sm.textContent = 'SmartMoney: ' + (sys.engines.smartmoney || 'idle');
-        badge(sm, 'ok');
-      } catch(e){ badge(document.getElementById('status-smartmoney'), 'err'); }
+    // ✅ Σταθερό service-worker.js με auto version update
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/static/service-worker.js')
+        .then(() => console.log('[SW] Registered'))
+        .catch(() => console.warn('[SW] Failed to register'));
     }
-    refreshAll();
-    setInterval(refreshAll, 60000);
   </script>
 </body>
 </html>
