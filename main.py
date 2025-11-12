@@ -183,6 +183,67 @@ async def api_dowjones_config():
 async def api_dowjones_health():
     return dowjones.health() if dowjones else {"mock": True}
 
+# ------------------------------------------------------------
+# SMARTMONEY & GOALMATRIX SUMMARY ENDPOINTS
+# ------------------------------------------------------------
+from services import smartmoney_engine, goal_matrix_engine
+
+@app.get("/api/smartmoney/summary")
+async def api_smartmoney_summary(match_id: str = "default"):
+    """Returns unified SmartMoney odds & signals"""
+    try:
+        data = smartmoney_engine.get_odds_snapshot(match_id)
+        signals = smartmoney_engine.get_smartmoney_signals(match_id)
+        return {"status": "ok", "match_id": match_id, "snapshot": data, "signals": signals}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/goal_matrix/summary")
+async def api_goal_matrix_summary(match_id: str = "default"):
+    """Returns GoalMatrix expected goals and heatmap"""
+    try:
+        data = goal_matrix_engine.get_goal_matrix(match_id)
+        return {"status": "ok", "match_id": match_id, "matrix": data}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# ------------------------------------------------------------
+# UNIFIED SYSTEM STATUS API
+# ------------------------------------------------------------
+from services import dowjones_engine, smartmoney_engine, goal_matrix_engine, history_engine
+import datetime as dt
+
+@app.get("/api/system/status")
+async def api_system_status():
+    """Unified system health snapshot for all engines"""
+    now = dt.datetime.now().isoformat()
+    engines = {
+        "dowjones": "ok",
+        "smartmoney": "ok",
+        "goalmatrix": "ok",
+        "history": "ok"
+    }
+    alerts = {"smartmoney": 0, "goalmatrix": 0}
+
+    try:
+        sm_data = await smartmoney_engine.get_smartmoney_signals("default")
+        alerts["smartmoney"] = len(sm_data) if isinstance(sm_data, list) else 0
+    except Exception as e:
+        engines["smartmoney"] = f"error: {e}"
+
+    try:
+        gm_data = goal_matrix_engine.get_goal_matrix("default")
+        alerts["goalmatrix"] = len(gm_data.get("alerts", [])) if isinstance(gm_data, dict) else 0
+    except Exception as e:
+        engines["goalmatrix"] = f"error: {e}"
+
+    return {
+        "status": "ok",
+        "timestamp": now,
+        "engines": engines,
+        "last_refresh": now,
+        "alerts": alerts
+    }
 
 # ------------------------------------------------------------
 # STARTUP EVENT
