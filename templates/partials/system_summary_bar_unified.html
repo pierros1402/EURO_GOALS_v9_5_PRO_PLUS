@@ -1,62 +1,51 @@
-<!-- ========================================================= -->
-<!-- EURO_GOALS PRO+ — SYSTEM SUMMARY BAR (v9.6.8 + PWA STATUS) -->
-<!-- ========================================================= -->
+<!-- ============================================================
+     EURO_GOALS PRO+ v9.9.1 — System Summary Bar (Unified Theme)
+     ============================================================ -->
+<section id="eg-summary" class="eg-panel">
+  <div class="eg-panel-head">
+    <h2>System Summary</h2>
+    <span id="eg-summary-time" class="muted"></span>
+  </div>
 
-<div id="system-summary-bar"
-     class="flex flex-wrap items-center justify-center gap-2 py-2 bg-neutral-900/70 backdrop-blur-md rounded-xl shadow text-gray-100 text-xs font-medium">
+  <div class="eg-grid">
+    <div class="dj-card">
+      <div class="dj-row">
+        <div>
+          <div class="dj-id">Active Engines</div>
+          <div class="dj-dom">SmartMoney • GoalMatrix • DowJones</div>
+        </div>
+        <div class="badge" id="eg-engines-status">Active</div>
+      </div>
+    </div>
 
-  <span id="summary-smartmoney"
-        class="px-2 py-1 rounded bg-emerald-600 text-black">💰 SmartMoney: OK</span>
-  <span id="summary-goalmatrix"
-        class="px-2 py-1 rounded bg-sky-500 text-black">📊 GoalMatrix: OK</span>
-  <span id="summary-history"
-        class="px-2 py-1 rounded bg-indigo-500 text-black">📜 History: OK</span>
-  <span id="summary-standings"
-        class="px-2 py-1 rounded bg-amber-400 text-black">🏆 Standings: OK</span>
+    <div class="dj-card">
+      <div class="dj-row">
+        <div>
+          <div class="dj-id">Last Data Refresh</div>
+          <div class="dj-dom">via DataRefresher</div>
+        </div>
+        <div id="eg-refresh-ts" class="badge">--:--</div>
+      </div>
+    </div>
 
-  <!-- ✅ ΝΕΟ: PWA STATUS -->
-  <span id="summary-pwa"
-        class="px-2 py-1 rounded bg-gray-700 text-white"⚙️ PWA: Checking...</span>
+    <div class="dj-card">
+      <div class="dj-row">
+        <div>
+          <div class="dj-id">DowJones Engine</div>
+          <div class="dj-dom">Worker passthrough</div>
+        </div>
+        <div id="eg-dj-health" class="badge">OK</div>
+      </div>
+    </div>
 
-  <span id="summary-clock"
-        class="ml-auto px-2 py-1 rounded bg-neutral-800 text-gray-400 font-mono">--:--:--</span>
-</div>
-
-<script>
-  // ------------------------------------------------------------
-  // Ρολόι πραγματικού χρόνου
-  // ------------------------------------------------------------
-  function updateClock() {
-    const now = new Date();
-    document.getElementById("summary-clock").textContent =
-      now.toLocaleTimeString("el-GR", { hour12: false });
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
-
-  // ------------------------------------------------------------
-  // Έλεγχος Service Worker για PWA pill
-  // ------------------------------------------------------------
-  async function checkPWAStatus() {
-    const el = document.getElementById("summary-pwa");
-    if (!("serviceWorker" in navigator)) {
-      el.textContent = "⚙️ PWA: Unsupported";
-      el.className = "px-2 py-1 rounded bg-red-700 text-white";
-      return;
-    }
-    try {
-      const reg = await navigator.serviceWorker.getRegistration();
-      if (reg) {
-        el.textContent = "⚙️ PWA: Active";
-        el.className = "px-2 py-1 rounded bg-green-500 text-black";
-      } else {
-        el.textContent = "⚙️ PWA: Inactive";
-        el.className = "px-2 py-1 rounded bg-red-600 text-white";
-      }
-    } catch (err) {
-      el.textContent = "⚙️ PWA: Error";
-      el.className = "px-2 py-1 rounded bg-red-700 text-white";
-    }
-  }
-  checkPWAStatus();
-</script>
+    <div class="dj-card">
+      <div class="dj-row">
+        <div>
+          <div class="dj-id">Render Environment</div>
+          <div class="dj-dom">PWA v9.9.1</div>
+        </div>
+        <div class="badge accent">LIVE</div>
+      </div>
+    </div>
+  </div>
+</section>

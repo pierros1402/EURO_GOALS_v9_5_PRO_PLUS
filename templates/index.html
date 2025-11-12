@@ -3,37 +3,128 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EURO_GOALS PRO+ v9.8.8</title>
-  <link rel="manifest" href="/static/manifest.json" />
-  <link rel="icon" href="/static/icons/eurogoals_192.png" />
-  <link rel="apple-touch-icon" href="/static/icons/eurogoals_512.png" />
-  <meta name="theme-color" content="#0a84ff" />
-  <link rel="stylesheet" href="/static/css/unified_theme.css" />
+  <title>EURO_GOALS PRO+ v9.9.5</title>
+
+  <!-- Manifest / Icons -->
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" href="/static/icons/eurogoals_192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/static/icons/eurogoals_512.png">
+  <meta name="theme-color" content="#0a84ff">
+
+  <!-- iOS / PWA Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="EURO_GOALS">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="color-scheme" content="dark light">
+
+  <!-- iOS Splash Screens -->
+  <link rel="apple-touch-startup-image" href="/static/icons/apple_splash.png" media="(device-width: 375px)">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash_720x1280.png" media="(device-width: 414px)">
+  <link rel="apple-touch-startup-image" href="/static/icons/splash_1080x1920.png" media="(device-width: 430px)">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/static/css/unified_theme.css?v=9.9.5">
+  <style>
+    .hidden{display:none!important}
+    .eg-update{position:sticky;top:56px;z-index:9;margin:0 auto;max-width:1280px}
+    .eg-update .box{margin:.5rem 1rem;padding:.6rem .8rem;border:1px solid var(--panel-border);
+      border-radius:14px;background:var(--panel);color:var(--fg);display:flex;align-items:center;gap:.6rem}
+    .eg-update .box button{margin-left:auto}
+    .eg-install-ios{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:.85rem 1rem;background:var(--panel);
+      border-top:1px solid var(--panel-border);color:var(--fg);display:flex;align-items:center;gap:.6rem}
+    .eg-install-ios .close{margin-left:auto;background:var(--chip-bg);border:1px solid var(--panel-border);
+      color:var(--fg);border-radius:10px;padding:.4rem .7rem}
+  </style>
 </head>
 
-<body>
+<body class="eg-body">
+  <!-- HEADER -->
   <header class="eg-header">
-    <div class="title">EURO_GOALS PRO+ <span class="ver">v9.8.8</span></div>
-    <div class="actions">
-      <button id="btnDowJones" class="ghost">Dow Jones</button>
-      <button id="btnToggleOverlay" class="ghost">Overlay</button>
-      <button id="btnRefresh" class="ghost" onclick="location.reload()">Refresh</button>
+    <div class="eg-header-left">
+      <div class="eg-title">
+        EURO_GOALS PRO+ <span class="eg-ver">v9.9.5</span>
+      </div>
+
+      <button id="btnDowJones" class="eg-btn">Dow Jones ▾</button>
+      <div id="djDropdown" class="eg-dropdown hidden">
+        <button class="eg-dd-item" data-dj="inline">Inline (App View)</button>
+        <button class="eg-dd-item" data-dj="full">Full Page (/dowjones)</button>
+      </div>
+
+      <a href="/history_admin" class="eg-btn ghost">📚 History</a>
+    </div>
+
+    <!-- Updated header-right -->
+    <div class="eg-header-right">
+      <button id="btnSound" class="eg-btn ghost" title="Sound">🔊</button>
+      <button id="btnNotify" class="eg-btn ghost" title="Notifications">🔔</button>
+      <button id="btnSettings" class="eg-btn" title="Ρυθμίσεις">⚙️</button>
+      <button id="btnToggleOverlay" class="eg-btn ghost">Overlay</button>
+      <button id="btnRefresh" class="eg-btn ghost" onclick="location.reload()">
+        Refresh <span id="eg-refresh-dot" class="eg-refresh-dot"></span>
+      </button>
+      <button id="btnInstall" class="eg-btn accent hidden">📲 Install App</button>
     </div>
   </header>
 
-  <main class="eg-main">
-    <section class="placeholder">
-      <h2>Matchplan / Standings</h2>
-      <p>Δείγμα σελίδας για έλεγχο overlay.</p>
-      <div class="sample-matches">
-        <button class="m-btn" data-mid="EPL_2025_ARS_BHA">ARS vs BHA</button>
-        <button class="m-btn" data-mid="GRE_2025_PAO_AEK">PAO vs AEK</button>
+  <!-- Update popup -->
+  <div id="eg-update" class="eg-update hidden">
+    <div class="box">
+      <span>🆕 Νέα έκδοση διαθέσιμη.</span>
+      <button id="btnUpdate" class="eg-btn accent">Επανεκκίνηση</button>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <section id="eg-settings" class="eg-settings hidden">
+    <div class="eg-settings-row">
+      <div>Dow Jones Mode</div>
+      <div class="eg-seg">
+        <button class="eg-seg-btn" data-dj="inline">Inline</button>
+        <button class="eg-seg-btn" data-dj="full">Full Page</button>
       </div>
+    </div>
+    <div class="eg-settings-row">
+      <div>Theme</div>
+      <div class="eg-seg">
+        <button class="eg-theme" data-theme="auto">Auto</button>
+        <button class="eg-theme" data-theme="dark">Dark</button>
+        <button class="eg-theme" data-theme="light">Light</button>
+      </div>
+    </div>
+    <div class="eg-settings-row small muted">
+      PWA: 📲 Install ή Share → Add to Home Screen (iPhone).
+    </div>
+  </section>
+
+  <!-- iPhone install banner -->
+  <div id="eg-install-ios" class="eg-install-ios hidden">
+    <span>📲 Πρόσθεσε το <b>EURO_GOALS</b> στην αρχική: <u>Κοινοποίηση</u> → <u>Προσθήκη</u></span>
+    <button class="close" id="eg-install-ios-close">OK</button>
+  </div>
+
+  <!-- MAIN (κάθετη ροή: summary → goalmatrix → smartmoney → dowjones → status) -->
+  <main class="eg-main eg-stack">
+    {% include "partials/system_summary_bar_unified.html" %}
+    {% include "partials/goal_matrix_panel_unified.html" %}
+    {% include "partials/smartmoney_panel_unified.html" %}
+
+    <!-- Dow Jones inline -->
+    <section id="dj-inline" class="eg-panel hidden">
+      <div class="eg-panel-head">
+        <h2>Dow Jones Momentum — Inline Panel</h2>
+        <div id="dj-status" class="muted">loading…</div>
+      </div>
+      <div id="dj-chips" class="eg-chips"></div>
+      <div id="dj-grid" class="eg-grid"></div>
+      <div id="dj-footer" class="eg-footer muted"></div>
     </section>
+
+    {% include "partials/system_status_panel.html" %}
   </main>
 
-  <!-- Overlay UI -->
-  <div id="eg-overlay" class="eg-overlay hidden" style="opacity:0.94">
+  <!-- Overlay -->
+  <div id="eg-overlay" class="eg-overlay hidden" style="opacity:0.96">
     <div class="overlay-header">
       <div>GoalMatrix + SmartMoney</div>
       <div class="mini-actions">
@@ -55,31 +146,19 @@
     </div>
   </div>
 
-  <script src="/static/js/overlay.js"></script>
-  <script>
-    // Ενεργοποίηση κουμπιού Dow Jones Panel
-    const btnDJ = document.getElementById('btnDowJones');
-    if (btnDJ) {
-      btnDJ.addEventListener('click', () => {
-        window.open('/dowjones', '_blank');
-      });
-    }
+  <!-- On-screen toasts & mini console -->
+  <div id="eg-toasts" class="eg-toasts"></div>
+  <div id="eg-eventlog" class="eg-eventlog hidden"></div>
 
-    // Overlay handlers
-    document.querySelectorAll('.m-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const mid = btn.dataset.mid;
-        const payload = await fetch(`/overlay/match/${encodeURIComponent(mid)}`).then(r => r.json());
-        window.egOverlay?.showWithPayload(payload);
-      });
-    });
+  <!-- Scripts -->
+  <script src="/static/js/dowjones_ui.js?v=9.9.5"></script>
+  <script src="/static/js/system_ui.js?v=9.9.5"></script>
 
-    // Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/static/service-worker.js')
-        .then(() => console.log('[SW] Registered'))
-        .catch(() => console.warn('[SW] Failed to register'));
-    }
-  </script>
+  {% if INTERACTIVE_LAYER %}
+    <script src="/static/js/toast_manager.js?v=9.9.5"></script>
+    <script src="/static/js/goal_smart_refresh.js?v=9.9.5"></script>
+  {% else %}
+    <script src="/static/js/goal_smart_refresh.js?v=9.9.1"></script>
+  {% endif %}
 </body>
 </html>
