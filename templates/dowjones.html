@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ ui.app_name }} — Betfair Dow Jones</title>
+  <meta name="theme-color" content="#0b1220" />
+  <style>
+    :root{--bg:#0b1220;--panel:#0f1a32;--fg:#e6eefc;--muted:#91a4c4;--accent:#0a84ff;--ok:#2ecc71;--warn:#f1c40f;--err:#ff6b6b;--chip:#142447;--chip2:#1b2b52}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,Segoe UI,Roboto}
+    header{position:sticky;top:0;z-index:5;background:#0d162b;backdrop-filter:blur(6px);border-bottom:1px solid #1b2a4a}
+    .bar{display:flex;gap:.75rem;align-items:center;justify-content:space-between;padding:.8rem 1rem}
+    .title{font-weight:700;letter-spacing:.3px}.chips{display:flex;gap:.4rem;flex-wrap:wrap}
+    .chip{background:var(--chip);padding:.35rem .6rem;border-radius:999px;font-size:.8rem;color:var(--muted);border:1px solid #233761}
+    .main{max-width:1220px;margin:0 auto;padding:1rem}.panel{background:var(--panel);border:1px solid #1b2a4a;border-radius:18px;padding:1rem;box-shadow:0 6px 22px rgba(0,0,0,.35)}
+    .panel h2{margin:.2rem 0 1rem 0}.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+    @media (max-width:1100px){.grid{grid-template-columns:1fr 1fr}}@media (max-width:720px){.grid{grid-template-columns:1fr}}
+    .card{background:#0c1731;border:1px solid #22335b;border-radius:16px;padding:.75rem}
+    .row{display:flex;gap:.6rem;align-items:center;justify-content:space-between}
+    .id{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas;color:#9fb2d6}.score{font-weight:800}
+    .dom{font-size:.85rem;color:#a5b7d8}.mk{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+    .mk span{background:var(--chip2);padding:.25rem .45rem;border-radius:999px;border:1px solid #2a3c69;color:#c7d6f1;font-size:.8rem}
+    .muted{color:var(--muted)}.controls{display:flex;gap:.5rem;align-items:center}
+    button,select{background:#0f223f;border:1px solid #244270;color:var(--fg);padding:.45rem .6rem;border-radius:10px}
+    button:hover{filter:brightness(1.1)}.ok{color:var(--ok)}.warn{color:var(--warn)}.err{color:var(--err)}.footer{opacity:.7;font-size:.85rem;margin-top:1rem;text-align:center}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="title">{{ ui.app_name }} · <span class="muted">Betfair Dow Jones</span></div>
+      <div class="controls">
+        <span id="status" class="muted">loading…</span>
+        <select id="auto">
+          <option value="0">Auto: off</option>
+          <option value="5">Auto: 5s</option>
+          <option value="10" selected>Auto: 10s</option>
+          <option value="20">Auto: 20s</option>
+        </select>
+        <button id="refreshBtn">Refresh</button>
+      </div>
+    </div>
+  </header>
+  <main class="main">
+    <section class="panel">
+      <h2>"Dow Jones" Momentum — Live</h2>
+      <div class="chips">
+        {% for c in ui.countries %}<div class="chip">Country: {{ c }}</div>{% endfor %}
+        {% for l in ui.leagues %}<div class="chip">League: {{ l }}</div>{% endfor %}
+        <div class="chip" id="mockChip" style="display:none">Mock Mode</div>
+      </div>
+      <div class="grid" id="rows"></div>
+      <div class="footer" id="footer"></div>
+    </section>
+  </main>
+  <script>
+    const rowsEl = document.getElementById('rows');
+    const statusEl = document.getElementById('status');
+    const mockChip = document.getElementById('mockChip');
+    const autoSel = document.getElementById('auto');
+    const btn = document.getElementById('refreshBtn');
+
+    let timer = null;
+    function setAuto(ms){ if (timer) { clearInterval(timer); timer=null; } if (ms>0){ timer=setInterval(load, ms); } }
+    autoSel.value = String({{ ui.refresh_seconds or 10 }});
+    autoSel.addEventListener('change', e => setAuto((parseInt(e.target.value,10)||0)*1000));
+    btn.addEventListener('click', load);
+
+    async function load(){
+      try{
+        statusEl.textContent = 'refreshing…';
+        const r = await fetch('/api/dowjones/live');
+        const j = await r.json();
+        render(j);
+        statusEl.innerHTML = `<span class="ok">ok</span> · tick ${j.tick} · ts ${j.ts}`;
+      }catch(err){ statusEl.innerHTML = `<span class="err">error</span>`; }
+    }
+
+    function render(data){
+      mockChip.style.display = data.mock ? 'inline-flex' : 'none';
+      rowsEl.innerHTML = '';
+      for (const row of data.rows){
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="row">
+            <div>
+              <div class="id"># ${row.fixture_id}</div>
+              <div class="dom">Dominant: ${row.dominant ?? '-'}</div>
+            </div>
+            <div class="score">${row.score.toFixed(4)}</div>
+          </div>
+          <div class="mk">${Object.entries(row.markets).map(([k,v])=>`<span>${k}: ${v.toFixed(4)}</span>`).join('')}</div>
+        `;
+        rowsEl.appendChild(card);
+      }
+      const when = new Date(data.ts*1000).toLocaleTimeString();
+      document.getElementById('footer').textContent = `Updated ${when} · Items ${data.rows.length}`;
+    }
+
+    setAuto({{ ui.refresh_seconds or 10 }} * 1000);
+    load();
+  </script>
+</body>
+</html>

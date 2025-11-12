@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EURO_GOALS PRO+ v9.7.2</title>
+  <title>EURO_GOALS PRO+ v9.8.8</title>
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="icon" href="/static/icons/eurogoals_192.png" />
   <link rel="apple-touch-icon" href="/static/icons/eurogoals_512.png" />
@@ -13,8 +13,9 @@
 
 <body>
   <header class="eg-header">
-    <div class="title">EURO_GOALS PRO+ <span class="ver">v9.7.2</span></div>
+    <div class="title">EURO_GOALS PRO+ <span class="ver">v9.8.8</span></div>
     <div class="actions">
+      <button id="btnDowJones" class="ghost">Dow Jones</button>
       <button id="btnToggleOverlay" class="ghost">Overlay</button>
       <button id="btnRefresh" class="ghost" onclick="location.reload()">Refresh</button>
     </div>
@@ -56,15 +57,24 @@
 
   <script src="/static/js/overlay.js"></script>
   <script>
-    document.querySelectorAll('.m-btn').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
+    // Ενεργοποίηση κουμπιού Dow Jones Panel
+    const btnDJ = document.getElementById('btnDowJones');
+    if (btnDJ) {
+      btnDJ.addEventListener('click', () => {
+        window.open('/dowjones', '_blank');
+      });
+    }
+
+    // Overlay handlers
+    document.querySelectorAll('.m-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
         const mid = btn.dataset.mid;
-        const payload = await fetch(`/overlay/match/${encodeURIComponent(mid)}`).then(r=>r.json());
+        const payload = await fetch(`/overlay/match/${encodeURIComponent(mid)}`).then(r => r.json());
         window.egOverlay?.showWithPayload(payload);
       });
     });
 
-    // ✅ Σταθερό service-worker.js με auto version update
+    // Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/static/service-worker.js')
         .then(() => console.log('[SW] Registered'))
