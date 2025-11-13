@@ -3,203 +3,158 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EURO_GOALS PRO+ v9.9.13</title>
+  <title>EURO_GOALS — v9.9.16</title>
 
+  <!-- PWA -->
   <link rel="manifest" href="/static/manifest.json" />
-  <link rel="icon" href="/static/icons/eurogoals_192.png" sizes="192x192" />
   <meta name="theme-color" content="#0a84ff" />
+  <link rel="icon" href="/static/icons/eurogoals_192.png" sizes="192x192" />
 
+  <!-- Theme -->
+  <link rel="stylesheet" href="/static/css/unified_theme.css?v=9.9.16" />
+  <link rel="stylesheet" href="/static/css/compact_mobile.css?v=9.9.16" />
   <style>
-    :root {
-      --bg: #0b1220;
-      --fg: #e6eefc;
-      --accent: #0a84ff;
-      --ok: #2ecc71;
-      --err: #ff6b6b;
-      --panel: #121b30cc;
-      --border: #2a3a5a;
+    :root{
+      --bg:#0b1220; --fg:#e6eefc; --accent:#0a84ff; --ok:#2ecc71; --err:#ff6b6b;
+      --panel:#121b30cc; --border:#2a3a5a;
     }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: ui-sans-serif, system-ui;
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui;}
+    header{
+      position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;
+      background:#0d1526cc;backdrop-filter:blur(10px);padding:.6rem 1rem;border-bottom:1px solid var(--border);
     }
-    header {
-      position: sticky;
-      top: 0;
-      background: #0d1526cc;
-      backdrop-filter: blur(8px);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: .5rem 1rem;
-      z-index: 10;
-    }
-    header h1 { font-size: 1.1rem; margin: 0; }
-    .eg-btn {
-      background: transparent;
-      border: 1px solid var(--accent);
-      border-radius: 8px;
-      color: var(--accent);
-      padding: .3rem .6rem;
-      cursor: pointer;
-      transition: .2s;
-      margin-left: .4rem;
-    }
-    .eg-btn:hover { background: var(--accent); color: #fff; }
-    .ghost { border: none; color: var(--fg); }
-    main { padding: 1rem; }
+    header h1{margin:0;font-size:1.05rem;letter-spacing:.02em}
+    .controls{display:flex;gap:.45rem}
+    .eg-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:.32rem .7rem;cursor:pointer;transition:.2s}
+    .eg-btn:hover{background:var(--accent);color:#fff}
 
-    /* === SUMMARY BAR === */
-    #system-summary {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      padding: .6rem 1rem;
-      background: var(--panel);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      box-shadow: 0 2px 5px #0004 inset;
-      font-size: 0.9rem;
-      position: sticky;
-      top: 3rem;
-      z-index: 9;
+    /* Unified summary bar (sticky κάτω από header) */
+    #system-summary{
+      position:sticky;top:3.2rem;z-index:90;display:flex;gap:.8rem;justify-content:space-around;align-items:center;
+      padding:.55rem 1rem;background:var(--panel);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+      font-size:.9rem
     }
-    #system-summary div {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: .1rem;
-    }
-    #system-summary span.label { opacity: .7; font-size: .75rem; }
-    #refresh-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%,100% { opacity: .6; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.3); }
+    #system-summary div{display:flex;flex-direction:column;align-items:center}
+    #system-summary .label{opacity:.75;font-size:.75rem}
+    #refresh-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+
+    /* Panels container */
+    main{padding:1rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    section.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:1rem;box-shadow:0 0 8px #0006}
+
+    /* Mobile compact */
+    @media (max-width: 980px){
+      main{display:flex;flex-direction:column;gap:.9rem;padding:.7rem}
+      section.panel{padding:.85rem}
+      header h1{font-size:1rem}
     }
 
-    /* Smart Console (ίδιο όπως πριν) */
-    #eg-console {
-      position: fixed; bottom: 1rem; right: 1rem;
-      width: 320px; background: var(--panel);
-      border: 1px solid var(--border); border-radius: 14px;
-      box-shadow: 0 0 20px #0008; padding: .8rem 1rem; z-index: 50;
-      backdrop-filter: blur(8px);
+    /* Live pulse όταν έρχεται νέο payload */
+    .live-pulse{animation:panelPulse 800ms ease-out}
+    @keyframes panelPulse{
+      0%{box-shadow:0 0 0px #0af6,inset 0 0 0 #0000}
+      40%{box-shadow:0 0 22px #0af8}
+      100%{box-shadow:0 0 8px #0006}
     }
-    #eg-console.hidden { display: none; }
-    #eg-console h3 { margin: 0 0 .5rem 0; }
-    .console-row { display: flex; justify-content: space-between; margin: .3rem 0; }
 
-    /* Toast alert */
-    .toast {
-      position: fixed; top: 1rem; right: 1rem;
-      background: var(--err); color: #fff;
-      padding: .7rem 1.1rem; border-radius: 8px;
-      box-shadow: 0 0 10px #0006; font-weight: 600;
-      z-index: 999; opacity: 0;
-      transform: translateY(-15px);
-      animation: blipIn .3s forwards, fadeOut 5s forwards;
+    /* Toast για update SW */
+    .toast{
+      position:fixed;top:1rem;right:1rem;background:#111a;
+      border:1px solid var(--border);backdrop-filter:blur(10px);
+      color:#fff;padding:.7rem 1rem;border-radius:10px;z-index:999;opacity:0;transform:translateY(-10px);
+      animation:toastIn .25s forwards
     }
-    @keyframes blipIn { to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeOut { 90% {opacity:1;} 100% {opacity:0;transform:translateY(-15px);} }
+    @keyframes toastIn{to{opacity:1;transform:translateY(0)}}
+    .toast button{margin-left:.6rem;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:8px;padding:.2rem .5rem;cursor:pointer}
   </style>
 </head>
-<body>
 
+<body>
   <header>
-    <h1>⚽ EURO_GOALS PRO+ v9.9.13</h1>
-    <div>
-      <button id="themeToggle" class="eg-btn ghost">🌓</button>
-      <button id="btnConsole" class="eg-btn ghost">🧩</button>
+    <h1>⚽ EURO_GOALS <span style="opacity:.6">v9.9.16</span></h1>
+    <div class="controls">
+      <button id="themeToggle" class="eg-btn">🌓</button>
+      <button id="scrollTop" class="eg-btn" title="Πάνω">⬆️</button>
+      <button id="refreshNow" class="eg-btn">🔄</button>
     </div>
   </header>
 
-  <!-- Unified Summary Panel -->
+  <!-- Unified Summary -->
   <div id="system-summary">
     <div><b id="djStat">⏳</b><span class="label">DowJones</span></div>
     <div><b id="smStat">⏳</b><span class="label">SmartMoney</span></div>
     <div><b id="gmStat">⏳</b><span class="label">GoalMatrix</span></div>
-    <div><div id="refresh-dot"></div><span class="label" id="lastUpdate">-</span></div>
+    <div>
+      <div id="refresh-dot"></div>
+      <span class="label" id="lastUpdate">--:--</span>
+    </div>
   </div>
 
-  <main>
-    <h2>Unified Dashboard</h2>
-    <p>Το EURO_GOALS PRO+ παρακολουθεί συνεχώς όλα τα modules μέσω του Unified System Status API.</p>
+  <!-- PANELS (partials) -->
+  <main id="eg-panels">
+    <section id="panel-summary" class="panel">{% include 'partials/system_summary_bar_unified.html' %}</section>
+    <section id="panel-status"  class="panel">{% include 'partials/system_status_panel.html' %}</section>
+    <section id="panel-goalmatrix" class="panel">{% include 'partials/goal_matrix_panel_unified.html' %}</section>
+    <section id="panel-smartmoney" class="panel">{% include 'partials/smartmoney_panel_unified.html' %}</section>
   </main>
 
-  <!-- Smart Console -->
-  <section id="eg-console" class="hidden">
-    <h3>Smart Console</h3>
-    <div class="console-row"><b>DowJones:</b> <span id="djStatus">⏳</span></div>
-    <div class="console-row"><b>SmartMoney:</b> <span id="smStatus">⏳</span></div>
-    <div class="console-row"><b>GoalMatrix:</b> <span id="gmStatus">⏳</span></div>
-    <div class="console-row"><b>History:</b> <span id="histStatus">⏳</span></div>
-    <hr />
-    <div class="console-row"><b>SmartMoney Alerts:</b> <span id="smAlerts">0</span></div>
-    <div class="console-row"><b>GoalMatrix Alerts:</b> <span id="gmAlerts">0</span></div>
-  </section>
+<script>
+if (location.hostname === "127.0.0.1" || location.hostname === "localhost") {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => {
+      if (r.scope.includes("127.0.0.1:8000")) {
+        console.log("🧹 Auto-clean SW:", r.scope);
+        r.unregister();
+      }
+    });
+  });
+}
+</script>
+
+  <!-- Core scheduler / UI logic -->
+  <script src="/static/js/goal_smart_refresh.js?v=9.9.16" defer></script>
 
   <script>
-    const themeBtn = document.getElementById("themeToggle");
-    themeBtn.addEventListener("click", () => {
-      const dark = document.body.classList.toggle("dark");
-      document.documentElement.style.setProperty("--bg", dark ? "#e6eefc" : "#0b1220");
-      document.documentElement.style.setProperty("--fg", dark ? "#0b1220" : "#e6eefc");
-    });
+    // Theme toggle (light/dark)
+    document.getElementById("themeToggle").onclick = () => {
+      const light = document.body.classList.toggle("light");
+      document.documentElement.style.setProperty("--bg", light ? "#e6eefc" : "#0b1220");
+      document.documentElement.style.setProperty("--fg", light ? "#0b1220" : "#e6eefc");
+    };
 
-    const btnConsole = document.getElementById("btnConsole");
-    const consolePanel = document.getElementById("eg-console");
-    btnConsole.addEventListener("click", () => consolePanel.classList.toggle("hidden"));
+    // Manual scroll to top (mobile help)
+    document.getElementById("scrollTop").onclick = () => window.scrollTo({top:0,behavior:"smooth"});
 
-    function showToast(msg) {
-      const t = document.createElement("div");
-      t.className = "toast";
-      t.textContent = msg;
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 5500);
+    // Service Worker registration + update toast
+    if ("serviceWorker" in navigator){
+      window.addEventListener("load", async () => {
+        try{
+          const reg = await navigator.serviceWorker.register("/service-worker.js");
+          // listen for waiting SW (new version)
+          const showUpdateToast = () => {
+            const t = document.createElement("div");
+            t.className="toast";
+            t.innerHTML=`Νέα έκδοση διαθέσιμη. <button id="swApply">Εφαρμογή</button>`;
+            document.body.appendChild(t);
+            document.getElementById("swApply").onclick = () => {
+              if (reg.waiting) {
+                reg.waiting.postMessage({type:"SKIP_WAITING"});
+              }
+              window.location.reload();
+            };
+          };
+          if (reg.waiting) showUpdateToast();
+          reg.addEventListener("updatefound", () => {
+            const sw = reg.installing;
+            sw?.addEventListener("statechange", () => {
+              if (sw.state === "installed" && navigator.serviceWorker.controller) showUpdateToast();
+            });
+          });
+          navigator.serviceWorker.addEventListener("controllerchange", () => window.location.reload());
+        }catch(e){ console.warn("[SW] register failed:", e); }
+      });
     }
-
-    let failCount = 0;
-
-    async function updateSystem() {
-      try {
-        const res = await fetch("/api/system/status");
-        const data = await res.json();
-
-        const djOK = !data.engines.dowjones.includes("error");
-        const smOK = !data.engines.smartmoney.includes("error");
-        const gmOK = !data.engines.goalmatrix.includes("error");
-
-        // summary bar
-        document.getElementById("djStat").textContent = djOK ? "🧠" : "❌";
-        document.getElementById("smStat").textContent = smOK ? "💰" : "❌";
-        document.getElementById("gmStat").textContent = gmOK ? "🎯" : "❌";
-        document.getElementById("lastUpdate").textContent = new Date(data.timestamp).toLocaleTimeString();
-
-        // console
-        document.getElementById("djStatus").textContent = djOK ? "🟢 OK" : "🔴 Error";
-        document.getElementById("smStatus").textContent = smOK ? "🟢 OK" : "🔴 Error";
-        document.getElementById("gmStatus").textContent = gmOK ? "🟢 OK" : "🔴 Error";
-        document.getElementById("histStatus").textContent = data.engines.history.includes("error") ? "🔴 Error" : "🟢 OK";
-        document.getElementById("smAlerts").textContent = data.alerts.smartmoney || 0;
-        document.getElementById("gmAlerts").textContent = data.alerts.goalmatrix || 0;
-
-        failCount = 0;
-      } catch {
-        failCount++;
-        if (failCount === 3) showToast("⚠️ Unified API Unavailable");
-      }
-    }
-
-    setInterval(updateSystem, 10000);
-    updateSystem();
   </script>
 </body>
 </html>

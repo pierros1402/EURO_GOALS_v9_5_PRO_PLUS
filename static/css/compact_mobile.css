@@ -1,0 +1,121 @@
+/* ============================================================
+   EURO_GOALS PRO+ v9.9.16 — COMPACT MOBILE LAYER
+   Ενεργοποιείται μόνο σε οθόνες <= 980px
+   Βελτιώνει: padding, layout, γραμματοσειρές, panels, κουμπιά
+   ============================================================ */
+
+@media (max-width: 980px) {
+
+  /* Smooth scrolling παντού */
+  html, body {
+    scroll-behavior: smooth;
+  }
+
+  /* -------------------------------
+     Header (πιο λεπτό & compact)
+     ------------------------------- */
+  header {
+    padding: 0.45rem 0.8rem !important;
+  }
+  header h1 {
+    font-size: 0.95rem !important;
+    letter-spacing: 0.015em;
+  }
+
+  /* Controls buttons smaller */
+  .eg-btn {
+    padding: 0.22rem 0.55rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 7px !important;
+  }
+
+  /* μικρό press-in effect στο tap */
+  .eg-btn:active {
+    transform: scale(0.93);
+    transition: 0.08s;
+  }
+
+  /* -------------------------------
+     Unified Summary Bar
+     ------------------------------- */
+  #system-summary {
+    padding: 0.45rem 0.7rem !important;
+    font-size: 0.78rem !important;
+    gap: 0.6rem !important;
+  }
+  #system-summary .label {
+    font-size: 0.65rem !important;
+  }
+
+  /* icons smaller */
+  #system-summary b {
+    font-size: 1rem !important;
+  }
+
+  /* -------------------------------
+     Panels layout
+     Από grid → κάθετο compact
+     ------------------------------- */
+  main {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0.6rem !important;
+    gap: 0.75rem !important;
+  }
+
+  section.panel {
+    padding: 0.75rem !important;
+    border-radius: 10px !important;
+    border-width: 1px !important;
+  }
+
+  /* titles in panels */
+  section.panel h2, 
+  section.panel h3 {
+    font-size: 1.0rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+
+  /* reduce all text inside panels */
+  section.panel, 
+  section.panel p, 
+  section.panel span, 
+  section.panel div {
+    font-size: 0.88rem !important;
+  }
+
+  /* tables inside panels */
+  section.panel table {
+    font-size: 0.8rem !important;
+  }
+  section.panel table th,
+  section.panel table td {
+    padding: 0.25rem 0.3rem !important;
+  }
+
+  /* -------------------------------
+     Extra small screens (< 420px)
+     ------------------------------- */
+  @media (max-width: 420px) {
+
+    header h1 { font-size: 0.85rem !important; }
+
+    #system-summary {
+      gap: 0.4rem !important;
+      padding: 0.4rem 0.5rem !important;
+    }
+    #system-summary b {
+      font-size: 0.9rem !important;
+    }
+
+    section.panel {
+      border-radius: 0px !important; /* ενιαία κάθετη στήλη */
+      padding: 0.65rem !important;
+    }
+
+    .eg-btn {
+      padding: 0.18rem 0.48rem !important;
+      font-size: 0.75rem !important;
+    }
+  }
+}
