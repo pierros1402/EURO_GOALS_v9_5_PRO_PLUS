@@ -1,13 +1,17 @@
 <!-- ============================================================
-     EURO_GOALS PRO+ v9.9.1 — System Summary Bar (Unified Theme)
+     EURO_GOALS PRO+ v10.2.0 — System Summary Bar (Unified Theme)
      ============================================================ -->
 <section id="eg-summary" class="eg-panel">
+
   <div class="eg-panel-head">
     <h2>System Summary</h2>
-    <span id="eg-summary-time" class="muted"></span>
+    <!-- Last update time (updated by JS) -->
+    <span id="lastUpdate" class="muted">--:--</span>
   </div>
 
   <div class="eg-grid">
+
+    <!-- Active Engines -->
     <div class="dj-card">
       <div class="dj-row">
         <div>
@@ -18,16 +22,22 @@
       </div>
     </div>
 
+    <!-- System Status Indicators (DowJones / SmartMoney / GoalMatrix) -->
     <div class="dj-card">
       <div class="dj-row">
         <div>
-          <div class="dj-id">Last Data Refresh</div>
-          <div class="dj-dom">via DataRefresher</div>
+          <div class="dj-id">Engines Status</div>
+          <div class="dj-dom">
+            <span id="djStat" style="margin-right: 8px;">🧠</span>
+            <span id="smStat" style="margin-right: 8px;">💰</span>
+            <span id="gmStat">🎯</span>
+          </div>
         </div>
         <div id="eg-refresh-ts" class="badge">--:--</div>
       </div>
     </div>
 
+    <!-- DowJones Engine -->
     <div class="dj-card">
       <div class="dj-row">
         <div>
@@ -38,14 +48,16 @@
       </div>
     </div>
 
+    <!-- Environment -->
     <div class="dj-card">
       <div class="dj-row">
         <div>
           <div class="dj-id">Render Environment</div>
-          <div class="dj-dom">PWA v9.9.1</div>
+          <div class="dj-dom">PWA v10.2.0</div>
         </div>
         <div class="badge accent">LIVE</div>
       </div>
     </div>
+
   </div>
 </section>

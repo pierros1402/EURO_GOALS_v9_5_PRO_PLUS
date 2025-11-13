@@ -1,70 +1,64 @@
 /* ============================================================
-   EURO_GOALS — Service Worker v9.9.16
-   - Cache-first για static assets
-   - Stale-while-revalidate για APIs (μικρό TTL)
-   - Update flow: SKIP_WAITING μέσω postMessage
+   EURO_GOALS PRO+ v10.2.1 — Service Worker
+   Offline + Cache + Auto Update
    ============================================================ */
 
-const STATIC_CACHE = "eg-static-v9.9.16";
-const API_CACHE    = "eg-api-v9.9.16";
+const CACHE_NAME = "eg-cache-v10.2.1";
 const STATIC_ASSETS = [
-  "/", "/static/manifest.json",
-  "/static/css/unified_theme.css",
-  "/static/js/goal_smart_refresh.js",
-  "/static/icons/eurogoals_192.png",
-  "/static/icons/eurogoals_512.png"
+    "/",
+    "/static/manifest.json",
+    "/static/icons/eurogoals_192.png",
+    "/static/icons/eurogoals_512.png",
+    "/static/css/unified_theme.css",
+    "/static/js/goal_smart_refresh.js",
+    "/static/pwa/pwa_update_monitor.js"
 ];
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(STATIC_CACHE).then((c) => c.addAll(STATIC_ASSETS))
-  );
-});
-
-self.addEventListener("activate", (e) => {
-  e.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter(k => ![STATIC_CACHE, API_CACHE].includes(k)).map(k => caches.delete(k)));
-    self.clients.claim();
-  })());
-});
-
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
+/* INSTALL ---------------------------------------------------*/
+self.addEventListener("install", (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    );
     self.skipWaiting();
-  }
 });
 
-self.addEventListener("fetch", (e) => {
-  const url = new URL(e.request.url);
-  const isAPI = url.pathname.startsWith("/api/");
+/* ACTIVATE --------------------------------------------------*/
+self.addEventListener("activate", (event) => {
+    event.waitUntil(
+        caches.keys().then((keys) =>
+            Promise.all(
+                keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+            )
+        )
+    );
+    self.clients.claim();
+});
 
-  // Cache-first για static
-  if (!isAPI) {
-    e.respondWith((async () => {
-      const cached = await caches.match(e.request);
-      if (cached) return cached;
-      try {
-        const res = await fetch(e.request);
-        const cache = await caches.open(STATIC_CACHE);
-        cache.put(e.request, res.clone());
-        return res;
-      } catch {
-        return cached || Response.error();
-      }
-    })());
-    return;
-  }
+/* FETCH -----------------------------------------------------*/
+self.addEventListener("fetch", (event) => {
+    if (event.request.url.includes("/api/")) {
+        return event.respondWith(fetch(event.request));
+    }
 
-  // SWR για API (με μικρό caching)
-  e.respondWith((async () => {
-    const cache = await caches.open(API_CACHE);
-    const cached = await cache.match(e.request);
-    const fetchPromise = fetch(e.request).then((res) => {
-      // cache only 200/OK
-      if (res && res.status === 200) cache.put(e.request, res.clone());
-      return res;
-    }).catch(() => cached);
-    return cached || fetchPromise;
-  })());
+    event.respondWith(
+        caches.match(event.request).then((cached) => {
+            return (
+                cached ||
+                fetch(event.request).then((response) => {
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, copy);
+                    });
+                    return response;
+                })
+            );
+        })
+    );
+});
+
+/* AUTO-UPDATE NOTIFICATION ---------------------------------*/
+self.addEventListener("message", (event) => {
+    if (event.data === "checkForUpdate") {
+        self.skipWaiting();
+    }
 });

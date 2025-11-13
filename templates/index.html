@@ -1,160 +1,81 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EURO_GOALS — v9.9.16</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- PWA -->
-  <link rel="manifest" href="/static/manifest.json" />
-  <meta name="theme-color" content="#0a84ff" />
-  <link rel="icon" href="/static/icons/eurogoals_192.png" sizes="192x192" />
+    <title>EURO_GOALS PRO+ v10.2.1</title>
 
-  <!-- Theme -->
-  <link rel="stylesheet" href="/static/css/unified_theme.css?v=9.9.16" />
-  <link rel="stylesheet" href="/static/css/compact_mobile.css?v=9.9.16" />
-  <style>
-    :root{
-      --bg:#0b1220; --fg:#e6eefc; --accent:#0a84ff; --ok:#2ecc71; --err:#ff6b6b;
-      --panel:#121b30cc; --border:#2a3a5a;
-    }
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui;}
-    header{
-      position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;
-      background:#0d1526cc;backdrop-filter:blur(10px);padding:.6rem 1rem;border-bottom:1px solid var(--border);
-    }
-    header h1{margin:0;font-size:1.05rem;letter-spacing:.02em}
-    .controls{display:flex;gap:.45rem}
-    .eg-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:8px;padding:.32rem .7rem;cursor:pointer;transition:.2s}
-    .eg-btn:hover{background:var(--accent);color:#fff}
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#0a84ff">
+    <link rel="apple-touch-icon" href="/static/icons/eurogoals_512.png">
 
-    /* Unified summary bar (sticky κάτω από header) */
-    #system-summary{
-      position:sticky;top:3.2rem;z-index:90;display:flex;gap:.8rem;justify-content:space-around;align-items:center;
-      padding:.55rem 1rem;background:var(--panel);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
-      font-size:.9rem
-    }
-    #system-summary div{display:flex;flex-direction:column;align-items:center}
-    #system-summary .label{opacity:.75;font-size:.75rem}
-    #refresh-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+    <!-- iOS PWA fixes -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="stylesheet" href="/static/pwa/unified_pwa_ios.css">
 
-    /* Panels container */
-    main{padding:1rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-    section.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:1rem;box-shadow:0 0 8px #0006}
-
-    /* Mobile compact */
-    @media (max-width: 980px){
-      main{display:flex;flex-direction:column;gap:.9rem;padding:.7rem}
-      section.panel{padding:.85rem}
-      header h1{font-size:1rem}
-    }
-
-    /* Live pulse όταν έρχεται νέο payload */
-    .live-pulse{animation:panelPulse 800ms ease-out}
-    @keyframes panelPulse{
-      0%{box-shadow:0 0 0px #0af6,inset 0 0 0 #0000}
-      40%{box-shadow:0 0 22px #0af8}
-      100%{box-shadow:0 0 8px #0006}
-    }
-
-    /* Toast για update SW */
-    .toast{
-      position:fixed;top:1rem;right:1rem;background:#111a;
-      border:1px solid var(--border);backdrop-filter:blur(10px);
-      color:#fff;padding:.7rem 1rem;border-radius:10px;z-index:999;opacity:0;transform:translateY(-10px);
-      animation:toastIn .25s forwards
-    }
-    @keyframes toastIn{to{opacity:1;transform:translateY(0)}}
-    .toast button{margin-left:.6rem;border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:8px;padding:.2rem .5rem;cursor:pointer}
-  </style>
+    <!-- UI Theme -->
+    <link rel="stylesheet" href="/static/css/unified_theme.css?v=10.2.1">
 </head>
 
 <body>
-  <header>
-    <h1>⚽ EURO_GOALS <span style="opacity:.6">v9.9.16</span></h1>
-    <div class="controls">
-      <button id="themeToggle" class="eg-btn">🌓</button>
-      <button id="scrollTop" class="eg-btn" title="Πάνω">⬆️</button>
-      <button id="refreshNow" class="eg-btn">🔄</button>
-    </div>
-  </header>
 
-  <!-- Unified Summary -->
-  <div id="system-summary">
-    <div><b id="djStat">⏳</b><span class="label">DowJones</span></div>
-    <div><b id="smStat">⏳</b><span class="label">SmartMoney</span></div>
-    <div><b id="gmStat">⏳</b><span class="label">GoalMatrix</span></div>
-    <div>
-      <div id="refresh-dot"></div>
-      <span class="label" id="lastUpdate">--:--</span>
-    </div>
-  </div>
+<!-- HEADER -->
+{% include "partials/navbar_unified.html" %}
 
-  <!-- PANELS (partials) -->
-  <main id="eg-panels">
-    <section id="panel-summary" class="panel">{% include 'partials/system_summary_bar_unified.html' %}</section>
-    <section id="panel-status"  class="panel">{% include 'partials/system_status_panel.html' %}</section>
-    <section id="panel-goalmatrix" class="panel">{% include 'partials/goal_matrix_panel_unified.html' %}</section>
-    <section id="panel-smartmoney" class="panel">{% include 'partials/smartmoney_panel_unified.html' %}</section>
-  </main>
+<!-- SUMMARY BAR -->
+{% include "partials/system_summary_bar_unified.html" %}
 
+<!-- STATUS PANEL -->
+{% include "partials/system_status_panel_unified.html" %}
+
+<!-- GOALMATRIX -->
+{% include "partials/goal_matrix_panel_unified.html" %}
+
+<!-- SMARTMONEY -->
+{% include "partials/smartmoney_panel_unified.html" %}
+
+<!-- SMARTMONEY LOG -->
+{% include "partials/smartmoney_log_panel.html" %}
+
+<!-- FLASHCORE FIXTURES -->
+{% include "partials/flashscore_panel.html" %}
+
+<!-- CONTROLS -->
+{% include "partials/system_controls_modal.html" %}
+
+<!-- INSTALL BUTTON SCRIPT -->
 <script>
-if (location.hostname === "127.0.0.1" || location.hostname === "localhost") {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(r => {
-      if (r.scope.includes("127.0.0.1:8000")) {
-        console.log("🧹 Auto-clean SW:", r.scope);
-        r.unregister();
-      }
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const btn = document.getElementById("eg-install-btn");
+    if (btn) btn.style.display = "inline-block";
+});
+</script>
+
+<!-- REGISTER SW -->
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", async () => {
+        try {
+            const reg = await navigator.serviceWorker.register("/static/service-worker.js");
+            console.log("[SW] Registered", reg);
+        } catch (e) {
+            console.warn("[SW] register failed:", e);
+        }
     });
-  });
 }
 </script>
 
-  <!-- Core scheduler / UI logic -->
-  <script src="/static/js/goal_smart_refresh.js?v=9.9.16" defer></script>
+<!-- AUTO UPDATE -->
+<script src="/static/pwa/pwa_update_monitor.js" defer></script>
 
-  <script>
-    // Theme toggle (light/dark)
-    document.getElementById("themeToggle").onclick = () => {
-      const light = document.body.classList.toggle("light");
-      document.documentElement.style.setProperty("--bg", light ? "#e6eefc" : "#0b1220");
-      document.documentElement.style.setProperty("--fg", light ? "#0b1220" : "#e6eefc");
-    };
+<!-- REFRESH ENGINE -->
+<script src="/static/js/goal_smart_refresh.js?v=10.2.1" defer></script>
 
-    // Manual scroll to top (mobile help)
-    document.getElementById("scrollTop").onclick = () => window.scrollTo({top:0,behavior:"smooth"});
-
-    // Service Worker registration + update toast
-    if ("serviceWorker" in navigator){
-      window.addEventListener("load", async () => {
-        try{
-          const reg = await navigator.serviceWorker.register("/service-worker.js");
-          // listen for waiting SW (new version)
-          const showUpdateToast = () => {
-            const t = document.createElement("div");
-            t.className="toast";
-            t.innerHTML=`Νέα έκδοση διαθέσιμη. <button id="swApply">Εφαρμογή</button>`;
-            document.body.appendChild(t);
-            document.getElementById("swApply").onclick = () => {
-              if (reg.waiting) {
-                reg.waiting.postMessage({type:"SKIP_WAITING"});
-              }
-              window.location.reload();
-            };
-          };
-          if (reg.waiting) showUpdateToast();
-          reg.addEventListener("updatefound", () => {
-            const sw = reg.installing;
-            sw?.addEventListener("statechange", () => {
-              if (sw.state === "installed" && navigator.serviceWorker.controller) showUpdateToast();
-            });
-          });
-          navigator.serviceWorker.addEventListener("controllerchange", () => window.location.reload());
-        }catch(e){ console.warn("[SW] register failed:", e); }
-      });
-    }
-  </script>
 </body>
 </html>

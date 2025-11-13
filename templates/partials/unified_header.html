@@ -1,55 +1,72 @@
-<!-- ============================================================
-     EURO_GOALS v9.6.1 PRO+ — Unified Header (Adaptive Toolbar)
-============================================================ -->
-<header class="system-header flex justify-between items-center px-4 py-2 rounded-b-xl shadow bg-gradient-to-r from-[#0a1425] to-[#101a33] backdrop-blur-md sticky top-0 z-20 transition-all">
-  <div class="header-left flex items-center gap-3">
-    <img src="/static/icons/eurogoals_512.png"
-         alt="EURO_GOALS Logo"
-         class="logo w-10 h-10 rounded-lg object-cover shadow-md" />
-    <h1 class="app-title text-base sm:text-lg font-semibold text-sky-400 tracking-wide">
-      EURO_GOALS PRO+ <span class="hidden sm:inline text-gray-400">v9.6.1</span>
-    </h1>
-  </div>
+<header class="eg-header">
 
-  <div class="header-right flex items-center gap-2 flex-wrap justify-end">
-    <button id="themeToggle"
-            class="header-btn bg-[#1d2b45] border border-[#2c3e63] text-gray-200 rounded-md px-3 py-1 text-sm hover:bg-[#243b61] transition">
-      🌗 Θέμα
-    </button>
+    <nav class="eg-nav">
+        <a href="#dowjones" class="eg-nav-btn">🧭 DowJones</a>
+        <a href="#smartmoney" class="eg-nav-btn">💰 SmartMoney</a>
+        <a href="#goalmatrix" class="eg-nav-btn">🎯 GoalMatrix</a>
 
-    <button id="headerRefresh"
-            class="header-btn bg-sky-700 text-white rounded-md px-3 py-1 text-sm hover:bg-sky-600 transition">
-      ⟳ Ανανέωση
-    </button>
+        <button id="open-controls"   class="eg-nav-btn">⚙️</button>
+        <button id="theme-toggle"    class="eg-nav-btn">🌓</button>
+        <button id="force-refresh"   class="eg-nav-btn">🔁</button>
 
-    <a href="/alert_center" class="header-btn bg-[#2a374d] border border-[#3b4f70] text-gray-200 rounded-md px-3 py-1 text-sm hover:bg-[#334567] transition">
-      🚨 Alerts
-    </a>
+        <!-- INSTALL PWA BUTTON -->
+        <button id="eg-install-btn" class="eg-nav-btn" style="display:none;">
+            📲 Install App
+        </button>
+    </nav>
 
-    <a href="/smartmoney_monitor"
-       class="header-btn bg-[#2a374d] border border-[#3b4f70] text-gray-200 rounded-md px-3 py-1 text-sm hover:bg-[#334567] transition">
-      💰 Monitor
-    </a>
-  </div>
 </header>
-<hr class="header-divider border-gray-700 opacity-40" />
+
+<!-- =============================== -->
+<!-- PWA INSTALL LOGIC -->
+<!-- =============================== -->
 
 <script>
-  // ============================================================
-  // EURO_GOALS Header Controls (Unified)
-  // ============================================================
-  document.getElementById("headerRefresh")?.addEventListener("click", () => {
-    location.reload(true);
-  });
+let deferredPrompt = null;
 
-  // Live sync με theme_toggle.js (το κουμπί ενημερώνεται αυτόματα)
-  window.addEventListener("storage", (e) => {
-    if (e.key === "eg_theme_sync") {
-      const btn = document.getElementById("themeToggle");
-      const data = JSON.parse(e.newValue || "{}");
-      if (btn && data.theme) {
-        btn.textContent = data.theme === "dark" ? "☀️ Φωτεινό" : "🌙 Σκοτεινό";
-      }
+// Capture install event before browser shows default banner
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    console.log("[PWA] Install prompt captured.");
+
+    const btn = document.getElementById("eg-install-btn");
+    if (btn) btn.style.display = "inline-block";
+});
+
+// When user clicks Install App
+document.getElementById("eg-install-btn")?.addEventListener("click", async () => {
+
+    if (!deferredPrompt) {
+        console.warn("[PWA] No install prompt available.");
+        return;
     }
-  });
+
+    deferredPrompt.prompt();
+
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+
+    // Hide button after install attempt
+    const btn = document.getElementById("eg-install-btn");
+    if (btn) btn.style.display = "none";
+});
 </script>
+
+<style>
+.eg-nav-btn {
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #1a273d;
+    color: var(--fg);
+    border: 1px solid #33425a;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Ensure install button is hidden by default */
+#eg-install-btn {
+    display: none;
+}
+</style>

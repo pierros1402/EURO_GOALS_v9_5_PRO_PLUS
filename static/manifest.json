@@ -1,13 +1,23 @@
 {
-  "name": "EURO_GOALS",
-  "short_name": "EURO_GOALS",
-  "description": "Unified football analytics (DowJones + SmartMoney + GoalMatrix) — EURO_GOALS PRO+",
+  "name": "EURO_GOALS PRO+",
+  "short_name": "EG Pro+",
+  "description": "EURO_GOALS PRO+ Unified Live Dashboard (GoalMatrix, SmartMoney, Worker Engines)",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0b1220",
   "theme_color": "#0a84ff",
   "icons": [
-    { "src": "/static/icons/eurogoals_192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/static/icons/eurogoals_512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/static/icons/eurogoals_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/eurogoals_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }

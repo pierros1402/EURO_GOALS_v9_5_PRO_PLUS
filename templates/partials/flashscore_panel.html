@@ -1,0 +1,27 @@
+<!-- ============================================================
+     EURO_GOALS PRO+ v10.2.0 — Flashscore Fixtures Panel
+     ============================================================ -->
+<section id="eg-flashscore" class="eg-panel">
+  <div class="eg-panel-head">
+    <h2>Flashscore Fixtures</h2>
+    <span class="muted small">via Cloudflare Worker</span>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.5rem">
+    <label class="muted small">Λίγκα:</label>
+    <select id="fs-league-select" style="flex:1;min-width:180px;border-radius:8px;padding:.25rem .4rem;border:1px solid var(--border);background:#0b1220;color:var(--fg);">
+      <option value="football/england/premier-league">Premier League</option>
+      <option value="football/spain/laliga">LaLiga</option>
+      <option value="football/germany/bundesliga">Bundesliga</option>
+      <option value="football/italy/serie-a">Serie A</option>
+      <option value="football/france/ligue-1">Ligue 1</option>
+      <option value="football/greece/super-league">Super League (GR)</option>
+    </select>
+    <button id="fs-open" class="eg-btn">Άνοιγμα</button>
+  </div>
+
+  <p class="muted small">
+    Πατώντας <b>Άνοιγμα</b>, εμφανίζονται τα Fixtures της επιλεγμένης λίγκας
+    σε νέο tab, απευθείας από Flashscore μέσω του Worker.
+  </p>
+</section>

@@ -1,123 +1,131 @@
 /* ============================================================
-   EURO_GOALS v9.9.16 — Mobile Pulse Edition (Scheduler + Pulse)
-   - Unified scheduler (status 10s, GM 15s, SM 10s)
-   - Live pulse σε panels όταν έρχεται νέο payload
-   - Manual refresh κουμπί
-   - Auto-scroll helpers (mobile)
+   EURO_GOALS PRO+ v10.2.1 — Goal & SmartMoney Auto-Refresh
    ============================================================ */
 
-(function () {
-  const $ = (sel) => document.querySelector(sel);
+console.log("[EG] goal_smart_refresh.js v10.2.1 loaded");
 
-  // Panels to pulse on data updates
-  const panels = {
-    system:  $("#panel-summary"),
-    status:  $("#panel-status"),
-    goal:    $("#panel-goalmatrix"),
-    smart:   $("#panel-smartmoney")
-  };
+const REFRESH_FROM_SERVER = 10 * 1000; // 10s
 
-  function pulse(el){
-    if(!el) return;
-    el.classList.remove("live-pulse");
-    // force reflow
-    void el.offsetWidth;
-    el.classList.add("live-pulse");
-  }
-
-  // state (for change detection)
-  let lastStatusSig = "";
-  let lastGMHash = "";
-  let lastSMHash = "";
-
-  // Simple hash of JSON
-  const jhash = (obj) => {
-    try { return JSON.stringify(obj).length + "|" + Object.keys(obj || {}).join(","); }
-    catch { return String(Math.random()); }
-  };
-
-  // Unified system status (every 10s)
-  async function refreshSystemStatus(manual=false){
-    try{
-      const res = await fetch("/api/system/status");
-      const data = await res.json();
-
-      // summary bar updates
-      const djOK = !String(data.engines.dowjones).includes("error");
-      const smOK = !String(data.engines.smartmoney).includes("error");
-      const gmOK = !String(data.engines.goalmatrix).includes("error");
-
-      $("#djStat").textContent = djOK ? "🧠" : "❌";
-      $("#smStat").textContent = smOK ? "💰" : "❌";
-      $("#gmStat").textContent = gmOK ? "🎯" : "❌";
-
-      $("#djStat").style.color = djOK ? "var(--ok)" : "var(--err)";
-      $("#smStat").style.color = smOK ? "var(--ok)" : "var(--err)";
-      $("#gmStat").style.color = gmOK ? "var(--ok)" : "var(--err)";
-      $("#lastUpdate").textContent = new Date(data.timestamp).toLocaleTimeString();
-
-      // change detect → pulse system & status panels
-      const sig = `${djOK}-${smOK}-${gmOK}-${data.alerts?.smartmoney||0}-${data.alerts?.goalmatrix||0}`;
-      if(sig !== lastStatusSig){
-        lastStatusSig = sig;
-        pulse(panels.system);
-        pulse(panels.status);
-      }
-    }catch(e){
-      console.warn("[EG] system status refresh failed:", e);
+async function fetchJSON(url) {
+    try {
+        const r = await fetch(url, { cache: "no-store" });
+        if (!r.ok) return null;
+        return await r.json();
+    } catch {
+        return null;
     }
-  }
+}
 
-  // GoalMatrix (detail) every 15s
-  async function refreshGoalMatrix(){
-    try{
-      const res = await fetch("/api/goal_matrix/summary");
-      const data = await res.json();
-      const h = jhash(data||{});
-      if (h !== lastGMHash){
-        lastGMHash = h;
-        pulse(panels.goal);
-      }
-    }catch(e){
-      console.warn("[EG] goal matrix refresh failed:", e);
+/* ------------------------------------------------------------
+   SYSTEM STATUS BAR
+------------------------------------------------------------ */
+
+async function updateSystemStatus() {
+    const data = await fetchJSON("/api/system/status");
+    if (!data) return;
+
+    const ts = document.getElementById("sys-ts");
+    if (ts) ts.textContent = data.timestamp.split("T")[1].replace("Z","");
+
+    const engines = data.engines || {};
+
+    const s1 = document.getElementById("eng-sm");
+    const s2 = document.getElementById("eng-gm");
+    const s3 = document.getElementById("eng-dj");
+
+    if (s1) s1.textContent = engines.smartmoney || "--";
+    if (s2) s2.textContent = engines.goalmatrix || "--";
+    if (s3) s3.textContent = engines.dowjones || "--";
+}
+
+/* ------------------------------------------------------------
+   GOAL MATRIX PANEL
+------------------------------------------------------------ */
+
+async function updateGoalMatrix() {
+    const data = await fetchJSON("/api/goal_matrix/summary");
+    if (!data || !data.items) return;
+
+    const body = document.getElementById("gm-body");
+    if (!body) return;
+
+    let html = "";
+    for (const row of data.items) {
+        html += `
+        <tr>
+            <td>${row.league || "-"}</td>
+            <td>${row.match || "-"}</td>
+            <td>${row.initial_odds || "-"}</td>
+            <td>${row.current_odds || "-"}</td>
+            <td>${row.movement || "-"}</td>
+        </tr>`;
     }
-  }
+    body.innerHTML = html;
+}
 
-  // SmartMoney (detail) every 10s
-  async function refreshSmartMoney(){
-    try{
-      const res = await fetch("/api/smartmoney/summary");
-      const data = await res.json();
-      const h = jhash(data||{});
-      if (h !== lastSMHash){
-        lastSMHash = h;
-        pulse(panels.smart);
-      }
-    }catch(e){
-      console.warn("[EG] smartmoney refresh failed:", e);
+/* ------------------------------------------------------------
+   SMARTMONEY PANEL
+------------------------------------------------------------ */
+
+async function updateSmartMoney() {
+    const data = await fetchJSON("/api/smartmoney/summary");
+    if (!data || !data.items) return;
+
+    const body = document.getElementById("sm-body");
+    if (!body) return;
+
+    let html = "";
+    for (const row of data.items) {
+        html += `
+        <tr>
+            <td>${row.league || "-"}</td>
+            <td>${row.match || "-"}</td>
+            <td>${row.odds || "-"}</td>
+            <td>${row.change || "-"}</td>
+            <td>${row.alerts || 0}</td>
+        </tr>`;
     }
-  }
+    body.innerHTML = html;
 
-  // Schedulers
-  setInterval(refreshSystemStatus, 10000);
-  setInterval(refreshGoalMatrix,   15000);
-  setInterval(refreshSmartMoney,   10000);
+    const alertBadge = document.getElementById("sm-alert-count");
+    if (alertBadge) alertBadge.textContent = data.alerts || 0;
+}
 
-  // First run
-  refreshSystemStatus();
-  refreshGoalMatrix();
-  refreshSmartMoney();
+/* ------------------------------------------------------------
+   SMARTMONEY LOG PANEL
+------------------------------------------------------------ */
 
-  // Manual refresh button (already present on page)
-  const refreshBtn = $("#refreshNow");
-  refreshBtn?.addEventListener("click", async () => {
-    await Promise.all([refreshSystemStatus(true), refreshGoalMatrix(), refreshSmartMoney()]);
-    // μικρό οπτικό feedback στο summary bar
-    pulse($("#system-summary"));
-  });
+async function updateSmartMoneyLog() {
+    const data = await fetchJSON("/api/smartmoney/log");
+    if (!data || !data.items) return;
 
-  // Auto-scroll helpers for mobile (tap στα summary icons → scroll στο panel)
-  $("#djStat")?.addEventListener("click", ()=> panels.status?.scrollIntoView({behavior:"smooth",block:"start"}));
-  $("#smStat")?.addEventListener("click", ()=> panels.smart?.scrollIntoView({behavior:"smooth",block:"start"}));
-  $("#gmStat")?.addEventListener("click", ()=> panels.goal?.scrollIntoView({behavior:"smooth",block:"start"}));
-})();
+    const body = document.getElementById("sm-log-body");
+    if (!body) return;
+
+    let html = "";
+    for (const row of data.items) {
+        html += `
+        <tr>
+            <td>${row.ts ? row.ts.split("T")[1].replace("Z","") : "-"}</td>
+            <td>${row.league || "-"}</td>
+            <td>${row.match || "-"}</td>
+            <td>${row.odds || "-"}</td>
+        </tr>`;
+    }
+
+    body.innerHTML = html;
+}
+
+/* ------------------------------------------------------------
+   MASTER REFRESH LOOP
+------------------------------------------------------------ */
+
+async function masterRefresh() {
+    updateSystemStatus();
+    updateGoalMatrix();
+    updateSmartMoney();
+    updateSmartMoneyLog();
+}
+
+setInterval(masterRefresh, REFRESH_FROM_SERVER);
+window.addEventListener("load", masterRefresh);
