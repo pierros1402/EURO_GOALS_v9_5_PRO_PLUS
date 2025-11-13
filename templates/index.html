@@ -1,23 +1,19 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="el">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>EURO_GOALS PRO+ v10.2.1</title>
 
     <!-- PWA -->
-    <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#0a84ff">
-    <link rel="apple-touch-icon" href="/static/icons/eurogoals_512.png">
+    <link rel="manifest" href="/static/manifest.json" />
+    <meta name="theme-color" content="#0b1220" />
+    <link rel="apple-touch-icon" href="/static/icons/eurogoals_192.png" />
+    <link rel="icon" href="/static/icons/eurogoals_192.png" />
 
-    <!-- iOS PWA fixes -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="stylesheet" href="/static/pwa/unified_pwa_ios.css">
-
-    <!-- UI Theme -->
-    <link rel="stylesheet" href="/static/css/unified_theme.css?v=10.2.1">
+    <!-- Unified Theme -->
+    <link rel="stylesheet" href="/static/css/unified_theme.css?v=10.2.1" />
 </head>
 
 <body>
@@ -28,54 +24,26 @@
 <!-- SUMMARY BAR -->
 {% include "partials/system_summary_bar_unified.html" %}
 
-<!-- STATUS PANEL -->
+<!-- SYSTEM STATUS -->
 {% include "partials/system_status_panel_unified.html" %}
-
-<!-- GOALMATRIX -->
-{% include "partials/goal_matrix_panel_unified.html" %}
 
 <!-- SMARTMONEY -->
 {% include "partials/smartmoney_panel_unified.html" %}
 
+<!-- GOALMATRIX -->
+{% include "partials/goal_matrix_panel_unified.html" %}
+
 <!-- SMARTMONEY LOG -->
-{% include "partials/smartmoney_log_panel.html" %}
+{% include "partials/smartmoney_log_panel_unified.html" %}
 
-<!-- FLASHCORE FIXTURES -->
-{% include "partials/flashscore_panel.html" %}
+<!-- FLASHSCORE PANEL -->
+{% include "partials/flashscore_panel_unified.html" %}
 
-<!-- CONTROLS -->
-{% include "partials/system_controls_modal.html" %}
+<!-- CONTROLS MODAL -->
+{% include "partials/system_controls_modal_unified.html" %}
 
-<!-- INSTALL BUTTON SCRIPT -->
-<script>
-let deferredPrompt = null;
-window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const btn = document.getElementById("eg-install-btn");
-    if (btn) btn.style.display = "inline-block";
-});
-</script>
-
-<!-- REGISTER SW -->
-<script>
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", async () => {
-        try {
-            const reg = await navigator.serviceWorker.register("/static/service-worker.js");
-            console.log("[SW] Registered", reg);
-        } catch (e) {
-            console.warn("[SW] register failed:", e);
-        }
-    });
-}
-</script>
-
-<!-- AUTO UPDATE -->
-<script src="/static/pwa/pwa_update_monitor.js" defer></script>
-
-<!-- REFRESH ENGINE -->
-<script src="/static/js/goal_smart_refresh.js?v=10.2.1" defer></script>
+<!-- JS CORE -->
+<script src="/static/js/goal_smart_refresh.js?v=10.2.1"></script>
 
 </body>
 </html>

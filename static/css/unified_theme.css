@@ -1,165 +1,235 @@
 /* ============================================================
-   EURO_GOALS PRO+ v10.2.1 — Unified Theme (Dark Blue)
+   EURO_GOALS PRO+ v10.2.1 — Unified Theme (Dark / PWA Optimized)
    ============================================================ */
 
 :root {
     --bg: #0b1220;
     --bg2: #111a2d;
     --bg3: #162035;
+
     --fg: #e6eefc;
     --fg-muted: #96a5c7;
+
     --accent: #1a73e8;
     --accent-soft: #2d85ff;
+    --highlight: #60a5fa;
+
     --good: #2ecc71;
     --warn: #f1c40f;
-    --danger: #e74c3c;
-    --card-radius: 14px;
-    --card-padding: 18px;
-    --shadow: 0 0 25px rgba(0,0,0,0.25);
+    --bad: #e74c3c;
+
+    --radius: 14px;
+    --radius-sm: 8px;
+
+    --shadow: 0 0 20px rgba(0,0,0,0.35);
+
+    --panel-pad: 16px;
+    --item-pad: 8px;
+
     --font-ui: 'Inter', system-ui, sans-serif;
 }
 
-/* Global layout ------------------------------------------------ */
+/* BODY ------------------------------------------------------- */
 
 body {
-    margin: 0;
-    padding: 0;
     background: var(--bg);
     color: var(--fg);
     font-family: var(--font-ui);
+    margin: 0;
+    padding: 0;
     -webkit-font-smoothing: antialiased;
 }
 
-a {
-    color: var(--accent);
-    text-decoration: none;
-}
 
-.eg-panel {
-    background: var(--bg2);
-    margin: 18px;
-    padding: var(--card-padding);
-    border-radius: var(--card-radius);
-    box-shadow: var(--shadow);
-}
-
-/* Header ------------------------------------------------------- */
+/* HEADER ----------------------------------------------------- */
 
 .eg-header {
+    background: var(--bg3);
+    padding: 12px 20px;
+    border-bottom: 1px solid #00000055;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 20px;
-    background: var(--bg3);
-    border-bottom: 1px solid #00000055;
     position: sticky;
-    top: 0;
+    top:0;
     z-index: 999;
 }
 
 .eg-logo {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
 }
 
 .eg-nav {
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
 .eg-nav-btn {
-    padding: 6px 13px;
-    background: var(--bg2);
-    border-radius: 10px;
-    color: var(--fg);
+    padding: 6px 12px;
     font-size: 14px;
+    background: var(--bg2);
+    color: var(--fg);
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    transition: all 0.15s ease-out;
-    border: 1px solid #00000055;
+    border: 1px solid #202c45;
+    transition: .15s ease;
 }
 
 .eg-nav-btn:hover {
     background: var(--accent-soft);
 }
 
-/* System Summary Blocks ---------------------------------------- */
 
-.summary-block {
-    background: var(--bg3);
-    padding: 15px;
-    border-radius: var(--card-radius);
-    margin-bottom: 14px;
-    border: 1px solid #00000044;
+/* PANELS ----------------------------------------------------- */
+
+.eg-panel {
+    background: var(--bg2);
+    margin: 20px;
+    padding: var(--panel-pad);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
 }
 
-.summary-title {
-    font-size: 17px;
+.eg-panel-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.eg-panel-title {
+    font-size: 18px;
     font-weight: 600;
-    margin-bottom: 6px;
 }
 
-.summary-content {
+.eg-panel-subtitle {
     font-size: 14px;
     color: var(--fg-muted);
 }
 
-/* Status Indicators ------------------------------------------- */
 
-.status-ok {
-    color: var(--good);
+/* STATUS GRID ------------------------------------------------ */
+
+.eg-status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 20px;
 }
 
-.status-warn {
-    color: var(--warn);
+.eg-status-row {
+    display: contents;
 }
 
-.status-bad {
-    color: var(--danger);
+.eg-status-label {
+    color: var(--fg-muted);
+    font-size: 14px;
+    padding: var(--item-pad) 0;
 }
 
-/* Tables ------------------------------------------------------- */
+.eg-status-value {
+    font-size: 15px;
+    padding: var(--item-pad) 0;
+}
+
+
+/* STATUS PILLS ---------------------------------------------- */
+
+.eg-status-pill {
+    background: var(--bg3);
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: 13px;
+    border: 1px solid #1f2d4a;
+}
+
+.eg-status-on {
+    background: var(--good);
+    color: #000;
+}
+
+.eg-status-off {
+    background: var(--bad);
+    color: #fff;
+}
+
+.eg-status-warn {
+    background: var(--warn);
+    color:#000;
+}
+
+
+/* SUMMARY GRID ---------------------------------------------- */
+
+.eg-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.eg-summary-box {
+    background: var(--bg3);
+    padding: 16px;
+    border-radius: var(--radius);
+    border: 1px solid #00000033;
+}
+
+.eg-box-title {
+    color: var(--fg-muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.eg-box-value {
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+
+/* TABLES ------------------------------------------------------ */
 
 .eg-table {
     width: 100%;
     border-collapse: collapse;
-    color: var(--fg);
-}
-
-.eg-table th,
-.eg-table td {
-    padding: 10px;
-    text-align: left;
 }
 
 .eg-table th {
     background: var(--bg3);
+    padding: 10px;
+    text-align: left;
     font-size: 14px;
-    letter-spacing: 0.3px;
+    color: var(--fg-muted);
+    border-bottom: 1px solid #00000055;
 }
 
-.eg-table tr:nth-child(even) {
-    background: #ffffff06;
+.eg-table td {
+    padding: 10px;
+    font-size: 14px;
+    border-bottom: 1px solid #00000022;
 }
 
 .eg-table tbody tr:hover {
-    background: #1a2c4d;
+    background: #1d2b47;
 }
 
-/* Flashscore Panel -------------------------------------------- */
 
-#flashscore iframe {
-    width: 100%;
-    height: 690px;
-    border: none;
-    border-radius: var(--card-radius);
+/* LOG PANEL --------------------------------------------------- */
+
+#sm-log-body td {
+    font-size: 13px;
+    padding: 8px;
 }
 
-/* Responsive ---------------------------------------------------- */
 
-@media (max-width: 800px) {
-    .eg-header {
-        flex-direction: column;
-        gap: 12px;
+/* MOBILE ------------------------------------------------------ */
+
+@media (max-width: 780px) {
+    .eg-panel {
+        margin: 12px;
+        padding: 12px;
+    }
+    .eg-status-grid {
+        grid-template-columns: 1fr;
     }
     .eg-nav {
         flex-wrap: wrap;

@@ -1,0 +1,65 @@
+<section id="flashscore" class="eg-panel">
+
+    <!-- HEADER -->
+    <div class="eg-panel-header">
+        <span class="eg-panel-title">📅 Flashscore Fixtures</span>
+        <span id="fs-updated" class="eg-panel-subtitle">Select league to load</span>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="eg-summary-box" style="margin-bottom:16px;">
+
+        <div class="eg-box-title">Select League</div>
+
+        <select id="fs-league-select" class="eg-nav-btn" style="width:100%; margin-top:6px;">
+            <option value="football/england/premier-league">🇬🇧 Premier League</option>
+            <option value="football/spain/laliga">🇪🇸 LaLiga</option>
+            <option value="football/italy/serie-a">🇮🇹 Serie A</option>
+            <option value="football/germany/bundesliga">🇩🇪 Bundesliga</option>
+            <option value="football/france/ligue-1">🇫🇷 Ligue 1</option>
+            <option value="football/greece/super-league">🇬🇷 Super League</option>
+        </select>
+
+        <button id="fs-load-btn" class="eg-nav-btn" style="margin-top:10px;">
+            🔄 Load Fixtures
+        </button>
+
+    </div>
+
+    <!-- OUTPUT BOX -->
+    <div id="fs-output" 
+         style="background:var(--bg3); padding:16px; border-radius:var(--radius); min-height:200px;">
+        <div style="text-align:center; padding:20px; color:var(--fg-muted);">
+            No data loaded yet.
+        </div>
+    </div>
+
+</section>
+
+
+<script>
+document.getElementById("fs-load-btn").addEventListener("click", async () => {
+    const league = document.getElementById("fs-league-select").value;
+    const output = document.getElementById("fs-output");
+
+    output.innerHTML = `
+        <div style="text-align:center; padding:20px;">
+            <span class="eg-panel-subtitle">Loading fixtures…</span>
+        </div>
+    `;
+
+    try {
+        const res = await fetch(`/fs/fixtures_proxy?league=${encodeURIComponent(league)}`);
+        const html = await res.text();
+        output.innerHTML = html;
+        document.getElementById("fs-updated").textContent = "Updated: " + new Date().toLocaleTimeString();
+    } 
+    catch (e) {
+        output.innerHTML = `
+            <div style="text-align:center; padding:20px; color:var(--bad);">
+                ❌ Failed to load fixtures.
+            </div>
+        `;
+    }
+});
+</script>

@@ -1,63 +1,41 @@
-<!-- ============================================================
-     EURO_GOALS PRO+ v10.2.0 — System Summary Bar (Unified Theme)
-     ============================================================ -->
 <section id="eg-summary" class="eg-panel">
 
-  <div class="eg-panel-head">
-    <h2>System Summary</h2>
-    <!-- Last update time (updated by JS) -->
-    <span id="lastUpdate" class="muted">--:--</span>
-  </div>
-
-  <div class="eg-grid">
-
-    <!-- Active Engines -->
-    <div class="dj-card">
-      <div class="dj-row">
-        <div>
-          <div class="dj-id">Active Engines</div>
-          <div class="dj-dom">SmartMoney • GoalMatrix • DowJones</div>
-        </div>
-        <div class="badge" id="eg-engines-status">Active</div>
-      </div>
+    <div class="eg-panel-header">
+        <span class="eg-panel-title">System Summary</span>
+        <span id="eg-summary-time" class="eg-panel-subtitle">--:--:--</span>
     </div>
 
-    <!-- System Status Indicators (DowJones / SmartMoney / GoalMatrix) -->
-    <div class="dj-card">
-      <div class="dj-row">
-        <div>
-          <div class="dj-id">Engines Status</div>
-          <div class="dj-dom">
-            <span id="djStat" style="margin-right: 8px;">🧠</span>
-            <span id="smStat" style="margin-right: 8px;">💰</span>
-            <span id="gmStat">🎯</span>
-          </div>
-        </div>
-        <div id="eg-refresh-ts" class="badge">--:--</div>
-      </div>
-    </div>
+    <div class="eg-summary-grid">
 
-    <!-- DowJones Engine -->
-    <div class="dj-card">
-      <div class="dj-row">
-        <div>
-          <div class="dj-id">DowJones Engine</div>
-          <div class="dj-dom">Worker passthrough</div>
+        <!-- Active Engines -->
+        <div class="eg-summary-box">
+            <div class="eg-box-title">Active Engines</div>
+            <div class="eg-box-value">SmartMoney • GoalMatrix • DowJones</div>
+            <div id="eg-engines-active" class="eg-status-pill eg-status-on">ACTIVE</div>
         </div>
-        <div id="eg-dj-health" class="badge">OK</div>
-      </div>
-    </div>
 
-    <!-- Environment -->
-    <div class="dj-card">
-      <div class="dj-row">
-        <div>
-          <div class="dj-id">Render Environment</div>
-          <div class="dj-dom">PWA v10.2.0</div>
+        <!-- Engines Status -->
+        <div class="eg-summary-box">
+            <div class="eg-box-title">Engines Status</div>
+            <div id="eg-engines-status" class="eg-emojis">
+                🧠 💰 🎯
+            </div>
+            <div id="eg-engines-status-pill" class="eg-status-pill">--</div>
         </div>
-        <div class="badge accent">LIVE</div>
-      </div>
-    </div>
 
-  </div>
+        <!-- Worker -->
+        <div class="eg-summary-box">
+            <div class="eg-box-title">Worker Status</div>
+            <div class="eg-box-value">Cloudflare passthrough</div>
+            <div id="eg-worker-status" class="eg-status-pill">--</div>
+        </div>
+
+        <!-- Environment -->
+        <div class="eg-summary-box">
+            <div class="eg-box-title">Environment</div>
+            <div class="eg-box-value">EURO_GOALS PRO+ v10.2.1</div>
+            <div id="eg-env-status" class="eg-status-pill eg-status-on">LIVE</div>
+        </div>
+
+    </div>
 </section>

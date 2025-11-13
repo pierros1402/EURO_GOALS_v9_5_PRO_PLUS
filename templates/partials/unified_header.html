@@ -1,72 +1,38 @@
-<header class="eg-header">
+<header id="eg-header" class="eg-header">
+    <div class="eg-left">
+        <span class="eg-logo">⚽ EURO_GOALS PRO+ v10.2.1</span>
+    </div>
 
     <nav class="eg-nav">
-        <a href="#dowjones" class="eg-nav-btn">🧭 DowJones</a>
         <a href="#smartmoney" class="eg-nav-btn">💰 SmartMoney</a>
         <a href="#goalmatrix" class="eg-nav-btn">🎯 GoalMatrix</a>
-
-        <button id="open-controls"   class="eg-nav-btn">⚙️</button>
-        <button id="theme-toggle"    class="eg-nav-btn">🌓</button>
-        <button id="force-refresh"   class="eg-nav-btn">🔁</button>
-
-        <!-- INSTALL PWA BUTTON -->
-        <button id="eg-install-btn" class="eg-nav-btn" style="display:none;">
-            📲 Install App
-        </button>
+        <a href="#flashscore" class="eg-nav-btn">📅 Fixtures</a>
     </nav>
 
-</header>
+    <div class="eg-right">
+        <button id="open-controls" class="eg-nav-btn">🛠</button>
+        <button id="theme-toggle" class="eg-nav-btn">🌙</button>
+        <button id="force-refresh" class="eg-nav-btn">🔄</button>
 
-<!-- =============================== -->
-<!-- PWA INSTALL LOGIC -->
-<!-- =============================== -->
+        <!-- Install App -->
+        <button id="eg-install-btn" class="eg-nav-btn" style="display:none;">📲 Install</button>
+    </div>
+</header>
 
 <script>
 let deferredPrompt = null;
 
-// Capture install event before browser shows default banner
 window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredPrompt = e;
-
-    console.log("[PWA] Install prompt captured.");
-
     const btn = document.getElementById("eg-install-btn");
     if (btn) btn.style.display = "inline-block";
 });
 
-// When user clicks Install App
 document.getElementById("eg-install-btn")?.addEventListener("click", async () => {
-
-    if (!deferredPrompt) {
-        console.warn("[PWA] No install prompt available.");
-        return;
-    }
-
+    if (!deferredPrompt) return;
     deferredPrompt.prompt();
-
     await deferredPrompt.userChoice;
     deferredPrompt = null;
-
-    // Hide button after install attempt
-    const btn = document.getElementById("eg-install-btn");
-    if (btn) btn.style.display = "none";
 });
 </script>
-
-<style>
-.eg-nav-btn {
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: #1a273d;
-    color: var(--fg);
-    border: 1px solid #33425a;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-/* Ensure install button is hidden by default */
-#eg-install-btn {
-    display: none;
-}
-</style>
