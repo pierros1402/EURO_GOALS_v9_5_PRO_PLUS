@@ -1,5 +1,5 @@
 # ============================================================
-# EURO_GOALS v9.9.0 PRO+ — UNIFIED REALDATA MAIN APPLICATION
+# AI MatchLab — UNIFIED REALDATA MAIN APPLICATION (v9.9.0)
 # ============================================================
 
 from fastapi import FastAPI, Request
@@ -22,7 +22,7 @@ try:
 except ImportError:
     httpx = None
 
-print("=== [EURO_GOALS PRO+] v9.9.0 — UNIFIED REALDATA MAIN ACTIVE ===")
+print("=== [AI MATCHLAB] v9.9.0 — UNIFIED REALDATA MAIN ACTIVE ===")
 
 # ------------------------------------------------------------
 # SYSTEM PATH FIX
@@ -36,9 +36,9 @@ if BASE_DIR not in sys.path:
 # ------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
-    format="[EURO_GOALS] %(asctime)s | %(levelname)s | %(message)s",
+    format="[AI_MATCHLAB] %(asctime)s | %(levelname)s | %(message)s",
 )
-logger = logging.getLogger("eurogoals")
+logger = logging.getLogger("ai_matchlab")
 
 # ------------------------------------------------------------
 # IMPORT ENGINES (safe fallbacks)
@@ -54,48 +54,53 @@ try:
     from services import history_engine as _h
     history_engine = _h
     logger.info("history_engine loaded OK")
-except:
+except Exception:
     logger.warning("history_engine missing")
 
 try:
     from services import matchplan_engine as _m
     matchplan_engine = _m
     logger.info("matchplan_engine loaded OK")
-except:
+except Exception:
     logger.warning("matchplan_engine missing")
 
 try:
     from services import standings_engine as _s
     standings_engine = _s
     logger.info("standings_engine loaded OK")
-except:
+except Exception:
     logger.warning("standings_engine missing")
 
 try:
     from services import smartmoney_engine as _sm
     smartmoney_engine = _sm
     logger.info("smartmoney_engine loaded OK")
-except:
+except Exception:
     logger.warning("smartmoney_engine missing")
 
 try:
     from services import goalmatrix_engine as _gm
     goalmatrix_engine = _gm
     logger.info("goalmatrix_engine loaded OK")
-except:
+except Exception:
     logger.warning("goalmatrix_engine missing")
 
 try:
     from services import heatmap_engine as _hm
     heatmap_engine = _hm
     logger.info("heatmap_engine loaded OK")
-except:
+except Exception:
     logger.warning("heatmap_engine missing")
 
 # ------------------------------------------------------------
 # ENVIRONMENT CONFIG
 # ------------------------------------------------------------
-APP_VERSION = "EURO_GOALS PRO+ v9.9.0 — Unified RealData"
+# Κρατάμε τα ίδια env var names για συμβατότητα με Render
+APP_NAME = "AI MatchLab"
+APP_VERSION = os.getenv(
+    "APP_VERSION",
+    "AI MatchLab · EURO_GOALS PRO+ v9.9.0 — Unified RealData"
+)
 APP_ENV = os.getenv("EUROGOALS_ENV", "production")
 
 LIVE_HUB_URL = os.getenv("EUROGOALS_LIVE_HUB_URL", "").strip()
@@ -105,12 +110,16 @@ LIVE_HUB_TIMEOUT = float(os.getenv("EUROGOALS_LIVE_HUB_TIMEOUT", "4.0"))
 # FASTAPI APP
 # ------------------------------------------------------------
 app = FastAPI(
-    title="EURO_GOALS PRO+ Unified",
+    title=f"{APP_NAME} — Unified Live Hub",
     version="9.9.0",
-    description="Unified real-time European football data platform"
+    description="AI MatchLab — unified real-time European football intelligence hub",
 )
 
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+app.mount(
+    "/static",
+    StaticFiles(directory=os.path.join(BASE_DIR, "static")),
+    name="static",
+)
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # ------------------------------------------------------------
@@ -118,7 +127,7 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 # ------------------------------------------------------------
 @app.on_event("startup")
 async def startup_event():
-    logger.info("🚀 EURO_GOALS starting...")
+    logger.info("🚀 AI MatchLab starting...")
     if httpx is None:
         logger.error("httpx not installed; Live Hub disabled")
         app.state.http = None
@@ -126,13 +135,18 @@ async def startup_event():
         app.state.http = httpx.AsyncClient(timeout=LIVE_HUB_TIMEOUT)
         logger.info("Live Hub client ready")
 
+    logger.info(
+        f"App version: {APP_VERSION} | Env: {APP_ENV} | LiveHub URL set: {bool(LIVE_HUB_URL)}"
+    )
+
+
 @app.on_event("shutdown")
 async def shutdown_event():
-    logger.info("🛑 EURO_GOALS shutting down...")
+    logger.info("🛑 AI MatchLab shutting down...")
     if getattr(app.state, "http", None):
         try:
             await app.state.http.aclose()
-        except:
+        except Exception:
             pass
 
 # ------------------------------------------------------------
@@ -153,12 +167,17 @@ async def call_live_hub(path: str, params: Optional[Dict[str, Any]] = None):
         r.raise_for_status()
         try:
             data = r.json()
-        except:
+        except Exception:
             data = {"raw": r.text}
         return {"ok": True, "data": data}
     except Exception as e:
         logger.warning(f"[LiveHub] {e}")
-        return {"ok": False, "error": "request_failed", "details": str(e), "data": None}
+        return {
+            "ok": False,
+            "error": "request_failed",
+            "details": str(e),
+            "data": None,
+        }
 
 # ------------------------------------------------------------
 # UI ROOT
@@ -172,8 +191,8 @@ async def index(request: Request):
             "app_version": APP_VERSION,
             "app_env": APP_ENV,
             "live_hub": bool(LIVE_HUB_URL),
-            "ts": time.time()
-        }
+            "ts": time.time(),
+        },
     )
 
 # ------------------------------------------------------------
@@ -182,6 +201,7 @@ async def index(request: Request):
 @app.get("/health", response_class=JSONResponse)
 async def health():
     return {"ok": True, "status": "alive", "version": APP_VERSION}
+
 
 @app.get("/api/system/health", response_class=JSONResponse)
 async def system_health():
@@ -195,8 +215,8 @@ async def system_health():
             "standings": bool(standings_engine),
             "smartmoney": bool(smartmoney_engine),
             "goalmatrix": bool(goalmatrix_engine),
-            "heatmap": bool(heatmap_engine)
-        }
+            "heatmap": bool(heatmap_engine),
+        },
     }
 
 # ------------------------------------------------------------
@@ -206,6 +226,7 @@ async def system_health():
 async def live_overview(league: Optional[str] = None):
     params = {"league": league} if league else None
     return await call_live_hub("live/overview", params)
+
 
 @app.get("/api/live/match/{match_id}", response_class=JSONResponse)
 async def live_match(match_id: str):
@@ -224,7 +245,9 @@ async def history(competition: str):
             data = await history_engine.get_competition_history(competition)
         else:
             loop = asyncio.get_running_loop()
-            data = await loop.run_in_executor(None, history_engine.get_competition_history, competition)
+            data = await loop.run_in_executor(
+                None, history_engine.get_competition_history, competition
+            )
         return {"ok": True, "data": data}
     except Exception as e:
         return {"ok": False, "error": str(e)}
