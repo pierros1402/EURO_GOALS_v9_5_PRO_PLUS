@@ -7,7 +7,10 @@
     content="width=device-width, initial-scale=1, viewport-fit=cover"
   />
   <meta name="theme-color" content="#0f1117" />
-  <title>EURO_GOALS PRO+ v9.9.1 LUX</title>
+  <div class="app-header">
+    <div class="app-title">AI MatchLab</div>
+    <div class="app-subtitle">Real-Time Football Intelligence</div>
+</div>
 
   <!-- PWA -->
   <link rel="manifest" href="/static/manifest.json" />
@@ -543,9 +546,29 @@
         left: 50%;
         transform: translateX(-50%);
         border-radius: 18px 18px 0 0;
-      }
+
+    /* === AI MATCHLAB HEADER STYLE === */
+    .app-header {
+        text-align: left;
+        padding: 16px 24px;
+        color: #e9ecef;
     }
-  </style>
+
+    .app-title {
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: #4ff0a8; /* neon mint */
+    }
+
+    .app-subtitle {
+        font-size: 15px;
+        opacity: 0.75;
+        margin-top: 2px;
+        color: #cfcfcf;
+    }
+
+</style>
 </head>
 
 <body>
