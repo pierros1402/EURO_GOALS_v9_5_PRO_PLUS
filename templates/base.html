@@ -1,61 +1,71 @@
-<!DOCTYPE html>
-<html lang="el" class="dark">
+<!doctype html>
+<html lang="{{ lang|default('en') }}">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0a0f1a" />
-  <title>EURO_GOALS PRO+ UNIFIED Dashboard</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI MatchLab</title>
 
-  <!-- PWA manifest -->
-  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" href="/static/icons/aimatchlab_192.png" sizes="192x192">
+  <meta name="theme-color" content="#050814" />
 
-  <!-- Icons -->
-  <link rel="icon" type="image/png" href="/static/icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="/static/icons/icon-512.png" />
-
-  <!-- Theme CSS -->
-  <link rel="stylesheet" href="/static/css/unified_theme.css" />
-
-  <!-- Tailwind CDN (για responsive layout) -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/css/aimatchlab_theme.css">
 </head>
+<body>
+<div class="app-shell">
 
-<body class="bg-gradient-to-b from-[#0a0f1a] to-[#111827] text-gray-200 min-h-screen flex flex-col">
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="brand-block">
+        <div class="brand-logo"></div>
+        <div class="brand-text">
+          <div class="brand-title">AI MatchLab</div>
+          <div class="brand-subtitle">
+            <span data-i18n="subtitle">AI-Driven Sports Analytics Lab</span>
+          </div>
+        </div>
+      </div>
 
-  <!-- Header -->
-  <header class="w-full bg-black/40 backdrop-blur-md border-b border-white/10 shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
-      <h1 class="text-xl md:text-2xl font-bold tracking-wide text-blue-400 select-none">
-        ⚽ EURO_GOALS <span class="text-blue-500">PRO+</span> <span class="text-xs text-gray-400 ml-1">UNIFIED</span>
-      </h1>
-      <div class="flex items-center gap-4">
-        <button id="theme-toggle" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition">
-          <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-400" fill="none"
-               viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 3v1m0 16v1m8.66-9H21M3 12H2m15.364-6.364l.707.707M6.343 17.657l-.707.707m12.728 0l.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-          </svg>
-        </button>
+      <div class="header-controls">
+        <div class="chip">
+          <span class="chip-dot"></span>
+          <span data-i18n="status.live_chain">Live data chain online</span>
+        </div>
+
+        <!-- Language switch -->
+        <div class="lang-switch" id="lang-switch">
+          <button class="lang-btn{% if lang == 'en' %} active{% endif %}" data-lang="en">EN</button>
+          <button class="lang-btn{% if lang == 'gr' %} active{% endif %}" data-lang="gr">GR</button>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main id="main-content" class="flex-1 w-full max-w-7xl mx-auto px-4 py-6 space-y-6">
+  <!-- MAIN -->
+  <main class="app-main">
     {% block content %}
+    <!-- εδώ το περιεχόμενο κάθε σελίδας -->
     {% endblock %}
   </main>
 
-  <!-- Footer -->
-  <footer class="w-full text-center py-3 text-sm text-gray-500 border-t border-white/10 bg-black/30">
-    EURO_GOALS PRO+ Unified © 2025 – All Rights Reserved
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <div class="app-footer-inner">
+      <div class="footer-copy">
+        © {{ current_year }} AI MatchLab. All rights reserved.
+      </div>
+      <div class="footer-links">
+        <a href="/responsible-gambling" data-i18n="footer.responsible">Responsible Gambling</a>
+        <a href="/privacy-policy" data-i18n="footer.privacy">Privacy Policy</a>
+        <a href="/cookies-policy" data-i18n="footer.cookies">Cookies Policy</a>
+        <a href="/terms-and-conditions" data-i18n="footer.terms">Terms &amp; Conditions</a>
+      </div>
+    </div>
   </footer>
 
-    <!-- Scripts -->
-  <!-- Scripts -->
-<script src="/static/js/theme_toggle.js"></script>
-<script type="module" src="/static/js/main_unified.js"></script>
-<script type="module" src="/static/js/register-sw.js"></script>
+</div>
+
+<script src="/static/js/lang_manager.js"></script>
 </body>
 </html>
-

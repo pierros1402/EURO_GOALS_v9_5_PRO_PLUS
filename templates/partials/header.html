@@ -1,0 +1,33 @@
+<header class="app-header">
+  <div class="app-header-inner">
+
+    <!-- BRAND AREA -->
+    <div class="brand-block">
+      <div class="brand-logo"></div>
+      <div class="brand-text">
+        <div class="brand-title">AI MatchLab</div>
+        <div class="brand-subtitle" data-i18n="subtitle.lab">
+          AI-Driven Sports Analytics Lab
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="header-controls">
+
+      <!-- LIVE DATA INDICATOR -->
+      <div class="chip">
+        <span class="chip-dot"></span>
+        <span data-i18n="status.live_chain">Live data chain online</span>
+      </div>
+
+      <!-- LANGUAGE SWITCH -->
+      <div class="lang-switch" id="lang-switch">
+        <button class="lang-btn{% if lang == 'en' %} active{% endif %}" data-lang="en">EN</button>
+        <button class="lang-btn{% if lang == 'gr' %} active{% endif %}" data-lang="gr">GR</button>
+      </div>
+
+    </div>
+
+  </div>
+</header>

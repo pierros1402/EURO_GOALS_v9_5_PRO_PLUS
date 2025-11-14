@@ -1,0 +1,1 @@
+EURO_GOALS PRO+ skeleton; see chat for full source of each file.
