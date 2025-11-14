@@ -1,1 +1,1254 @@
-<!-- index.html placeholder, full content provided in chat -->
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <meta name="theme-color" content="#0f1117" />
+  <title>EURO_GOALS PRO+ v9.9.1 LUX</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="icon" href="/static/icons/eurogoals_192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="/static/icons/eurogoals_192.png" />
+
+  <!-- LUX THEME CSS -->
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg2: #131722;
+      --glass: rgba(255, 255, 255, 0.05);
+      --fg: #e8f1ff;
+      --muted: #73839e;
+      --accent: #00ff88;
+      --accent-soft: #00d97f;
+      --card: #161b26;
+      --card-hover: #1d2330;
+      --border: #242b3b;
+      --danger: #ff4f4f;
+      --yellow: #ffe066;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right)
+        calc(env(safe-area-inset-bottom) + 60px)
+        env(safe-area-inset-left);
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      background: rgba(15, 17, 23, 0.8);
+      backdrop-filter: blur(12px);
+      padding: 14px 18px;
+      z-index: 900;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #00ff88, #00c16a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-sub {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .refresh-btn {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      color: var(--accent);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .refresh-btn:hover {
+      background: var(--card-hover);
+    }
+
+    /* SYSTEM BAR */
+    #system-bar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 6px 18px 0;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .sys-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sys-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .sys-dot.off {
+      background: var(--danger);
+    }
+
+    /* LOADER */
+    #loader {
+      display: none;
+      text-align: center;
+      padding: 30px;
+      font-size: 1rem;
+      color: var(--muted);
+    }
+
+    .info-box,
+    .error-box {
+      padding: 20px;
+      border-radius: 12px;
+      margin: 10px 18px;
+      font-size: 0.9rem;
+    }
+    .info-box {
+      background: var(--glass);
+      color: var(--muted);
+    }
+    .error-box {
+      background: rgba(255, 79, 79, 0.1);
+      color: var(--danger);
+    }
+
+    .info-box-small {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .section-title-main {
+      font-size: 1.1rem;
+      margin: 0 0 14px;
+      color: var(--accent);
+    }
+
+    /* LIVE MATCH GRID */
+    #matches-container {
+      margin: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 18px;
+    }
+
+    .match-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      transition: 0.25s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .match-card:hover {
+      background: var(--card-hover);
+      transform: translateY(-2px);
+    }
+
+    .match-header-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .league-tag {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      font-size: 0.75rem;
+    }
+
+    .teams {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .score-line {
+      display: flex;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 4px 0;
+    }
+
+    .minute {
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .odds {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
+    }
+
+    .odd-box {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      min-width: 48px;
+      text-align: center;
+      color: var(--accent-soft);
+      font-weight: 600;
+    }
+
+    /* SMARTMONEY TERMINAL */
+    #smartmoney-page {
+      padding: 18px;
+      display: none;
+    }
+
+    .sm-row {
+      display: grid;
+      grid-template-columns: 40px 1fr 60px 60px 80px;
+      gap: 12px;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: 0.2s;
+    }
+    .sm-row:hover {
+      background: var(--card-hover);
+      transform: translateY(-2px);
+    }
+    .sm-team {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .sm-move {
+      font-size: 1rem;
+      text-align: center;
+    }
+    .sm-change {
+      font-weight: 700;
+      text-align: center;
+    }
+    .sm-odds {
+      font-weight: 600;
+      text-align: center;
+    }
+    .sm-status {
+      color: var(--muted);
+      font-size: 0.7rem;
+      text-align: center;
+    }
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.04) 0%,
+        rgba(255, 255, 255, 0.09) 50%,
+        rgba(255, 255, 255, 0.04) 100%
+      );
+      height: 48px;
+      border-radius: 12px;
+      animation: skeleton-loading 1.4s infinite;
+    }
+    @keyframes skeleton-loading {
+      0% {
+        opacity: 0.4;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0.4;
+      }
+    }
+
+    /* GOALMATRIX / HEATMAP PLACEHOLDERS */
+    #goalmatrix-page,
+    #heatmap-page {
+      padding: 18px;
+      display: none;
+    }
+
+    .gm-grid-placeholder,
+    .hm-grid-placeholder {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* MATCH DETAIL OVERLAY */
+    #match-detail-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(14px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    #match-detail-panel {
+      background: #121622;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      max-width: 900px;
+      width: 94%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8);
+    }
+
+    #match-detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      background: radial-gradient(
+        circle at top left,
+        rgba(0, 255, 136, 0.15),
+        transparent
+      );
+    }
+
+    #match-detail-header .title {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    #match-detail-header .close-btn {
+      border: none;
+      background: var(--glass);
+      border-radius: 999px;
+      padding: 4px 10px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    #match-detail-body {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      padding: 16px 18px 18px;
+      overflow: auto;
+    }
+
+    .detail-column {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .detail-main-score {
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .detail-main-score .teams-line {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .detail-main-score .score-line-big {
+      font-size: 2rem;
+      font-weight: 800;
+    }
+
+    .detail-main-score .minute-big {
+      font-size: 0.9rem;
+      color: var(--accent);
+      margin-top: 2px;
+    }
+
+    .detail-section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin: 14px 0 8px;
+    }
+
+    .detail-odds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 8px;
+    }
+
+    .detail-odd-card {
+      background: var(--glass);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      font-size: 0.8rem;
+    }
+
+    .detail-odd-label {
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+
+    .detail-odd-value {
+      font-weight: 600;
+      color: var(--accent-soft);
+    }
+
+    .event-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .event-item {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .event-item-placeholder {
+      padding: 4px 0;
+      color: var(--muted);
+    }
+
+    .event-time {
+      color: var(--accent-soft);
+      min-width: 36px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .stat-label {
+      color: var(--muted);
+    }
+
+    .stat-value {
+      font-weight: 500;
+    }
+
+    /* BOTTOM NAV */
+    #bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(10, 12, 18, 0.85);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid #202631;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 calc(env(safe-area-inset-bottom) + 6px);
+      z-index: 950;
+    }
+
+    .nav-item {
+      flex: 1;
+      text-align: center;
+      color: #777;
+      font-size: 0.8rem;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: 0.25s;
+    }
+
+    .nav-item:hover {
+      color: var(--accent);
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      margin: 0 auto 4px;
+      stroke: currentColor;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 800px) {
+      header h1 {
+        font-size: 1.1rem;
+      }
+      #matches-container {
+        margin: 15px;
+        grid-template-columns: 1fr;
+      }
+      #match-detail-body {
+        flex-direction: column;
+      }
+    }
+
+    @media (min-width: 900px) {
+      #bottom-nav {
+        max-width: 900px;
+        margin: 0 auto;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 18px 18px 0 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header>
+    <div>
+      <h1>EURO_GOALS PRO+</h1>
+      <div class="header-sub">
+        {{ app_version if app_version is defined }}
+      </div>
+    </div>
+    <button class="refresh-btn" onclick="loadLive()">Ανανέωση</button>
+  </header>
+
+  <!-- SYSTEM BAR -->
+  <div id="system-bar">
+    <div class="sys-pill">
+      <span class="sys-dot {{ 'off' if not live_hub else '' }}"></span>
+      Live Hub: {{ 'ON' if live_hub else 'OFF' }}
+    </div>
+    <div class="sys-pill">
+      Env: {{ app_env if app_env is defined else 'prod' }}
+    </div>
+  </div>
+
+  <!-- LOADER -->
+  <div id="loader">Φόρτωση live δεδομένων…</div>
+
+  <!-- LIVE MATCH CARDS -->
+  <div id="matches-container"></div>
+
+  <!-- SMARTMONEY PAGE -->
+  <div id="smartmoney-page">
+    <h2 class="section-title-main">SmartMoney Terminal</h2>
+    <div id="smartmoney-loader">
+      <div class="sm-row skeleton"></div>
+      <div class="sm-row skeleton"></div>
+      <div class="sm-row skeleton"></div>
+    </div>
+    <div id="smartmoney-table"></div>
+  </div>
+
+  <!-- GOALMATRIX PAGE -->
+  <div id="goalmatrix-page">
+    <h2 class="section-title-main">GoalMatrix Analytics</h2>
+    <div id="goalmatrix-container" class="gm-grid-placeholder">
+      GoalMatrix panel – θα συνδεθεί με τα πραγματικά patterns από τον GoalMatrix
+      Engine / Live Hub.
+    </div>
+  </div>
+
+  <!-- HEATMAP PAGE -->
+  <div id="heatmap-page">
+    <h2 class="section-title-main">Heatmap Analytics</h2>
+    <div id="heatmap-container" class="hm-grid-placeholder">
+      Heatmap panel – θα συνδεθεί με τα live shot maps & pressure από τον Heatmap
+      Engine / Live Hub.
+    </div>
+  </div>
+
+  <!-- MATCH DETAIL OVERLAY -->
+  <div id="match-detail-overlay" onclick="overlayClick(event)">
+    <div id="match-detail-panel">
+      <div id="match-detail-header">
+        <div class="title" id="detail-league">Αγώνας</div>
+        <button class="close-btn" onclick="closeMatchDetail()">Κλείσιμο ✕</button>
+      </div>
+      <div id="match-detail-body">
+        <div class="detail-column" id="detail-main-column"></div>
+        <div class="detail-column" id="detail-side-column"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div id="bottom-nav">
+    <div class="nav-item active" data-tab="live">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M2 12h20M12 2v20"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+      Live
+    </div>
+
+    <div class="nav-item" data-tab="smartmoney">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M4 16l4-4 4 4 8-8"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      SmartMoney
+    </div>
+
+    <div class="nav-item" data-tab="goalmatrix">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+        <rect
+          x="3"
+          y="3"
+          width="18"
+          height="18"
+          rx="3"
+          stroke-width="2"
+        />
+        <path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke-width="2" />
+      </svg>
+      Matrix
+    </div>
+
+    <div class="nav-item" data-tab="heatmap">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="8" stroke-width="2" />
+        <circle cx="12" cy="12" r="4" stroke-width="2" />
+      </svg>
+      Heatmap
+    </div>
+
+    <div class="nav-item" data-tab="settings">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M12 15a3 3 0 100-6 3 3 0 000 6zM4 12h2M18 12h2M12 4v2M12 18v2M6.8 6.8l1.4 1.4M15.8 15.8l1.4 1.4M6.8 17.2l1.4-1.4M15.8 8.2l1.4-1.4"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+      Ρυθμίσεις
+    </div>
+  </div>
+
+  <!-- MAIN JS -->
+  <script>
+    let autoRefreshTimer = null;
+    let lastOverviewPayload = null;
+
+    function showPage(name) {
+      const live = document.getElementById("matches-container");
+      const sm = document.getElementById("smartmoney-page");
+      const gm = document.getElementById("goalmatrix-page");
+      const hm = document.getElementById("heatmap-page");
+
+      live.style.display = "none";
+      sm.style.display = "none";
+      gm.style.display = "none";
+      hm.style.display = "none";
+
+      if (name === "live") {
+        live.style.display = "grid";
+      } else if (name === "smartmoney") {
+        sm.style.display = "block";
+      } else if (name === "goalmatrix") {
+        gm.style.display = "block";
+      } else if (name === "heatmap") {
+        hm.style.display = "block";
+      }
+    }
+
+    function getMatchIdFromObject(m, idx) {
+      return m.id || m.match_id || m.uid || m.mid || "m_" + idx;
+    }
+
+    async function loadLive() {
+      const loader = document.getElementById("loader");
+      const container = document.getElementById("matches-container");
+
+      loader.style.display = "block";
+      container.innerHTML = "";
+
+      try {
+        const res = await fetch("/api/live/overview");
+        const json = await res.json();
+        loader.style.display = "none";
+
+        if (!json.ok) {
+          container.innerHTML =
+            "<div class='error-box'>Δεν υπάρχουν διαθέσιμα live δεδομένα.</div>";
+          return;
+        }
+
+        lastOverviewPayload = json;
+        const matches = (json.data && json.data.matches) || [];
+
+        if (!matches.length) {
+          container.innerHTML =
+            "<div class='info-box'>Δεν υπάρχουν αγώνες αυτή τη στιγμή.</div>";
+          return;
+        }
+
+        renderMatches(matches);
+      } catch (err) {
+        loader.style.display = "none";
+        container.innerHTML =
+          "<div class='error-box'>Σφάλμα σύνδεσης στο Live Hub.</div>";
+      }
+    }
+
+    function renderMatches(matches) {
+      const container = document.getElementById("matches-container");
+      container.innerHTML = "";
+
+      matches.forEach(function (m, idx) {
+        const home = m.home || m.home_team || m.team_home || "";
+        const away = m.away || m.away_team || m.team_away || "";
+        const sh =
+          m.score_home !== undefined && m.score_home !== null
+            ? m.score_home
+            : m.goals_home;
+        const sa =
+          m.score_away !== undefined && m.score_away !== null
+            ? m.score_away
+            : m.goals_away;
+        const scoreHome = sh !== undefined && sh !== null ? sh : "-";
+        const scoreAway = sa !== undefined && sa !== null ? sa : "-";
+        const minute = m.minute || m.time || "--";
+        const league = m.league || m.competition || m.tournament || "";
+        const kickoff = m.kickoff_time || m.start_time || "";
+
+        const odds = m.odds || {};
+        const odd1 = odds.home || m.odds_1 || "-";
+        const oddX = odds.draw || m.odds_x || "-";
+        const odd2 = odds.away || m.odds_2 || "-";
+
+        const matchId = getMatchIdFromObject(m, idx);
+
+        const card = document.createElement("div");
+        card.className = "match-card";
+        card.dataset.matchId = matchId;
+        card.innerHTML =
+          "<div class='match-header-line'>" +
+          "<div class='league-tag'>" +
+          (league || "—") +
+          "</div>" +
+          "<div class='kickoff'>" +
+          (kickoff || "") +
+          "</div>" +
+          "</div>" +
+          "<div class='teams'>" +
+          "<div>" +
+          home +
+          "</div>" +
+          "<div>" +
+          away +
+          "</div>" +
+          "</div>" +
+          "<div class='score-line'>" +
+          scoreHome +
+          " - " +
+          scoreAway +
+          "</div>" +
+          "<div class='minute'>" +
+          minute +
+          "'</div>" +
+          "<div class='odds'>" +
+          "<div class='odd-box'>" +
+          odd1 +
+          "</div>" +
+          "<div class='odd-box'>" +
+          oddX +
+          "</div>" +
+          "<div class='odd-box'>" +
+          odd2 +
+          "</div>" +
+          "</div>";
+
+        card.addEventListener("click", function () {
+          openMatchDetail(matchId, m);
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    function openMatchDetail(matchId, basicMatchData) {
+      const overlay = document.getElementById("match-detail-overlay");
+      overlay.style.display = "flex";
+      renderMatchDetailSkeleton(basicMatchData);
+      loadMatchDetail(matchId, basicMatchData);
+    }
+
+    function closeMatchDetail() {
+      document.getElementById("match-detail-overlay").style.display = "none";
+    }
+
+    function overlayClick(event) {
+      if (event.target.id === "match-detail-overlay") {
+        closeMatchDetail();
+      }
+    }
+
+    function renderMatchDetailSkeleton(m) {
+      const leagueEl = document.getElementById("detail-league");
+      const mainCol = document.getElementById("detail-main-column");
+      const sideCol = document.getElementById("detail-side-column");
+
+      const home = m.home || m.home_team || m.team_home || "";
+      const away = m.away || m.away_team || m.team_away || "";
+      const sh =
+        m.score_home !== undefined && m.score_home !== null
+          ? m.score_home
+          : m.goals_home;
+      const sa =
+        m.score_away !== undefined && m.score_away !== null
+          ? m.score_away
+          : m.goals_away;
+      const scoreHome = sh !== undefined && sh !== null ? sh : "-";
+      const scoreAway = sa !== undefined && sa !== null ? sa : "-";
+      const minute = m.minute || m.time || "--";
+      const league = m.league || m.competition || m.tournament || "";
+
+      const odds = m.odds || {};
+      const odd1 = odds.home || m.odds_1 || "-";
+      const oddX = odds.draw || m.odds_x || "-";
+      const odd2 = odds.away || m.odds_2 || "-";
+
+      leagueEl.textContent = league || "Αγώνας";
+
+      mainCol.innerHTML =
+        "<div class='detail-main-score'>" +
+        "<div class='teams-line'>" +
+        home +
+        " vs " +
+        away +
+        "</div>" +
+        "<div class='score-line-big'>" +
+        scoreHome +
+        " - " +
+        scoreAway +
+        "</div>" +
+        "<div class='minute-big'>" +
+        minute +
+        "'</div>" +
+        "</div>" +
+        "<div class='detail-section-title'>Κύριες Αποδόσεις</div>" +
+        "<div class='detail-odds-grid'>" +
+        "<div class='detail-odd-card'>" +
+        "<div class='detail-odd-label'>1</div>" +
+        "<div class='detail-odd-value'>" +
+        odd1 +
+        "</div>" +
+        "</div>" +
+        "<div class='detail-odd-card'>" +
+        "<div class='detail-odd-label'>Χ</div>" +
+        "<div class='detail-odd-value'>" +
+        oddX +
+        "</div>" +
+        "</div>" +
+        "<div class='detail-odd-card'>" +
+        "<div class='detail-odd-label'>2</div>" +
+        "<div class='detail-odd-value'>" +
+        odd2 +
+        "</div>" +
+        "</div>" +
+        "</div>";
+
+      sideCol.innerHTML =
+        "<div class='detail-section-title'>Στατιστικά αγώνα</div>" +
+        "<div id='detail-stats-container'>" +
+        "<div class='info-box-small'>Στατιστικά μη διαθέσιμα (ή θα έρθουν από Live Hub / engines).</div>" +
+        "</div>" +
+        "<div class='detail-section-title'>Timeline</div>" +
+        "<ul class='event-list' id='detail-events-container'>" +
+        "<li class='event-item-placeholder'>Γεγονότα αγώνα θα εμφανιστούν όταν είναι διαθέσιμα.</li>" +
+        "</ul>";
+    }
+
+    async function loadMatchDetail(matchId, basicMatchData) {
+      try {
+        const res = await fetch(
+          "/api/live/match/" + encodeURIComponent(matchId)
+        );
+        const json = await res.json();
+        if (!json.ok) return;
+        const merged =
+          (json.data && (json.data.merged || json.data)) || basicMatchData || {};
+        renderMatchDetailFull(merged, basicMatchData);
+      } catch (err) {
+        // skeleton already visible
+      }
+    }
+
+    function renderMatchDetailFull(detail, fallbackBasic) {
+      const leagueEl = document.getElementById("detail-league");
+      const mainCol = document.getElementById("detail-main-column");
+      const sideCol = document.getElementById("detail-side-column");
+
+      const m = {};
+      if (fallbackBasic) {
+        for (const k in fallbackBasic) m[k] = fallbackBasic[k];
+      }
+      if (detail) {
+        for (const k in detail) m[k] = detail[k];
+      }
+
+      const home = m.home || m.home_team || m.team_home || "";
+      const away = m.away || m.away_team || m.team_away || "";
+      const sh =
+        m.score_home !== undefined && m.score_home !== null
+          ? m.score_home
+          : m.goals_home;
+      const sa =
+        m.score_away !== undefined && m.score_away !== null
+          ? m.score_away
+          : m.goals_away;
+      const scoreHome = sh !== undefined && sh !== null ? sh : "-";
+      const scoreAway = sa !== undefined && sa !== null ? sa : "-";
+      const minute = m.minute || m.time || "--";
+      const league = m.league || m.competition || m.tournament || "";
+
+      leagueEl.textContent = league || "Αγώνας";
+
+      const oddsMain = m.odds || {};
+      const oddsExtra = m.extra_odds || m.markets || {};
+
+      const extraBlocks = [];
+      const ou =
+        oddsExtra["O/U"] ||
+        oddsExtra["over_under"] ||
+        oddsExtra["goal_line"];
+      if (ou) {
+        extraBlocks.push(
+          "<div class='detail-odd-card'><div class='detail-odd-label'>Over</div><div class='detail-odd-value'>" +
+            (ou.over || "-") +
+            "</div></div>"
+        );
+        extraBlocks.push(
+          "<div class='detail-odd-card'><div class='detail-odd-label'>Under</div><div class='detail-odd-value'>" +
+            (ou.under || "-") +
+            "</div></div>"
+        );
+      }
+      const gg =
+        oddsExtra["BTTS"] ||
+        oddsExtra["GGNG"] ||
+        oddsExtra["both_teams_to_score"];
+      if (gg) {
+        extraBlocks.push(
+          "<div class='detail-odd-card'><div class='detail-odd-label'>GG</div><div class='detail-odd-value'>" +
+            (gg.yes || "-") +
+            "</div></div>"
+        );
+        extraBlocks.push(
+          "<div class='detail-odd-card'><div class='detail-odd-label'>NG</div><div class='detail-odd-value'>" +
+            (gg.no || "-") +
+            "</div></div>"
+        );
+      }
+
+      mainCol.innerHTML =
+        "<div class='detail-main-score'>" +
+        "<div class='teams-line'>" +
+        home +
+        " vs " +
+        away +
+        "</div>" +
+        "<div class='score-line-big'>" +
+        scoreHome +
+        " - " +
+        scoreAway +
+        "</div>" +
+        "<div class='minute-big'>" +
+        minute +
+        "'</div>" +
+        "</div>" +
+        "<div class='detail-section-title'>Κύριες Αποδόσεις</div>" +
+        "<div class='detail-odds-grid'>" +
+        "<div class='detail-odd-card'><div class='detail-odd-label'>1</div><div class='detail-odd-value'>" +
+        (oddsMain.home || m.odds_1 || "-") +
+        "</div></div>" +
+        "<div class='detail-odd-card'><div class='detail-odd-label'>Χ</div><div class='detail-odd-value'>" +
+        (oddsMain.draw || m.odds_x || "-") +
+        "</div></div>" +
+        "<div class='detail-odd-card'><div class='detail-odd-label'>2</div><div class='detail-odd-value'>" +
+        (oddsMain.away || m.odds_2 || "-") +
+        "</div></div>" +
+        "</div>" +
+        (extraBlocks.length
+          ? "<div class='detail-section-title'>Ειδικές Αγορές</div><div class='detail-odds-grid'>" +
+            extraBlocks.join("") +
+            "</div>"
+          : "");
+
+      // stats
+      const statsContainer = document.createElement("div");
+      statsContainer.id = "detail-stats-container";
+      const stats = m.stats || m.statistics || null;
+
+      if (!stats) {
+        statsContainer.innerHTML =
+          "<div class='info-box-small'>Στατιστικά μη διαθέσιμα.</div>";
+      } else {
+        const map = {
+          Possession: ["possession", "possession_home", "possession_away"],
+          "Σουτ": ["shots", "shots_total"],
+          "Σουτ στο τέρμα": ["shots_on_target", "shots_on"],
+          "Κόρνερ": ["corners"],
+          "Κίτρινες": ["yellow_cards"],
+          "Κόκκινες": ["red_cards"],
+          Offsides: ["offsides"],
+        };
+        let rowsHtml = "";
+        for (const label in map) {
+          const keys = map[label];
+          let valHome = null;
+          let valAway = null;
+          for (let i = 0; i < keys.length; i++) {
+            const k = keys[i];
+            const hKey = k + "_home";
+            const aKey = k + "_away";
+            if (stats[hKey] !== undefined || stats[aKey] !== undefined) {
+              valHome = stats[hKey];
+              valAway = stats[aKey];
+              break;
+            }
+          }
+          if (valHome !== null || valAway !== null) {
+            rowsHtml +=
+              "<div class='stat-row'><div class='stat-value'>" +
+              (valHome !== null ? valHome : "-") +
+              "</div><div class='stat-label'>" +
+              label +
+              "</div><div class='stat-value'>" +
+              (valAway !== null ? valAway : "-") +
+              "</div></div>";
+          }
+        }
+        statsContainer.innerHTML =
+          rowsHtml ||
+          "<div class='info-box-small'>Στατιστικά μη διαθέσιμα.</div>";
+      }
+
+      const eventsContainer = document.createElement("ul");
+      eventsContainer.id = "detail-events-container";
+      eventsContainer.className = "event-list";
+
+      const events = m.events || m.timeline || [];
+      if (!events || !events.length) {
+        eventsContainer.innerHTML =
+          "<li class='event-item-placeholder'>Δεν υπάρχουν διαθέσιμα γεγονότα.</li>";
+      } else {
+        events.forEach(function (ev) {
+          const minuteEv = ev.minute || ev.time || "";
+          const desc = ev.description || ev.type || "";
+          const team = ev.team || ev.side || "";
+          const scoreEv = ev.score || "";
+          const parts = [];
+          if (desc) parts.push(desc);
+          if (team) parts.push(team);
+          if (scoreEv) parts.push(scoreEv);
+          const line = parts.join(" · ");
+          const li = document.createElement("li");
+          li.className = "event-item";
+          li.innerHTML =
+            "<span class='event-time'>" +
+            (minuteEv ? minuteEv + "'" : "") +
+            "</span><span>" +
+            line +
+            "</span>";
+          eventsContainer.appendChild(li);
+        });
+      }
+
+      sideCol.innerHTML =
+        "<div class='detail-section-title'>Στατιστικά αγώνα</div>";
+      sideCol.appendChild(statsContainer);
+      const titleTime = document.createElement("div");
+      titleTime.className = "detail-section-title";
+      titleTime.textContent = "Timeline";
+      sideCol.appendChild(titleTime);
+      sideCol.appendChild(eventsContainer);
+    }
+
+    // SMARTMONEY
+    async function loadSmartMoney() {
+      const loader = document.getElementById("smartmoney-loader");
+      const table = document.getElementById("smartmoney-table");
+      loader.style.display = "block";
+      table.innerHTML = "";
+
+      try {
+        const res = await fetch("/api/smartmoney/overview");
+        const json = await res.json();
+        loader.style.display = "none";
+
+        if (!json.ok || !json.data) {
+          table.innerHTML =
+            "<div class='error-box'>Δεν υπάρχουν SmartMoney δεδομένα.</div>";
+          return;
+        }
+
+        const rows = json.data || [];
+        if (!rows.length) {
+          table.innerHTML =
+            "<div class='info-box'>Καμία κίνηση SmartMoney αυτή τη στιγμή.</div>";
+          return;
+        }
+
+        renderSmartMoney(rows);
+      } catch (err) {
+        loader.style.display = "none";
+        table.innerHTML =
+          "<div class='error-box'>Σφάλμα σύνδεσης SmartMoney.</div>";
+      }
+    }
+
+    function renderSmartMoney(list) {
+      const table = document.getElementById("smartmoney-table");
+      table.innerHTML = "";
+
+      list.forEach(function (item, idx) {
+        const home = item.home || item.team_home || "";
+        const away = item.away || item.team_away || "";
+        const matchId = item.match_id || item.id || "sm_" + idx;
+        const movement = item.movement || "→";
+        const change = item.change_percent || 0;
+        const lastOdds = item.last_odds || "-";
+        const lastUpdate = item.last_update || "--";
+
+        let moveColor = "var(--muted)";
+        if (movement === "↑") moveColor = "var(--accent)";
+        else if (movement === "↓") moveColor = "var(--danger)";
+
+        const row = document.createElement("div");
+        row.className = "sm-row";
+        row.dataset.matchId = matchId;
+
+        row.innerHTML =
+          "<div class='sm-move' style='color:" +
+          moveColor +
+          ";'>" +
+          movement +
+          "</div>" +
+          "<div class='sm-team'>" +
+          home +
+          " vs " +
+          away +
+          "</div>" +
+          "<div class='sm-change' style='color:" +
+          moveColor +
+          ";'>" +
+          change +
+          "%</div>" +
+          "<div class='sm-odds'>" +
+          lastOdds +
+          "</div>" +
+          "<div class='sm-status'>" +
+          lastUpdate +
+          "</div>";
+
+        row.addEventListener("click", function () {
+          openMatchDetail(matchId, item);
+        });
+
+        table.appendChild(row);
+      });
+    }
+
+    // DOM READY
+    document.addEventListener("DOMContentLoaded", function () {
+      // default page
+      showPage("live");
+      loadLive();
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = setInterval(loadLive, 25000);
+
+      // bottom nav
+      const navItems = document.querySelectorAll(".nav-item");
+      navItems.forEach(function (item) {
+        item.addEventListener("click", function () {
+          navItems.forEach(function (i) {
+            i.classList.remove("active");
+          });
+          item.classList.add("active");
+          const tab = item.getAttribute("data-tab");
+
+          if (tab === "live") {
+            showPage("live");
+            loadLive();
+          } else if (tab === "smartmoney") {
+            showPage("smartmoney");
+            loadSmartMoney();
+          } else if (tab === "goalmatrix") {
+            showPage("goalmatrix");
+          } else if (tab === "heatmap") {
+            showPage("heatmap");
+          } else if (tab === "settings") {
+            alert("Ρυθμίσεις / Theme toggle θα προστεθούν σε επόμενο βήμα.");
+          }
+        });
+      });
+
+      // service worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/static/sw.js")
+          .catch(function (err) {
+            console.log("SW registration failed", err);
+          });
+      }
+    });
+  </script>
+</body>
+</html>

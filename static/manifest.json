@@ -1,8 +1,28 @@
 {
-  "name": "EURO_GOALS PRO+",
-  "short_name": "EURO_GOALS",
+  "name": "AI MatchLab",
+  "short_name": "MatchLab",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0f1117",
-  "theme_color": "#0f1117"
+  "theme_color": "#0f1117",
+  "icons": [
+    {
+      "src": "/static/icons/aimatchlab_192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/aimatchlab_512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/aimatchlab_maskable_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }
