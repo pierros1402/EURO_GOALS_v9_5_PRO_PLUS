@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>AI MatchLab — Workspace</title>
+
+    <link rel="manifest" href="/static/manifest.json" />
+    <link rel="stylesheet" href="/static/css/aimatchlab.css" />
+    <link rel="icon" type="image/png" href="/static/icons/logo_64.png" />
+
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/static/service-worker.js");
+        }
+    </script>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-left">
+        <img src="/static/icons/logo_64.png" class="top-logo" />
+        <span class="top-title">AI MATCHLAB — WORKSPACE</span>
+    </div>
+
+    <div class="topbar-right">
+        <button class="top-btn" onclick="backHome()">Back</button>
+        <button class="top-btn" onclick="refreshWorkspace()">Refresh</button>
+    </div>
+</header>
+
+<main class="workspace-area">
+
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <h1 class="workspace-title">AI MatchLab Experimental Workspace</h1>
+
+    <div id="workspace-content" class="workspace-panel">
+        <div class="placeholder">
+            This is the AI MatchLab experimental area.<br>
+            Load tools and modules directly from Worker.
+        </div>
+    </div>
+
+</main>
+
+<script src="/static/js/aimatchlab.js"></script>
+
+<script>
+function backHome() { window.location.href = "/"; }
+
+async function refreshWorkspace() {
+    loadWorkspaceModule("default");
+}
+
+async function loadWorkspaceModule(moduleName) {
+    const container = document.getElementById("workspace-content");
+    container.innerHTML = `<div class="placeholder">Loading ${moduleName}...</div>`;
+
+    const result = await callWorker(`aimatchlab/workspace/${moduleName}`);
+
+    if (typeof result === "object") {
+        if (Array.isArray(result)) container.innerHTML = generateTable(result);
+        else container.innerHTML = objectToTable(result);
+        return;
+    }
+
+    container.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadWorkspaceModule("default");
+});
+</script>
+
+</body>
+</html>

@@ -2,201 +2,81 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    />
-    <title>AI MatchLab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- PWA: Manifest & Theme -->
-    <link
-        rel="manifest"
-        href="{{ url_for('static', path='manifest.json') }}"
-    />
-    <meta name="theme-color" content="#050816" />
+    <title>AI MatchLab — Unified Intelligence Hub</title>
 
-    <!-- Favicon / Icons -->
-    <link
-        rel="icon"
-        type="image/png"
-        href="{{ url_for('static', path='icons/aimatchlab-32.png') }}"
-    />
-    <link
-        rel="apple-touch-icon"
-        href="{{ url_for('static', path='icons/aimatchlab-512.png') }}"
-    />
-    <meta
-        name="apple-mobile-web-app-capable"
-        content="yes"
-    />
-    <meta
-        name="apple-mobile-web-app-status-bar-style"
-        content="black-translucent"
-    />
+    <link rel="manifest" href="/static/manifest.json" />
+    <link rel="stylesheet" href="/static/css/aimatchlab.css" />
+    <link rel="icon" type="image/png" href="/static/icons/logo_64.png" />
 
-    <!-- Main Styles -->
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', path='css/style.css') }}"
-    />
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/static/service-worker.js");
+        }
+    </script>
 </head>
-<body class="theme-dark">
-    <!-- ========================= -->
-    <!-- TOP BAR                   -->
-    <!-- ========================= -->
-    <header class="top-bar">
-        <div class="top-bar-left">
-            <div class="logo-wrap">
-                <img
-                    src="{{ url_for('static', path='img/aimatchlab_logo.png') }}"
-                    alt="AI MatchLab"
-                    class="app-logo"
-                />
-                <div class="logo-text">
-                    <h1 class="app-title">AI MatchLab</h1>
-                    <span class="app-subtitle">
-                        Unified Match Intelligence Workspace
-                    </span>
-                </div>
-            </div>
+<body>
+
+<div id="app">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <img src="/static/icons/logo_64.png" class="top-logo" />
+            <span class="top-title">AI MATCHLAB</span>
         </div>
 
-        <div class="top-bar-right">
-            <!-- Install App Button (PWA) -->
-            <button
-                id="installBtn"
-                class="btn btn-ghost"
-                type="button"
-                title="Εγκατάσταση εφαρμογής στο σύστημά σου"
-            >
-                <span class="btn-icon">📲</span>
-                <span class="btn-label">Install App</span>
-            </button>
-
-            <!-- Quick Refresh / Future Controls -->
-            <button
-                id="quickRefreshBtn"
-                class="btn btn-ghost"
-                type="button"
-                title="Quick refresh"
-            >
-                <span class="btn-icon">⟳</span>
-            </button>
-
-            <!-- Theme toggle (dark/light) – θα το ενεργοποιήσουμε αργότερα -->
-            <button
-                id="themeToggleBtn"
-                class="btn btn-ghost"
-                type="button"
-                title="Switch theme"
-            >
-                <span class="btn-icon">☾</span>
-            </button>
+        <div class="topbar-right">
+            <button class="top-btn" onclick="openWorkspace()">Workspace</button>
+            <button class="top-btn" onclick="refreshData()">Refresh</button>
         </div>
     </header>
 
-    <!-- ========================= -->
-    <!-- MAIN LAYOUT (B2, B3, B4)  -->
-    <!-- ========================= -->
-    <main class="layout-3col">
-        <!-- B2: Left Panel -->
-        <section
-            id="panel-b2"
-            class="panel panel-left"
-        >
-            <div class="panel-header">
-                <h2>B2 · Match Filters / Input Lab</h2>
-                <span class="panel-tag">AI Feeds · Filters</span>
+    <!-- LAYOUT -->
+    <div class="layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Navigation</div>
+
+            <ul class="sidebar-menu">
+                <li onclick="loadPanel('overview')">📊 Overview</li>
+                <li onclick="loadPanel('live')">⚡ Live Dashboard</li>
+                <li onclick="loadPanel('predictions')">🧠 Predictions</li>
+                <li onclick="loadPanel('smartmoney')">💰 Smart Money</li>
+                <li onclick="loadPanel('heatmaps')">🔥 Heatmaps</li>
+                <li onclick="loadPanel('stats')">📈 Stats & Analytics</li>
+                <li onclick="loadPanel('bookmakers')">🏦 Bookmakers Compare</li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="content">
+
+            <!-- LOADING -->
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Loading...</p>
             </div>
-            <div
-                class="panel-body"
-                id="b2-content"
-            >
-                <!-- Εδώ θα μπούνε αργότερα οι φόρμες / filters -->
+
+            <!-- PANEL TITLE -->
+            <h1 id="panel-title">Overview</h1>
+
+            <!-- PANEL CONTENT -->
+            <div id="panel-content" class="panel">
                 <div class="placeholder">
-                    <p>Left analytics & filters area (B2).</p>
+                    Select a section from the sidebar to load data.
                 </div>
             </div>
-        </section>
 
-        <!-- B3: Center Main Engine -->
-        <section
-            id="panel-b3"
-            class="panel panel-center"
-        >
-            <div class="panel-header">
-                <h2>B3 · AI Match Engine</h2>
-                <span class="panel-tag">Core Lab View</span>
-            </div>
-            <div
-                class="panel-body"
-                id="b3-content"
-            >
-                <!-- Κεντρική σκηνή — match list, timelines, κλπ -->
-                <div class="placeholder">
-                    <p>Main AI MatchLab workspace (B3).</p>
-                </div>
-            </div>
-        </section>
+        </main>
 
-        <!-- B4: Right Tools / Insights -->
-        <section
-            id="panel-b4"
-            class="panel panel-right"
-        >
-            <div class="panel-header">
-                <h2>B4 · Tools & Insights</h2>
-                <span class="panel-tag">Side Lab</span>
-            </div>
-            <div
-                class="panel-body"
-                id="b4-content"
-            >
-                <!-- Δεξί panel για tools, odds, micro-panels κ.λπ. -->
-                <div class="placeholder">
-                    <p>Auxiliary tools & insights (B4).</p>
-                </div>
-            </div>
-        </section>
-    </main>
+    </div>
 
-    <!-- ========================= -->
-    <!-- B5: BOTTOM MATRIX         -->
-    <!-- ========================= -->
-    <section
-        id="panel-b5"
-        class="panel panel-bottom"
-    >
-        <div class="panel-header">
-            <h2>B5 · Match Matrix / Heatmaps</h2>
-            <span class="panel-tag">Matrix Layer</span>
-        </div>
-        <div
-            class="panel-body"
-            id="b5-content"
-        >
-            <!-- Εδώ θα μπει το matrix / heatmap / goal timelines -->
-            <div class="placeholder">
-                <p>Bottom matrix / timeline zone (B5).</p>
-            </div>
-        </div>
-    </section>
+</div>
 
-    <!-- ========================= -->
-    <!-- FOOTER / STATUS BAR (OPT) -->
-    <!-- ========================= -->
-    <footer class="status-bar">
-        <div class="status-left">
-            <span id="status-text">AI MatchLab ready.</span>
-        </div>
-        <div class="status-right">
-            <span id="version-text">v0.1.0 · UI Skeleton</span>
-        </div>
-    </footer>
+<script src="/static/js/aimatchlab.js"></script>
 
-    <!-- ========================= -->
-    <!-- SCRIPTS                   -->
-    <!-- ========================= -->
-    <script src="{{ url_for('static', path='js/app.js') }}"></script>
 </body>
 </html>

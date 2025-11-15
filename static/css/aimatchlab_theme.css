@@ -1,305 +1,272 @@
 /* ============================================================
-   AI MATCHLAB — DARK LAB THEME
+   AI MATCHLAB — FULL DARK NEON EDITION CSS
    ============================================================ */
 
-/* ROOT VARIABLES */
 :root {
-  --bg-main: #050814;
-  --bg-panel: #0b1020;
-  --bg-panel-soft: #0f1628;
-  --bg-header: rgba(5, 8, 20, 0.85);
-  --bg-footer: rgba(5, 8, 20, 0.9);
-
-  --border-color: rgba(140, 150, 175, 0.25);
-  --border-hover: rgba(140, 150, 175, 0.45);
-
-  --fg-main: #f4f6fb;
-  --fg-muted: #94a3b8;
-  --fg-soft: #7b86a3;
-
-  --accent-blue: #2c7cf4;
-  --accent-purple: #7f4bff;
-  --accent-cyan: #3ff0c5;
-
-  --success: #34d399;
-  --warn: #facc15;
-  --error: #fb7185;
-
-  --radius: 16px;
-  --radius-lg: 22px;
-
-  --shadow-soft: 0 10px 32px rgba(0, 0, 0, 0.55);
-
-  --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    --bg-dark: #0b0f19;
+    --bg-panel: #111827;
+    --bg-panel-light: #1a2333;
+    --text-main: #e5e7eb;
+    --text-dim: #9ca3af;
+    --accent: #1ac8ff;       /* neon cyan */
+    --accent-strong: #33d0ff;
+    --border-color: #1f2937;
+    --danger: #ff476f;
+    --success: #2bdc74;
+    --warning: #f5c14a;
+    --radius: 12px;
 }
 
-/* RESET */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-/* BODY */
-html, body {
-  background: var(--bg-main);
-  color: var(--fg-main);
-  font-family: var(--font-ui);
-  scroll-behavior: smooth;
-}
-
-/* APP LAYOUT */
-.app-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-main {
-  flex: 1 0 auto;
-  padding: 24px clamp(16px, 4vw, 48px);
+body {
+    background: var(--bg-dark);
+    color: var(--text-main);
+    font-family: "Inter", Arial, sans-serif;
+    overflow: hidden;
 }
 
 /* ============================================================
-   HEADER
+   TOPBAR
    ============================================================ */
 
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  backdrop-filter: blur(16px);
-  background: var(--bg-header);
-  border-bottom: 1px solid rgba(44, 124, 244, 0.25);
+.topbar {
+    height: 58px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 50;
 }
 
-.app-header-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 12px 20px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-/* BRAND AREA */
-.brand-block {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.top-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
 }
 
-.brand-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-
-  background: radial-gradient(
-    circle at 30% 20%,
-    var(--accent-cyan),
-    var(--accent-blue) 40%,
-    var(--accent-purple) 75%,
-    #050814 100%
-  );
-
-  box-shadow: 0 0 18px rgba(63, 240, 197, 0.6);
+.top-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
-.brand-title {
-  font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.brand-subtitle {
-  font-size: 0.72rem;
-  color: var(--fg-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+.top-btn {
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--accent);
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.15s;
 }
 
-/* LANGUAGE SWITCH */
-.lang-switch {
-  display: flex;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  padding: 4px;
+.top-btn:hover {
+    background: var(--accent);
+    color: #000;
 }
 
-.lang-btn {
-  font-size: 0.75rem;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 0;
-  background: transparent;
-  color: var(--fg-muted);
-  cursor: pointer;
-}
-
-.lang-btn.active {
-  background: linear-gradient(
-    135deg,
-    var(--accent-blue),
-    var(--accent-purple)
-  );
-  color: #fff;
-}
-
-/* LIVE CHIP */
-.chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-
-  background: rgba(15, 23, 42, 0.85);
-  font-size: 0.75rem;
-  color: var(--fg-muted);
-}
-
-.chip-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--success);
-  box-shadow: 0 0 10px rgba(52, 211, 153, 0.9);
-}
 
 /* ============================================================
-   PAGE TITLE
+   MAIN LAYOUT
    ============================================================ */
 
-.page-title {
-  margin-bottom: 24px;
+.layout {
+    display: grid;
+    grid-template-columns: 230px auto;
+    height: calc(100vh - 58px);
+    margin-top: 58px;
 }
 
-.title-main {
-  font-size: 1.6rem;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.title-sub {
-  font-size: 0.9rem;
-  color: var(--fg-muted);
-}
 
 /* ============================================================
-   GRID / PANELS
+   SIDEBAR
    ============================================================ */
 
-.grid-layout {
-  display: grid;
-  gap: 28px;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+.sidebar {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border-color);
+    padding: 20px 0;
+    overflow-y: auto;
+}
+
+.sidebar-title {
+    font-size: 14px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 0 16px;
+    margin-bottom: 12px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0 6px;
+}
+
+.sidebar-menu li {
+    padding: 12px 16px;
+    margin: 4px 0;
+    cursor: pointer;
+    border-radius: var(--radius);
+    font-size: 15px;
+    color: var(--text-main);
+    transition: 0.15s;
+}
+
+.sidebar-menu li:hover {
+    background: var(--bg-panel-light);
+    color: var(--accent);
+}
+
+
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
+
+.content {
+    padding: 24px;
+    overflow-y: auto;
+}
+
+#panel-title {
+    font-size: 26px;
+    margin-bottom: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
 .panel {
-  background: var(--bg-panel);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-soft);
-  padding: 18px 22px;
+    background: var(--bg-panel-light);
+    padding: 20px;
+    border-radius: var(--radius);
+    min-height: 300px;
+    border: 1px solid var(--border-color);
 }
 
-.panel-accent {
-  border: 1px solid var(--accent-purple);
-}
-
-.panel-title {
-  font-size: 1.1rem;
-  margin-bottom: 14px;
-  font-weight: 600;
-}
-
-.panel-body {
-  color: var(--fg-main);
-  font-size: 0.85rem;
-}
-
-/* FIXTURES FRAME */
-.fixtures-frame {
-  width: 100%;
-  height: 420px;
-  border: 0;
-  border-radius: var(--radius);
-  overflow: hidden;
+.placeholder {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--text-dim);
+    font-size: 16px;
 }
 
 /* ============================================================
-   TABLE STYLE
+   LOADING SPINNER
    ============================================================ */
 
-.table {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.loading {
+    position: absolute;
+    top: 5%;
+    right: 5%;
+    background: rgba(0,0,0,0.55);
+    padding: 18px 24px;
+    border-radius: var(--radius);
+    border: 1px solid var(--accent);
+    text-align: center;
 }
 
-.row {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  padding: 6px 0;
-  align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+.loading.hidden {
+    display: none;
 }
 
-.row.header {
-  font-weight: 600;
-  color: var(--fg-muted);
-  border-bottom: 1px solid rgba(255,255,255,0.12);
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 8px;
 }
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 
 /* ============================================================
-   FOOTER
+   SCROLLBAR
    ============================================================ */
 
-.app-footer {
-  flex-shrink: 0;
-  margin-top: 40px;
+::-webkit-scrollbar {
+    width: 8px;
 }
 
-.app-footer-inner {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 18px 20px;
-
-  border-top: 1px solid rgba(44, 124, 244, 0.2);
-  background: var(--bg-footer);
-
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
 }
 
-.footer-copy {
-  color: var(--fg-soft);
-  opacity: 0.8;
+::-webkit-scrollbar-thumb {
+    background: var(--bg-panel-light);
+    border-radius: 10px;
 }
 
-.footer-links {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
 }
 
-.footer-links a {
-  color: var(--fg-soft);
-  font-size: 0.8rem;
-  text-decoration: none;
+
+/* ============================================================
+   TABLES (for Worker data)
+   ============================================================ */
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 14px;
 }
 
-.footer-links a:hover {
-  color: var(--accent-cyan);
-  text-decoration: underline;
+.data-table th {
+    text-align: left;
+    padding: 10px;
+    background: #1d2738;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border-color);
 }
+
+.data-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.data-table tr:hover td {
+    background: rgba(255,255,255,0.02);
+}
+
+
+/* ============================================================
+   STATUS COLORS
+   ============================================================ */
+
+.status-green { color: var(--success); }
+.status-red { color: var(--danger); }
+.status-yellow { color: var(--warning); }
+
+
+/* END OF FILE */
