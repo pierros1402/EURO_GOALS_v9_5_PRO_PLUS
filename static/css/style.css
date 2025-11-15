@@ -1,0 +1,228 @@
+/* ============================================================
+   AI MATCHLAB — UNIFIED UI STYLESHEET
+   Core layout · Panels B2-B5 · Dark Theme · Top Bar · Status Bar
+   ============================================================ */
+
+/* ------------------------- */
+/* RESET & BASE             */
+/* ------------------------- */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+    background: #050816;
+    color: #e7e7e7;
+    overflow-x: hidden;
+}
+
+/* Scrollbar (for dark UI) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-thumb {
+    background: #3a3f52;
+    border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #151826;
+}
+
+/* ------------------------- */
+/* TOP BAR                   */
+/* ------------------------- */
+
+.top-bar {
+    width: 100%;
+    height: 70px;
+    background: #0c0f1a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 18px;
+    border-bottom: 1px solid #1e2333;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.logo-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.app-logo {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.3px;
+}
+
+.app-subtitle {
+    font-size: 12px;
+    opacity: 0.55;
+    letter-spacing: 0.5px;
+}
+
+/* ------------------------- */
+/* TOP BAR BUTTONS           */
+/* ------------------------- */
+
+.btn {
+    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    background: #1a1d2b;
+    color: #fff;
+    font-size: 14px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    transition: 0.18s ease;
+}
+
+.btn:hover {
+    background: #24293d;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: #d2d2d2;
+}
+
+.btn-ghost:hover {
+    background: #1a1d2b;
+}
+
+/* ------------------------- */
+/* LAYOUT GRID (B2-B3-B4)    */
+/* ------------------------- */
+
+.layout-3col {
+    display: grid;
+    grid-template-columns: 260px 1fr 300px;
+    gap: 14px;
+    padding: 14px;
+    min-height: calc(100vh - 70px - 40px);
+}
+
+/* ------------------------- */
+/* PANEL BASE STYLE          */
+/* ------------------------- */
+
+.panel {
+    background: #0c0f1c;
+    border: 1px solid #1e2333;
+    border-radius: 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ------------------------- */
+/* PANEL HEADER              */
+/* ------------------------- */
+
+.panel-header {
+    background: #151a29;
+    padding: 12px 16px;
+    border-bottom: 1px solid #1f2435;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panel-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.panel-tag {
+    font-size: 12px;
+    opacity: 0.55;
+    background: #1e2333;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+/* ------------------------- */
+/* PANEL CONTENT AREA        */
+/* ------------------------- */
+
+.panel-body {
+    padding: 18px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.placeholder {
+    opacity: 0.45;
+    font-size: 14px;
+}
+
+/* ------------------------- */
+/* BOTTOM PANEL (B5)         */
+/* ------------------------- */
+
+.panel-bottom {
+    margin: 0 14px 14px 14px;
+    border-radius: 14px;
+    min-height: 220px;
+}
+
+/* ------------------------- */
+/* STATUS BAR (FOOTER)       */
+/* ------------------------- */
+
+.status-bar {
+    height: 40px;
+    background: #0c0f1a;
+    color: #9b9b9b;
+    border-top: 1px solid #1e2333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    font-size: 13px;
+}
+
+/* ------------------------- */
+/* RESPONSIVE DESIGN         */
+/* ------------------------- */
+
+@media (max-width: 1100px) {
+    .layout-3col {
+        grid-template-columns: 220px 1fr 240px;
+    }
+}
+
+@media (max-width: 900px) {
+    .layout-3col {
+        grid-template-columns: 1fr;
+    }
+    .panel-left,
+    .panel-right {
+        display: none;
+    }
+    .panel-bottom {
+        margin: 14px;
+    }
+}
