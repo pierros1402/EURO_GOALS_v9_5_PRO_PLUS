@@ -8,12 +8,6 @@
   />
   <meta name="theme-color" content="#0f1117" />
 
-  <!-- APP HEADER (TOP LEFT TEXT BRAND) -->
-  <div class="app-header">
-    <div class="app-title">AI MatchLab</div>
-    <div class="app-subtitle">Real-Time Football Intelligence</div>
-  </div>
-
   <!-- PWA -->
   <link rel="manifest" href="/static/manifest.json" />
   <link rel="icon" href="/static/icons/eurogoals_192.png" sizes="192x192" />
@@ -53,33 +47,14 @@
       overflow-x: hidden;
     }
 
-    /* SMALL BRAND HEADER (ABOVE APP) */
-    .app-header {
-      position: fixed;
-      top: 4px;
-      left: 14px;
-      z-index: 910;
-      pointer-events: none;
-    }
-
-    .app-title {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .app-subtitle {
-      font-size: 11px;
-      opacity: 0.7;
-    }
-
-    /* MAIN HEADER */
+    /* HEADER */
     header {
       position: sticky;
       top: 0;
       width: 100%;
-      background: rgba(15, 17, 23, 0.9);
+      background: rgba(15, 17, 23, 0.8);
       backdrop-filter: blur(12px);
-      padding: 18px 18px 14px;
+      padding: 14px 18px;
       z-index: 900;
       border-bottom: 1px solid var(--border);
       display: flex;
@@ -89,8 +64,8 @@
 
     header h1 {
       margin: 0;
-      font-size: 1.45rem;
-      font-weight: 750;
+      font-size: 1.4rem;
+      font-weight: 700;
       letter-spacing: -0.5px;
       background: linear-gradient(90deg, #00ff88, #00c16a);
       -webkit-background-clip: text;
@@ -100,14 +75,13 @@
     .header-sub {
       font-size: 0.7rem;
       color: var(--muted);
-      margin-top: 4px;
     }
 
     .refresh-btn {
       background: var(--glass);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 7px 14px;
+      border-radius: 10px;
+      padding: 6px 12px;
       font-size: 0.85rem;
       color: var(--accent);
       cursor: pointer;
@@ -117,7 +91,7 @@
       background: var(--card-hover);
     }
 
-    /* SYSTEM BAR (PILLS) */
+    /* SYSTEM BAR */
     #system-bar {
       display: flex;
       gap: 12px;
@@ -145,30 +119,15 @@
       background: var(--danger);
     }
 
-    /* SYSTEM STATUS PANEL (B1) */
-    #system-status {
-      margin: 10px 18px;
-      padding: 14px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid #242b3b;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      line-height: 1.4;
+    /* LOADER */
+    #loader {
+      display: none;
+      text-align: center;
+      padding: 30px;
+      font-size: 1rem;
+      color: var(--muted);
     }
 
-    #system-status-title {
-      color: #00ff88;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    #sys-livehub,
-    #sys-engines,
-    #sys-version {
-      margin-top: 2px;
-    }
-
-    /* GENERIC INFO / ERROR BOXES */
     .info-box,
     .error-box {
       padding: 20px;
@@ -188,39 +147,12 @@
     .info-box-small {
       font-size: 0.8rem;
       color: var(--muted);
-      margin-top: 6px;
-    }
-
-    .mini-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-
-    .insights-box {
-      background: var(--glass);
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      padding: 10px 12px;
-      font-size: 0.8rem;
-      color: var(--muted);
     }
 
     .section-title-main {
       font-size: 1.1rem;
       margin: 0 0 14px;
       color: var(--accent);
-    }
-
-    /* LOADER */
-    #loader {
-      display: none;
-      text-align: center;
-      padding: 30px;
-      font-size: 1rem;
-      color: var(--muted);
     }
 
     /* LIVE MATCH GRID */
@@ -358,9 +290,15 @@
       animation: skeleton-loading 1.4s infinite;
     }
     @keyframes skeleton-loading {
-      0% { opacity: 0.4; }
-      50% { opacity: 1; }
-      100% { opacity: 0.4; }
+      0% {
+        opacity: 0.4;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0.4;
+      }
     }
 
     /* GOALMATRIX / HEATMAP PLACEHOLDERS */
@@ -586,7 +524,7 @@
     /* RESPONSIVE */
     @media (max-width: 800px) {
       header h1 {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
       }
       #matches-container {
         margin: 15px;
@@ -610,19 +548,18 @@
 </head>
 
 <body>
-  <!-- MAIN HEADER -->
+  <!-- HEADER -->
   <header>
     <div>
       <h1>AI MatchLab</h1>
       <div class="header-sub">
-        Real-Time Football Intelligence ·
-        {{ app_version if app_version is defined }}
+        Real-Time Football Intelligence · {{ app_version if app_version is defined }}
       </div>
     </div>
     <button class="refresh-btn" onclick="loadLive()">Ανανέωση</button>
   </header>
 
-  <!-- SYSTEM BAR (PILLS) -->
+  <!-- SYSTEM BAR -->
   <div id="system-bar">
     <div class="sys-pill">
       <span class="sys-dot {{ 'off' if not live_hub else '' }}"></span>
@@ -633,12 +570,23 @@
     </div>
   </div>
 
-  <!-- SYSTEM STATUS PANEL (B1) -->
-  <div id="system-status">
-    <div id="system-status-title">System Status</div>
-    <div id="sys-livehub">Live Hub: checking…</div>
-    <div id="sys-engines">Engines: checking…</div>
-    <div id="sys-version">Version: {{ app_version if app_version is defined }}</div>
+  <!-- NEW SYSTEM STATUS PANEL -->
+  <div
+    id="system-status"
+    style="
+      margin:10px 18px;
+      padding:14px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid #242b3b;
+      border-radius:12px;
+      font-size:0.8rem;
+      line-height:1.4;
+    "
+  >
+    <div style="color:#00ff88; font-weight:600;">System Status</div>
+    <div id="sys-livehub">Live Hub: checking...</div>
+    <div id="sys-engines">Engines: checking...</div>
+    <div id="sys-version"></div>
   </div>
 
   <!-- LOADER -->
@@ -650,15 +598,6 @@
   <!-- SMARTMONEY PAGE -->
   <div id="smartmoney-page">
     <h2 class="section-title-main">SmartMoney Terminal</h2>
-
-    <!-- SmartMoney mini-summary (B2) -->
-    <div id="smartmoney-summary" class="info-box" style="display:none;">
-      <div class="mini-label">SmartMoney snapshot</div>
-      <div id="smartmoney-summary-text">
-        Αναμονή δεδομένων SmartMoney…
-      </div>
-    </div>
-
     <div id="smartmoney-loader">
       <div class="sm-row skeleton"></div>
       <div class="sm-row skeleton"></div>
@@ -670,24 +609,18 @@
   <!-- GOALMATRIX PAGE -->
   <div id="goalmatrix-page">
     <h2 class="section-title-main">GoalMatrix Analytics</h2>
-    <div class="info-box-small" id="goalmatrix-status-mini">
-      GoalMatrix engine status: checking…
-    </div>
     <div id="goalmatrix-container" class="gm-grid-placeholder">
-      GoalMatrix panel – θα συνδεθεί με τα πραγματικά patterns από τον
-      GoalMatrix Engine / Live Hub.
+      GoalMatrix panel – θα συνδεθεί με τα πραγματικά patterns από τον GoalMatrix
+      Engine / Live Hub.
     </div>
   </div>
 
   <!-- HEATMAP PAGE -->
   <div id="heatmap-page">
     <h2 class="section-title-main">Heatmap Analytics</h2>
-    <div class="info-box-small" id="heatmap-status-mini">
-      Heatmap engine status: checking…
-    </div>
     <div id="heatmap-container" class="hm-grid-placeholder">
-      Heatmap panel – θα συνδεθεί με τα live shot maps &amp; pressure
-      από τον Heatmap Engine / Live Hub.
+      Heatmap panel – θα συνδεθεί με τα live shot maps &amp; pressure από τον Heatmap
+      Engine / Live Hub.
     </div>
   </div>
 
@@ -709,7 +642,11 @@
   <div id="bottom-nav">
     <div class="nav-item active" data-tab="live">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
-        <path d="M2 12h20M12 2v20" stroke-width="2" stroke-linecap="round" />
+        <path
+          d="M2 12h20M12 2v20"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
       </svg>
       Live
     </div>
@@ -728,7 +665,14 @@
 
     <div class="nav-item" data-tab="goalmatrix">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="3" width="18" height="18" rx="3" stroke-width="2" />
+        <rect
+          x="3"
+          y="3"
+          width="18"
+          height="18"
+          rx="3"
+          stroke-width="2"
+        />
         <path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke-width="2" />
       </svg>
       Matrix
@@ -785,7 +729,6 @@
       return m.id || m.match_id || m.uid || m.mid || "m_" + idx;
     }
 
-    // -------- LIVE LOADING --------
     async function loadLive() {
       const loader = document.getElementById("loader");
       const container = document.getElementById("matches-container");
@@ -897,7 +840,6 @@
       });
     }
 
-    // -------- MATCH DETAIL + INSIGHTS (B5) --------
     function openMatchDetail(matchId, basicMatchData) {
       const overlay = document.getElementById("match-detail-overlay");
       overlay.style.display = "flex";
@@ -988,11 +930,7 @@
         "<div class='detail-section-title'>Timeline</div>" +
         "<ul class='event-list' id='detail-events-container'>" +
         "<li class='event-item-placeholder'>Γεγονότα αγώνα θα εμφανιστούν όταν είναι διαθέσιμα.</li>" +
-        "</ul>" +
-        "<div class='detail-section-title'>Match Insights</div>" +
-        "<div class='insights-box' id='detail-insights-box'>" +
-        "Insights θα εμφανιστούν όταν είναι διαθέσιμα." +
-        "</div>";
+        "</ul>";
     }
 
     async function loadMatchDetail(matchId, basicMatchData) {
@@ -1006,51 +944,8 @@
           (json.data && (json.data.merged || json.data)) || basicMatchData || {};
         renderMatchDetailFull(merged, basicMatchData);
       } catch (err) {
-        // skeleton ήδη φαίνεται
+        // skeleton already visible
       }
-    }
-
-    function buildMatchInsightsText(m) {
-      const home = m.home || m.home_team || m.team_home || "";
-      const away = m.away || m.away_team || m.team_away || "";
-      const sh =
-        m.score_home !== undefined && m.score_home !== null
-          ? m.score_home
-          : m.goals_home;
-      const sa =
-        m.score_away !== undefined && m.score_away !== null
-          ? m.score_away
-          : m.goals_away;
-      const minute = m.minute || m.time || "";
-      const oddsMain = m.odds || {};
-      const o1 = oddsMain.home || m.odds_1;
-      const ox = oddsMain.draw || m.odds_x;
-      const o2 = oddsMain.away || m.odds_2;
-
-      const parts = [];
-      if (minute) {
-        parts.push("Λεπτό " + minute + "'");
-      }
-      if (sh !== undefined && sh !== null && sa !== undefined && sa !== null) {
-        parts.push("Σκορ " + home + " " + sh + " - " + sa + " " + away);
-      }
-      if (o1 || ox || o2) {
-        const oddsLine = [
-          o1 ? "1: " + o1 : null,
-          ox ? "X: " + ox : null,
-          o2 ? "2: " + o2 : null,
-        ]
-          .filter(Boolean)
-          .join(" · ");
-        if (oddsLine) {
-          parts.push("Κύριες αποδόσεις " + oddsLine);
-        }
-      }
-
-      if (!parts.length) {
-        return "Insights μη διαθέσιμα προς το παρόν.";
-      }
-      return parts.join(" • ");
     }
 
     function renderMatchDetailFull(detail, fallbackBasic) {
@@ -1242,29 +1137,107 @@
       titleTime.textContent = "Timeline";
       sideCol.appendChild(titleTime);
       sideCol.appendChild(eventsContainer);
-
-      const insightsTitle = document.createElement("div");
-      insightsTitle.className = "detail-section-title";
-      insightsTitle.textContent = "Match Insights";
-      sideCol.appendChild(insightsTitle);
-
-      const insightsBox = document.createElement("div");
-      insightsBox.className = "insights-box";
-      insightsBox.id = "detail-insights-box";
-      insightsBox.textContent = buildMatchInsightsText(m);
-      sideCol.appendChild(insightsBox);
     }
 
-    // -------- SMARTMONEY (B2) --------
+    // -------- SYSTEM STATUS --------
+    async function systemStatusRefresh() {
+      try {
+        const res = await fetch("/api/system/health");
+        const json = await res.json();
+
+        if (!json.ok) {
+          document.getElementById("sys-livehub").textContent = "Live Hub: ERROR";
+          document.getElementById("sys-engines").textContent = "Engines: ERROR";
+          document.getElementById("sys-version").textContent =
+            "Version: unknown";
+          return;
+        }
+
+        // Live Hub
+        document.getElementById("sys-livehub").textContent =
+          "Live Hub: " + (json.live_hub ? "ON" : "OFF");
+
+        // Engines
+        const e = json.engines || {};
+        document.getElementById("sys-engines").textContent =
+          "Engines: hist=" +
+          (e.history ? "✓" : "✗") +
+          ", plan=" +
+          (e.matchplan ? "✓" : "✗") +
+          ", table=" +
+          (e.standings ? "✓" : "✗") +
+          ", sm=" +
+          (e.smartmoney ? "✓" : "✗") +
+          ", gm=" +
+          (e.goalmatrix ? "✓" : "✗") +
+          ", hm=" +
+          (e.heatmap ? "✓" : "✗");
+
+        // Version
+        document.getElementById("sys-version").textContent =
+          "Version: " + (json.version || "unknown");
+      } catch (err) {
+        document.getElementById("sys-livehub").textContent = "Live Hub: ERROR";
+        document.getElementById("sys-engines").textContent = "Engines: ERROR";
+        document.getElementById("sys-version").textContent =
+          "Version: unknown";
+      }
+    }
+
+    // DOM READY
+    document.addEventListener("DOMContentLoaded", function () {
+      // initial system status
+      systemStatusRefresh();
+      setInterval(systemStatusRefresh, 15000);
+
+      // default page
+      showPage("live");
+      loadLive();
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = setInterval(loadLive, 25000);
+
+      // bottom nav
+      const navItems = document.querySelectorAll(".nav-item");
+      navItems.forEach(function (item) {
+        item.addEventListener("click", function () {
+          navItems.forEach(function (i) {
+            i.classList.remove("active");
+          });
+          item.classList.add("active");
+          const tab = item.getAttribute("data-tab");
+
+          if (tab === "live") {
+            showPage("live");
+            loadLive();
+          } else if (tab === "smartmoney") {
+            showPage("smartmoney");
+            loadSmartMoney();
+          } else if (tab === "goalmatrix") {
+            showPage("goalmatrix");
+          } else if (tab === "heatmap") {
+            showPage("heatmap");
+          } else if (tab === "settings") {
+            alert("Ρυθμίσεις / Theme toggle θα προστεθούν σε επόμενο βήμα.");
+          }
+        });
+      });
+
+      // service worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/static/sw.js")
+          .catch(function (err) {
+            console.log("SW registration failed", err);
+          });
+      }
+    });
+
+    // SMARTMONEY
     async function loadSmartMoney() {
       const loader = document.getElementById("smartmoney-loader");
       const table = document.getElementById("smartmoney-table");
-      const summaryBox = document.getElementById("smartmoney-summary");
-      const summaryText = document.getElementById("smartmoney-summary-text");
-
       loader.style.display = "block";
       table.innerHTML = "";
-      summaryBox.style.display = "none";
 
       try {
         const res = await fetch("/api/smartmoney/overview");
@@ -1284,42 +1257,7 @@
           return;
         }
 
-        // render πίνακα
         renderSmartMoney(rows);
-
-        // mini summary
-        let top = null;
-        rows.forEach(function (item) {
-          const v = Math.abs(item.change_percent || 0);
-          if (!top || v > Math.abs(top.change_percent || 0)) {
-            top = item;
-          }
-        });
-
-        if (top) {
-          const home = top.home || top.team_home || "";
-          const away = top.away || top.team_away || "";
-          const movement = top.movement || "→";
-          const change = top.change_percent || 0;
-          const lastOdds = top.last_odds || "-";
-          const lastUpdate = top.last_update || "--";
-
-          summaryText.textContent =
-            "Top move: " +
-            home +
-            " vs " +
-            away +
-            " (" +
-            movement +
-            " " +
-            change +
-            "%, odds " +
-            lastOdds +
-            ", last update " +
-            lastUpdate +
-            ").";
-          summaryBox.style.display = "block";
-        }
       } catch (err) {
         loader.style.display = "none";
         table.innerHTML =
@@ -1378,113 +1316,6 @@
         table.appendChild(row);
       });
     }
-
-    // -------- SYSTEM STATUS REFRESH (B1 + B3 + B4) --------
-    async function systemStatusRefresh() {
-      try {
-        const res = await fetch("/api/system/health");
-        const json = await res.json();
-
-        if (!json.ok) {
-          document.getElementById("sys-livehub").textContent =
-            "Live Hub: ERROR";
-          document.getElementById("sys-engines").textContent =
-            "Engines: ERROR";
-          return;
-        }
-
-        // Live Hub
-        document.getElementById("sys-livehub").textContent =
-          "Live Hub: " + (json.live_hub ? "ON" : "OFF");
-
-        // Engines
-        const e = json.engines || {};
-        document.getElementById("sys-engines").textContent =
-          "Engines: hist= " +
-          (e.history ? "✓" : "✕") +
-          ", plan= " +
-          (e.matchplan ? "✓" : "✕") +
-          ", table= " +
-          (e.standings ? "✓" : "✕") +
-          ", sm= " +
-          (e.smartmoney ? "✓" : "✕") +
-          ", gm= " +
-          (e.goalmatrix ? "✓" : "✕") +
-          ", hm= " +
-          (e.heatmap ? "✓" : "✕");
-
-        // Version
-        document.getElementById("sys-version").textContent =
-          "Version: " + (json.version || "unknown");
-
-        // Mini engine tags (GoalMatrix / Heatmap)
-        const gmMini = document.getElementById("goalmatrix-status-mini");
-        if (gmMini) {
-          gmMini.textContent =
-            "GoalMatrix engine status: " + (e.goalmatrix ? "ON" : "OFF");
-        }
-        const hmMini = document.getElementById("heatmap-status-mini");
-        if (hmMini) {
-          hmMini.textContent =
-            "Heatmap engine status: " + (e.heatmap ? "ON" : "OFF");
-        }
-      } catch (err) {
-        document.getElementById("sys-livehub").textContent =
-          "Live Hub: ERROR";
-        document.getElementById("sys-engines").textContent =
-          "Engines: ERROR";
-      }
-    }
-
-    // -------- DOM READY --------
-    document.addEventListener("DOMContentLoaded", function () {
-      // αρχικό system status
-      systemStatusRefresh();
-      setInterval(systemStatusRefresh, 15000);
-
-      // default page
-      showPage("live");
-      loadLive();
-      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-      autoRefreshTimer = setInterval(loadLive, 25000);
-
-      // bottom nav
-      const navItems = document.querySelectorAll(".nav-item");
-      navItems.forEach(function (item) {
-        item.addEventListener("click", function () {
-          navItems.forEach(function (i) {
-            i.classList.remove("active");
-          });
-          item.classList.add("active");
-          const tab = item.getAttribute("data-tab");
-
-          if (tab === "live") {
-            showPage("live");
-            loadLive();
-          } else if (tab === "smartmoney") {
-            showPage("smartmoney");
-            loadSmartMoney();
-          } else if (tab === "goalmatrix") {
-            showPage("goalmatrix");
-          } else if (tab === "heatmap") {
-            showPage("heatmap");
-          } else if (tab === "settings") {
-            alert(
-              "Ρυθμίσεις / Theme toggle θα προστεθούν σε επόμενο βήμα."
-            );
-          }
-        });
-      });
-
-      // service worker
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .register("/static/sw.js")
-          .catch(function (err) {
-            console.log("SW registration failed", err);
-          });
-      }
-    });
   </script>
 </body>
 </html>
