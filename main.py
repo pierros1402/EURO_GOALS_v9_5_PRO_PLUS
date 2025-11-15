@@ -1,5 +1,5 @@
 # ============================================================
-# AI MatchLab — UNIFIED REALDATA MAIN APPLICATION (v9.9.0)
+# AI MatchLab v1.0.0 — EURO_GOALS PRO+ UNIFIED REALDATA MAIN
 # ============================================================
 
 from fastapi import FastAPI, Request
@@ -12,7 +12,6 @@ import os
 import sys
 import time
 import json
-import logging
 import datetime as dt
 from typing import Optional, Dict, Any
 
@@ -22,26 +21,26 @@ try:
 except ImportError:
     httpx = None
 
-print("=== [AI MATCHLAB] v9.9.0 — UNIFIED REALDATA MAIN ACTIVE ===")
-
 # ------------------------------------------------------------
-# SYSTEM PATH FIX
+# LOCAL IMPORTS (CONFIG)
 # ------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
-# ------------------------------------------------------------
-# LOGGING
-# ------------------------------------------------------------
-logging.basicConfig(
-    level=logging.INFO,
-    format="[AI_MATCHLAB] %(asctime)s | %(levelname)s | %(message)s",
+from config import (
+    APP_NAME,
+    APP_VERSION,
+    APP_ENV,
+    LIVE_HUB_URL,
+    LIVE_HUB_TIMEOUT,
+    logger,
 )
-logger = logging.getLogger("ai_matchlab")
+
+print(f"=== [{APP_NAME}] {APP_VERSION} ACTIVE ===")
 
 # ------------------------------------------------------------
-# IMPORT ENGINES (safe fallbacks)
+# IMPORT ENGINES (safe fallbacks from services/)
 # ------------------------------------------------------------
 history_engine = None
 matchplan_engine = None
@@ -93,26 +92,12 @@ except Exception:
     logger.warning("heatmap_engine missing")
 
 # ------------------------------------------------------------
-# ENVIRONMENT CONFIG
-# ------------------------------------------------------------
-# Κρατάμε τα ίδια env var names για συμβατότητα με Render
-APP_NAME = "AI MatchLab"
-APP_VERSION = os.getenv(
-    "APP_VERSION",
-    "AI MatchLab · EURO_GOALS PRO+ v9.9.0 — Unified RealData"
-)
-APP_ENV = os.getenv("EUROGOALS_ENV", "production")
-
-LIVE_HUB_URL = os.getenv("EUROGOALS_LIVE_HUB_URL", "").strip()
-LIVE_HUB_TIMEOUT = float(os.getenv("EUROGOALS_LIVE_HUB_TIMEOUT", "4.0"))
-
-# ------------------------------------------------------------
 # FASTAPI APP
 # ------------------------------------------------------------
 app = FastAPI(
-    title=f"{APP_NAME} — Unified Live Hub",
-    version="9.9.0",
-    description="AI MatchLab — unified real-time European football intelligence hub",
+    title=f"{APP_NAME} — EURO_GOALS PRO+ Unified Hub",
+    version="1.0.0",
+    description="Unified real-time European football data platform (AI MatchLab / EURO_GOALS PRO+).",
 )
 
 app.mount(
@@ -133,12 +118,10 @@ async def startup_event():
         app.state.http = None
     else:
         app.state.http = httpx.AsyncClient(timeout=LIVE_HUB_TIMEOUT)
-        logger.info("Live Hub client ready")
-
-    logger.info(
-        f"App version: {APP_VERSION} | Env: {APP_ENV} | LiveHub URL set: {bool(LIVE_HUB_URL)}"
-    )
-
+        if LIVE_HUB_URL:
+            logger.info(f"Live Hub client ready → {LIVE_HUB_URL}")
+        else:
+            logger.warning("Live Hub URL is empty; live endpoints will return not_configured")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -153,6 +136,10 @@ async def shutdown_event():
 # LIVE HUB CALLER
 # ------------------------------------------------------------
 async def call_live_hub(path: str, params: Optional[Dict[str, Any]] = None):
+    """
+    Generic proxy προς Live Hub (Betfair/feeds/κλπ),
+    χωρίς να φαίνεται το όνομα του provider στο UI.
+    """
     if not LIVE_HUB_URL:
         return {"ok": False, "error": "live_hub_not_configured", "data": None}
 
@@ -171,7 +158,7 @@ async def call_live_hub(path: str, params: Optional[Dict[str, Any]] = None):
             data = {"raw": r.text}
         return {"ok": True, "data": data}
     except Exception as e:
-        logger.warning(f"[LiveHub] {e}")
+        logger.warning(f"[LiveHub] request failed: {e}")
         return {
             "ok": False,
             "error": "request_failed",
@@ -184,6 +171,9 @@ async def call_live_hub(path: str, params: Optional[Dict[str, Any]] = None):
 # ------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    """
+    Κεντρικό UI (index.html) — AI MatchLab live dashboard.
+    """
     return templates.TemplateResponse(
         "index.html",
         {
@@ -200,14 +190,19 @@ async def index(request: Request):
 # ------------------------------------------------------------
 @app.get("/health", response_class=JSONResponse)
 async def health():
-    return {"ok": True, "status": "alive", "version": APP_VERSION}
-
+    return {
+        "ok": True,
+        "status": "alive",
+        "version": APP_VERSION,
+        "env": APP_ENV,
+    }
 
 @app.get("/api/system/health", response_class=JSONResponse)
 async def system_health():
     return {
         "ok": True,
         "version": APP_VERSION,
+        "env": APP_ENV,
         "live_hub": bool(LIVE_HUB_URL),
         "engines": {
             "history": bool(history_engine),
@@ -227,7 +222,6 @@ async def live_overview(league: Optional[str] = None):
     params = {"league": league} if league else None
     return await call_live_hub("live/overview", params)
 
-
 @app.get("/api/live/match/{match_id}", response_class=JSONResponse)
 async def live_match(match_id: str):
     return await call_live_hub(f"live/match/{match_id}")
@@ -241,15 +235,20 @@ async def history(competition: str):
         return {"ok": False, "error": "history_engine_missing"}
 
     try:
-        if asyncio.iscoroutinefunction(history_engine.get_competition_history):
-            data = await history_engine.get_competition_history(competition)
+        fn = getattr(history_engine, "get_competition_history", None)
+        if fn is None:
+            return {"ok": False, "error": "get_competition_history_not_found"}
+
+        if asyncio.iscoroutinefunction(fn):
+            data = await fn(competition)
         else:
             loop = asyncio.get_running_loop()
             data = await loop.run_in_executor(
-                None, history_engine.get_competition_history, competition
+                None, fn, competition
             )
         return {"ok": True, "data": data}
     except Exception as e:
+        logger.exception("history endpoint failed")
         return {"ok": False, "error": str(e)}
 
 # ------------------------------------------------------------
@@ -262,6 +261,9 @@ async def matchplan_today():
 
     try:
         fn = getattr(matchplan_engine, "get_today_matchplan", None)
+        if fn is None:
+            return {"ok": False, "error": "get_today_matchplan_not_found"}
+
         if asyncio.iscoroutinefunction(fn):
             data = await fn()
         else:
@@ -269,6 +271,7 @@ async def matchplan_today():
             data = await loop.run_in_executor(None, fn)
         return {"ok": True, "data": data}
     except Exception as e:
+        logger.exception("matchplan endpoint failed")
         return {"ok": False, "error": str(e)}
 
 # ------------------------------------------------------------
@@ -278,8 +281,12 @@ async def matchplan_today():
 async def standings(league: str):
     if not standings_engine:
         return {"ok": False, "error": "standings_engine_missing"}
+
     try:
         fn = getattr(standings_engine, "get_standings", None)
+        if fn is None:
+            return {"ok": False, "error": "get_standings_not_found"}
+
         if asyncio.iscoroutinefunction(fn):
             data = await fn(league)
         else:
@@ -287,6 +294,7 @@ async def standings(league: str):
             data = await loop.run_in_executor(None, fn, league)
         return {"ok": True, "data": data}
     except Exception as e:
+        logger.exception("standings endpoint failed")
         return {"ok": False, "error": str(e)}
 
 # ------------------------------------------------------------
@@ -299,6 +307,9 @@ async def smartmoney():
 
     try:
         fn = getattr(smartmoney_engine, "get_overview", None)
+        if fn is None:
+            return {"ok": False, "error": "get_overview_not_found"}
+
         if asyncio.iscoroutinefunction(fn):
             data = await fn()
         else:
@@ -306,6 +317,7 @@ async def smartmoney():
             data = await loop.run_in_executor(None, fn)
         return {"ok": True, "data": data}
     except Exception as e:
+        logger.exception("smartmoney endpoint failed")
         return {"ok": False, "error": str(e)}
 
 # ------------------------------------------------------------
@@ -318,6 +330,9 @@ async def goalmatrix():
 
     try:
         fn = getattr(goalmatrix_engine, "get_overview", None)
+        if fn is None:
+            return {"ok": False, "error": "get_overview_not_found"}
+
         if asyncio.iscoroutinefunction(fn):
             data = await fn()
         else:
@@ -325,6 +340,7 @@ async def goalmatrix():
             data = await loop.run_in_executor(None, fn)
         return {"ok": True, "data": data}
     except Exception as e:
+        logger.exception("goalmatrix endpoint failed")
         return {"ok": False, "error": str(e)}
 
 # ------------------------------------------------------------
@@ -337,6 +353,9 @@ async def heatmap():
 
     try:
         fn = getattr(heatmap_engine, "get_overview", None)
+        if fn is None:
+            return {"ok": False, "error": "get_overview_not_found"}
+
         if asyncio.iscoroutinefunction(fn):
             data = await fn()
         else:
@@ -344,4 +363,5 @@ async def heatmap():
             data = await loop.run_in_executor(None, fn)
         return {"ok": True, "data": data}
     except Exception as e:
+        logger.exception("heatmap endpoint failed")
         return {"ok": False, "error": str(e)}
