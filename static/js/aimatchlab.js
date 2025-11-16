@@ -1,231 +1,294 @@
 // ============================================================================
-// AI MATCHLAB v0.9.0 BETA — FULL FRONTEND ENGINE
-// EXTENDED EDITION — COMPLETE FILE
+// AI MATCHLAB v0.9.2 HYBRID PRO — FRONTEND ENGINE
+// Compatible with AI MATCHLAB LIVE WORKER A2-FINAL-v3
 // ============================================================================
 
-console.log("🚀 AI MatchLab v0.9.0 BETA — FULL EXTENDED EDITION LOADED");
+console.log("🚀 AI MatchLab v0.9.2 HYBRID PRO loaded");
 
-// ============================================================================
-// GLOBAL CONFIG
-// ============================================================================
-const WORKER_BASE = "/api";
-const VERSION = "0.9.0";
-const REFRESH_INTERVAL = 20000;   // 20s auto-refresh
-let lastMatrixHash = null;
+// ---------------------------------------------------------------------------
+// CONFIG
+// ---------------------------------------------------------------------------
 
+const WORKER_BASE = "https://ai-matchlab-live-proxy.pierros1402.workers.dev/api";
+const REFRESH_MS = 8000; // auto-refresh κάθε 8 δευτερόλεπτα
 
-// ============================================================================
-// UTILS
-// ============================================================================
-function safeJSON(text) {
+const statusBar = document.getElementById("statusBar");
+const liveContainer = document.getElementById("liveContainer");
+const debugPanel = document.getElementById("debugPanel");
+const refreshBtn = document.getElementById("refreshBtn");
+
+// ---------------------------------------------------------------------------
+// HELPERS
+// ---------------------------------------------------------------------------
+
+async function fetchJSON(url) {
     try {
-        return JSON.parse(text);
-    } catch (e) {
-        console.warn("JSON parse error:", e);
-        return { error: "json_parse_error" };
-    }
-}
-
-function hashObject(obj) {
-    return btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
-}
-
-
-// ============================================================================
-// UPDATE-DETECTION LOGIC
-// ============================================================================
-async function checkVersion() {
-    try {
-        const res = await fetch(`${WORKER_BASE}/status`, { cache: "no-store" });
-        const data = await res.json();
-
-        if (data.version && data.version !== VERSION) {
-            showUpdateBanner(data.version);
-        }
-    } catch (e) {
-        console.warn("version check failed", e);
-    }
-}
-
-function showUpdateBanner(v) {
-    const div = document.createElement("div");
-    div.style.cssText = `
-        position: fixed; bottom: 0; left: 0; right: 0;
-        background: #ffb300; padding: 14px; color: #000;
-        font-weight: bold; text-align:center;
-        z-index: 9999; cursor:pointer;
-    `;
-    div.innerText = `New version available (${v}) — TAP TO UPDATE`;
-    div.onclick = () => location.reload();
-    document.body.appendChild(div);
-}
-
-
-// ============================================================================
-// INSTALLATION LOGIC (PWA)
-// ============================================================================
-let deferredPrompt = null;
-
-window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById("installBanner").style.display = "block";
-});
-
-document.getElementById("installBtn").addEventListener("click", async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    document.getElementById("installBanner").style.display = "none";
-});
-
-
-// ============================================================================
-// MAIN LIVE MATRIX FETCHER
-// ============================================================================
-async function loadLiveMatrix() {
-    const debug = document.getElementById("debugPanel");
-    debug.innerText = "Fetching /matrix…";
-
-    try {
-        const t0 = performance.now();
-        const res = await fetch(`${WORKER_BASE}/matrix`, { cache: "no-store" });
-
+        const res = await fetch(url, { cache: "no-store" });
         const text = await res.text();
-        const data = safeJSON(text);
-
-        const latency = (performance.now() - t0).toFixed(0);
-
-        // hash compare — avoid useless re-render
-        const newHash = hashObject(data);
-        if (lastMatrixHash === newHash) {
-            debug.innerText =
-                `No changes • Latency ${latency}ms • ${new Date().toLocaleTimeString()}`;
-            return;
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            return { _parseError: true, raw: text, message: e.toString() };
         }
-
-        lastMatrixHash = newHash;
-        updateLiveUI(data);
-        updateDebug(data, latency);
-
     } catch (err) {
-        debug.innerText = "ERROR: " + err;
-        console.error("Matrix error:", err);
+        return { _fetchError: true, message: err.toString() };
     }
 }
 
+function safeGet(obj, path, fallback = null) {
+    try {
+        return path.split(".").reduce((acc, k) => (acc && acc[k] !== undefined ? acc[k] : null), obj) ?? fallback;
+    } catch {
+        return fallback;
+    }
+}
 
-// ============================================================================
-// UI RENDERER — LIVE MATRIX
-// ============================================================================
-function updateLiveUI(data) {
-    const container = document.getElementById("liveContainer");
-    container.innerHTML = "";
+// ---------------------------------------------------------------------------
+// STATUS HANDLING (/api/status)
+// ---------------------------------------------------------------------------
 
-    if (!data || !Array.isArray(data.matches)) {
-        container.innerHTML = "<p>No live matches.</p>";
+async function updateStatus() {
+    const url = `${WORKER_BASE}/status`;
+    const data = await fetchJSON(url);
+
+    if (data._fetchError || data._parseError) {
+        statusBar.textContent = "Worker status: OFFLINE or INVALID RESPONSE";
+        statusBar.style.color = "#ff6b6b";
+        return data;
+    }
+
+    const version = data.version || data.workerVersion || "unknown";
+    const ts = data.timestamp || new Date().toISOString();
+
+    statusBar.textContent = `Worker status: OK • Version: ${version} • ${ts}`;
+    statusBar.style.color = "#9ae66e";
+
+    return data;
+}
+
+// ---------------------------------------------------------------------------
+// LIVE HANDLING (/api/live)
+// ---------------------------------------------------------------------------
+
+async function fetchLiveRaw() {
+    const url = `${WORKER_BASE}/live`;
+    return await fetchJSON(url);
+}
+
+// Προσπαθούμε να "νορμαλάρουμε" Sofascore-style live δομή σε απλές κάρτες
+function normalizeLiveData(raw) {
+    if (!raw) return { matches: [], raw };
+
+    // Sofascore συνήθως έχει raw.events ή raw.data.events
+    let events = null;
+
+    if (Array.isArray(raw.events)) {
+        events = raw.events;
+    } else if (Array.isArray(safeGet(raw, "data.events"))) {
+        events = safeGet(raw, "data.events");
+    } else if (Array.isArray(raw.data)) {
+        events = raw.data;
+    } else if (Array.isArray(raw.matches)) {
+        events = raw.matches;
+    }
+
+    if (!events) {
+        return { matches: [], raw };
+    }
+
+    const matches = events.map(ev => {
+        // Προσπαθούμε να χαρτογραφήσουμε τυπική Sofascore δομή
+        const homeName =
+            safeGet(ev, "homeTeam.name") ||
+            safeGet(ev, "home.name") ||
+            safeGet(ev, "homeTeam.shortName") ||
+            "Home";
+
+        const awayName =
+            safeGet(ev, "awayTeam.name") ||
+            safeGet(ev, "away.name") ||
+            safeGet(ev, "awayTeam.shortName") ||
+            "Away";
+
+        const homeScore =
+            safeGet(ev, "homeScore.display") ??
+            safeGet(ev, "homeScore.current") ??
+            safeGet(ev, "homeScore.normaltime") ??
+            safeGet(ev, "homeScore", 0);
+
+        const awayScore =
+            safeGet(ev, "awayScore.display") ??
+            safeGet(ev, "awayScore.current") ??
+            safeGet(ev, "awayScore.normaltime") ??
+            safeGet(ev, "awayScore", 0);
+
+        const statusType =
+            safeGet(ev, "status.type") ||
+            safeGet(ev, "status.description") ||
+            safeGet(ev, "status") ||
+            "UNKNOWN";
+
+        const minute =
+            safeGet(ev, "time.minute") ??
+            safeGet(ev, "time.currentPeriodStartMinute") ??
+            safeGet(ev, "time", null);
+
+        const tournament =
+            safeGet(ev, "tournament.name") ||
+            safeGet(ev, "league.name") ||
+            null;
+
+        const categoryName =
+            safeGet(ev, "tournament.category.name") ||
+            safeGet(ev, "league.country") ||
+            null;
+
+        const id =
+            safeGet(ev, "id") ||
+            safeGet(ev, "matchId") ||
+            safeGet(ev, "eventId") ||
+            null;
+
+        // Placeholder advanced fields (ακόμα δεν τα δίνει ο Worker)
+        const placeholders = {
+            xgHome: "—",
+            xgAway: "—",
+            momentum: "—",
+            pressure: "—"
+        };
+
+        return {
+            id,
+            home: homeName,
+            away: awayName,
+            score: `${homeScore} - ${awayScore}`,
+            status: statusType,
+            minute: minute ?? "—",
+            league: tournament,
+            country: categoryName,
+            placeholders,
+            raw: ev
+        };
+    });
+
+    return { matches, raw };
+}
+
+// ---------------------------------------------------------------------------
+// RENDER LIVE UI
+// ---------------------------------------------------------------------------
+
+function renderLive(matches) {
+    liveContainer.innerHTML = "";
+
+    if (!matches || matches.length === 0) {
+        liveContainer.innerHTML = `<div>No live matches available.</div>`;
         return;
     }
 
-    data.matches.forEach((m) => {
+    matches.forEach(m => {
         const card = document.createElement("div");
         card.className = "matchCard";
 
-        const color = m.status === "LIVE" ? "#0f0" : "#ccc";
+        const statusColor =
+            m.status === "inprogress" ||
+            m.status === "LIVE" ||
+            m.status === "live"
+                ? "#4ade80"
+                : m.status === "finished" || m.status === "FT"
+                ? "#60a5fa"
+                : "#e5e5e5";
+
+        const leagueInfo = m.league
+            ? `${m.league}${m.country ? " • " + m.country : ""}`
+            : (m.country || "");
 
         card.innerHTML = `
-            <div style="font-size:16px; font-weight:700; color:${color}">
+            <div class="matchHeader">
                 ${m.home} vs ${m.away}
             </div>
-
-            <div>Status: ${m.status}</div>
-            <div>Score: ${m.score}</div>
-            <div>Minute: ${m.minute}'</div>
-
-            <div style="margin-top:6px; opacity:0.7">
-                xG Home: ${m.xg_home} • xG Away: ${m.xg_away}
+            <div class="subInfo">
+                <span style="color:${statusColor};font-weight:bold;">${m.status}</span>
+                &nbsp;•&nbsp;
+                Min: ${m.minute}
+                &nbsp;•&nbsp;
+                Score: ${m.score}
             </div>
-
-            <div style="margin-top:6px; opacity:0.7">
-                Momentum: ${m.momentum}
+            ${
+                leagueInfo
+                    ? `<div class="subInfo" style="margin-top:4px;">${leagueInfo}</div>`
+                    : ""
+            }
+            <div class="placeholderArea">
+                <div>Advanced metrics (placeholders):</div>
+                <div>xG Home: ${m.placeholders.xgHome} • xG Away: ${m.placeholders.xgAway}</div>
+                <div>Momentum: ${m.placeholders.momentum} • Pressure: ${m.placeholders.pressure}</div>
             </div>
-
-            <div style="margin-top:6px; opacity:0.7">
-                Pressure Index: ${m.pressure}
-            </div>
+            <button class="inspectBtn">Inspect</button>
+            <div class="inspectorBox"></div>
         `;
 
-        card.onclick = () => openInspector(m);
-        container.appendChild(card);
+        const btn = card.querySelector(".inspectBtn");
+        const inspectorBox = card.querySelector(".inspectorBox");
+
+        btn.addEventListener("click", () => {
+            if (inspectorBox.style.display === "block") {
+                inspectorBox.style.display = "none";
+                inspectorBox.textContent = "";
+            } else {
+                inspectorBox.style.display = "block";
+                inspectorBox.textContent = JSON.stringify(m.raw, null, 2);
+            }
+        });
+
+        liveContainer.appendChild(card);
     });
 }
 
+// ---------------------------------------------------------------------------
+// DEBUG PANEL
+// ---------------------------------------------------------------------------
 
-// ============================================================================
-// MATCH INSPECTOR (DETAILED VIEW)
-// ============================================================================
-function openInspector(m) {
-    const div = document.createElement("div");
-    div.style.cssText = `
-        position: fixed; top:0; left:0; right:0; bottom:0;
-        background:#000; padding:20px; overflow-y:auto;
-        z-index:99999; color:#fff;
-    `;
-
-    div.innerHTML = `
-        <h2>${m.home} vs ${m.away}</h2>
-        <p><b>Status:</b> ${m.status}</p>
-        <p><b>Score:</b> ${m.score}</p>
-        <p><b>Minute:</b> ${m.minute}'</p>
-
-        <h3>Advanced Stats</h3>
-        <p>xG Home: ${m.xg_home}</p>
-        <p>xG Away: ${m.xg_away}</p>
-        <p>Momentum: ${m.momentum}</p>
-        <p>Pressure: ${m.pressure}</p>
-        <p>Attack Rate: ${m.attack_rate}</p>
-
-        <button id="closeInspector" style="
-            padding:10px 16px; margin-top:20px; background:#f00; color:#fff;
-            border:none; border-radius:6px; cursor:pointer;
-        ">Close</button>
-    `;
-
-    div.querySelector("#closeInspector").onclick = () => div.remove();
-    document.body.appendChild(div);
+function renderDebug(payload) {
+    try {
+        debugPanel.textContent = JSON.stringify(payload, null, 2);
+    } catch {
+        debugPanel.textContent = "Unable to render debug info.";
+    }
 }
 
+// ---------------------------------------------------------------------------
+// MAIN REFRESH LOOP
+// ---------------------------------------------------------------------------
 
-// ============================================================================
-// DEBUG PANEL UPDATE
-// ============================================================================
-function updateDebug(data, latency) {
-    const debug = document.getElementById("debugPanel");
+async function refreshAll() {
+    const [statusData, liveRaw] = await Promise.all([
+        updateStatus(),
+        fetchLiveRaw()
+    ]);
 
-    debug.innerText =
-        "Last update: " + new Date().toLocaleTimeString() +
-        "\nMatches: " + (data.matches ? data.matches.length : 0) +
-        "\nWorker Status: " + (data.status || "n/a") +
-        "\nWorker Latency: " + latency + "ms" +
-        "\nVersion: " + VERSION +
-        "\nHash: " + lastMatrixHash +
-        "\n" + (data.debug ? JSON.stringify(data.debug, null, 2) : "");
+    const normalized = normalizeLiveData(liveRaw);
+
+    renderLive(normalized.matches);
+
+    renderDebug({
+        status: statusData,
+        liveRaw: liveRaw,
+        normalizedPreview: normalized.matches.slice(0, 5)
+    });
 }
 
+// ---------------------------------------------------------------------------
+// EVENT LISTENERS
+// ---------------------------------------------------------------------------
 
-// ============================================================================
-// AUTO-REFRESH + VERSION CHECK
-// ============================================================================
-setInterval(() => {
-    loadLiveMatrix();
-    checkVersion();
-}, REFRESH_INTERVAL);
+refreshBtn.addEventListener("click", () => {
+    refreshAll();
+});
 
+// ---------------------------------------------------------------------------
+// AUTO-REFRESH START
+// ---------------------------------------------------------------------------
 
-// ============================================================================
-// FIRST LOAD
-// ============================================================================
-checkVersion();
-loadLiveMatrix();
-
+refreshAll();
+setInterval(refreshAll, REFRESH_MS);
