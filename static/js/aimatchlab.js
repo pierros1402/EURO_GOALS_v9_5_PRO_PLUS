@@ -72,19 +72,22 @@ themeToggleBtn.addEventListener("click", () => {
 window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    installBtn.style.display = "inline-flex";
+    console.log("[AIML] beforeinstallprompt captured");
 });
 
+// ΠΑΝΤΑ ΟΡΑΤΟ ΚΟΥΜΠΙ – αν δεν υπάρχει prompt, δείχνει οδηγίες
 installBtn.addEventListener("click", async () => {
     if (deferredPrompt) {
         deferredPrompt.prompt();
         const choice = await deferredPrompt.userChoice;
         console.log("[AIML] Install choice:", choice.outcome);
         deferredPrompt = null;
-        installBtn.style.display = "none";
     } else {
-        // iOS or unsupported: show simple instructions
-        alert("To install AI MatchLab:\n\nOn iOS: Share → 'Add to Home Screen'\nOn Android: Use browser menu → 'Install app'.");
+        alert(
+            "To install AI MatchLab:\n\n" +
+            "• Σε iOS: Share → 'Add to Home Screen'\n" +
+            "• Σε Android: Menu → 'Install app' ή 'Add to Home screen'."
+        );
     }
 });
 
@@ -143,7 +146,6 @@ async function loadStatus() {
 function extractMatches(raw) {
     if (!raw) return [];
 
-    // If backend already normalized
     if (Array.isArray(raw.normalizedPreview)) {
         return raw.normalizedPreview;
     }
@@ -263,7 +265,6 @@ function renderMatches(filter) {
         const card = document.createElement("div");
         card.className = "aiml-match-card";
 
-        // goal flash detection
         const key = m.id || `${m.home}-${m.away}`;
         const prevScore = lastScoreMap.get(key);
         if (prevScore && prevScore !== m.score && m.bucket === "live") {
