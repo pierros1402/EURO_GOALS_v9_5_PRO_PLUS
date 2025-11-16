@@ -1,5 +1,5 @@
 // =======================================================
-// AI MATCHLAB Frontend Engine – PREMIUM PACK v0.9.3
+// AI MATCHLAB Frontend Engine – PREMIUM PACK v9.9.3
 // =======================================================
 
 const API_STATUS = "/ai/status";
@@ -413,5 +413,5 @@ setInterval(() => {
 
     refreshAll();
 
-    console.log("[AIML] Premium engine initialised v0.9.3.");
+    console.log("[AIML] Premium engine initialised v9.9.3.");
 })();
