@@ -29,7 +29,7 @@ WORKER_URL = os.getenv(
 # ============================================================
 app = FastAPI(title="AI MATCHLAB Backend")
 
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates_matchlab"))
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
 
