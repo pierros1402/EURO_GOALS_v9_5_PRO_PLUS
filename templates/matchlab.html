@@ -10,6 +10,11 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#050815" />
 
+    <!-- iOS fullscreen -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AI MatchLab" />
+
     <!-- Icons -->
     <link rel="apple-touch-icon" href="/static/icons/aimatchlab_192.png" />
     <link rel="apple-touch-icon" href="/static/icons/aimatchlab_512.png" />
@@ -20,41 +25,58 @@
 </head>
 <body class="aiml-body">
 
-    <!-- TOP BAR -->
+    <!-- HEADER -->
     <header class="aiml-header">
-        <div class="aiml-logo-title">
+        <div class="aiml-header-left">
             <div class="aiml-logo-circle">AI</div>
             <div class="aiml-title-block">
                 <div class="aiml-title">AI MATCHLAB</div>
                 <div class="aiml-subtitle">Advanced Live Intelligence Engine</div>
             </div>
+
+            <div class="aiml-header-badges">
+                <span class="aiml-badge env">ENV: DEVELOPMENT</span>
+                <span class="aiml-badge version">v0.9.3 PREMIUM</span>
+            </div>
         </div>
 
-        <div class="aiml-header-badges">
-            <span class="aiml-badge env">ENV: DEVELOPMENT</span>
-            <span class="aiml-badge version">v0.9.3 PREMIUM</span>
-            <button id="refreshBtn" class="aiml-refresh-btn">⟳ Refresh now</button>
+        <div class="aiml-header-right">
+            <button id="themeToggleBtn" class="aiml-header-btn aiml-theme-btn" title="Change theme">
+                🎨 Theme
+            </button>
+            <button id="installBtn" class="aiml-header-btn aiml-install-btn" style="display:none;">
+                ⬇ Install
+            </button>
+            <button id="refreshBtn" class="aiml-header-btn aiml-refresh-btn">
+                ⟳ Refresh now
+            </button>
         </div>
     </header>
 
-    <!-- STATUS SUMMARY BAR -->
+    <!-- SUMMARY BAR -->
     <section class="aiml-summary-bar">
-        <div class="aiml-summary-card" id="backendSummary">
+        <div class="aiml-summary-card">
             <div class="aiml-summary-label">BACKEND</div>
-            <div class="aiml-summary-value aiml-summary-ok">Online</div>
+            <div id="backendStatusValue" class="aiml-summary-value aiml-summary-ok">Online</div>
             <div class="aiml-summary-caption">FastAPI core status</div>
         </div>
 
-        <div class="aiml-summary-card" id="workerSummary">
+        <div class="aiml-summary-card">
             <div class="aiml-summary-label">WORKER</div>
-            <div class="aiml-summary-value aiml-summary-issue" id="workerStatusChip">Checking…</div>
-            <div class="aiml-summary-caption" id="workerSummaryCaption">Matching engine</div>
+            <div id="workerStatusValue" class="aiml-summary-value aiml-summary-issue">Checking…</div>
+            <div id="workerSummaryCaption" class="aiml-summary-caption">
+                Matching engine
+            </div>
         </div>
 
-        <div class="aiml-summary-card" id="feedSummary">
+        <div class="aiml-summary-card">
             <div class="aiml-summary-label">LIVE FEED</div>
-            <div class="aiml-summary-value aiml-summary-issue" id="feedStatusChip">No data</div>
-            <div class="aiml-summary-caption">Source A (SofaScore)</div>
+            <div id="feedStatusValue" class="aiml-summary-value aiml-summary-issue">
+                No data
+            </div>
+            <div id="feedSummaryCaption" class="aiml-summary-caption">
+                Source A (SofaScore)
+            </div>
         </div>
     </section>
 
@@ -65,18 +87,27 @@
             <div class="aiml-panel-header">
                 <div>
                     <div class="aiml-panel-title">AI MatchLab – Live Matrix</div>
-                    <div class="aiml-panel-subtitle">Unified view of LIVE / RECENT / UPCOMING matches.</div>
+                    <div class="aiml-panel-subtitle">
+                        Unified view of LIVE / RECENT / UPCOMING matches.
+                    </div>
                 </div>
                 <div class="aiml-tabs">
-                    <button class="aiml-tab aiml-tab-active" data-filter="all">All</button>
-                    <button class="aiml-tab" data-filter="live">Live</button>
-                    <button class="aiml-tab" data-filter="recent">Recent</button>
-                    <button class="aiml-tab" data-filter="upcoming">Upcoming</button>
+                    <button id="btnAll" class="aiml-tab aiml-tab-active" data-filter="all">All</button>
+                    <button id="btnLive" class="aiml-tab" data-filter="live">Live</button>
+                    <button id="btnRecent" class="aiml-tab" data-filter="recent">Recent</button>
+                    <button id="btnUpcoming" class="aiml-tab" data-filter="upcoming">Upcoming</button>
                 </div>
             </div>
 
             <div id="liveContainer" class="aiml-live-container">
-                <div class="aiml-placeholder">
+                <!-- Skeleton loader on first load -->
+                <div class="aiml-skeleton-list" id="liveSkeleton">
+                    <div class="aiml-skeleton-card"></div>
+                    <div class="aiml-skeleton-card"></div>
+                    <div class="aiml-skeleton-card"></div>
+                    <div class="aiml-skeleton-card"></div>
+                </div>
+                <div class="aiml-placeholder" id="livePlaceholder" style="display:none;">
                     Waiting for live data…
                 </div>
             </div>
@@ -87,19 +118,19 @@
             <div class="aiml-panel-header">
                 <div>
                     <div class="aiml-panel-title">AI System Monitor</div>
-                    <div class="aiml-panel-subtitle">Worker & feed diagnostics.</div>
+                    <div class="aiml-panel-subtitle">Worker &amp; feed diagnostics.</div>
                 </div>
             </div>
 
             <div class="aiml-monitor-block">
-                <div class="aiml-monitor-title">Worker Status (/status)</div>
+                <div class="aiml-monitor-title">Worker Status (/ai/status)</div>
                 <pre id="statusBox" class="aiml-monitor-pre">
 Loading…
                 </pre>
             </div>
 
             <div class="aiml-monitor-block">
-                <div class="aiml-monitor-title">Last Live Payload (/live)</div>
+                <div class="aiml-monitor-title">Last Live Payload (/ai/source-a/live)</div>
                 <pre id="liveDebugBox" class="aiml-monitor-pre">
 Waiting for first payload…
                 </pre>
@@ -107,11 +138,21 @@ Waiting for first payload…
         </aside>
     </main>
 
-    <!-- DEBUG PANEL (FULL JSON) -->
+    <!-- DEBUG PANEL -->
     <section class="aiml-debug-section">
-        <div class="aiml-debug-title">Debug Panel</div>
-        <pre id="debugPanel" class="aiml-debug-pre">Waiting for combined debug data…</pre>
+        <div class="aiml-debug-header">
+            <span class="aiml-debug-title">Debug Panel</span>
+            <button id="toggleDebugBtn" class="aiml-debug-toggle-btn">Collapse</button>
+        </div>
+        <pre id="debugPanel" class="aiml-debug-pre">
+Waiting for combined debug data…
+        </pre>
     </section>
+
+    <!-- GOAL FLASH OVERLAY (optional use by JS) -->
+    <div id="goalFlashOverlay" class="aiml-goal-overlay" style="display:none;">
+        GOAL!
+    </div>
 
     <!-- LEGAL FOOTER -->
     <footer class="aiml-footer">
