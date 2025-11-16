@@ -1,146 +1,115 @@
 # ============================================================
-# AI MATCHLAB – UNIFIED FASTAPI BACKEND (v1.0.0)
+# AI MATCHLAB – FastAPI Backend (PREMIUM v0.9.3)
 # ============================================================
-
-import os
-import json
-import httpx
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from dotenv import load_dotenv
+import os, json, datetime as dt, httpx
 
-# ============================================================
-# ENV SETUP
-# ============================================================
-load_dotenv()
+print("=== AI MATCHLAB FASTAPI BACKEND (v1.0.0 / PREMIUM UI) ===")
 
+# ------------------------------------------------------------
+# PATHS
+# ------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-WORKER_URL = os.getenv(
-    "AI_MATCHLAB_LIVE_WORKER",
-    "https://ai-matchlab-live-proxy.pierros1402.workers.dev"
-)
+app = FastAPI()
 
-# ============================================================
-# FASTAPI INIT
-# ============================================================
-app = FastAPI(title="AI MATCHLAB Backend")
-
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+# Static files
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 
-# ============================================================
-# PWA (manifest.json & service-worker.js)
-# 100% Correct Absolute Paths (Τέλος το corrupted binary!)
-# ============================================================
+# Templates
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
-@app.get("/manifest.json", include_in_schema=False)
-def serve_manifest():
-    return FileResponse(
-        os.path.join(BASE_DIR, "manifest.json"),
-        media_type="application/json"
-    )
-
-
-@app.get("/service-worker.js", include_in_schema=False)
-def serve_sw():
-    return FileResponse(
-        os.path.join(BASE_DIR, "service-worker.js"),
-        media_type="application/javascript"
-    )
+# ------------------------------------------------------------
+# WORKER URL
+# ------------------------------------------------------------
+WORKER_URL = "https://ai-matchlab-live-proxy.pierros1402.workers.dev"
 
 
 # ============================================================
-# MAIN UI (MatchLab)
+# ROUTES
 # ============================================================
 
 @app.get("/", response_class=HTMLResponse)
-@app.head("/", include_in_schema=False)
-def serve_ui(request: Request):
+async def root(request: Request):
     return templates.TemplateResponse("matchlab.html", {"request": request})
 
-# ============================================================
-# HEALTH CHECK
-# ============================================================
+
+@app.get("/matchlab", response_class=HTMLResponse)
+async def matchlab(request: Request):
+    return templates.TemplateResponse("matchlab.html", {"request": request})
+
+
+# ---------------- LEGAL PAGES ----------------
+
+@app.get("/legal/terms", response_class=HTMLResponse)
+async def legal_terms(request: Request):
+    return templates.TemplateResponse("legal/terms.html", {"request": request})
+
+@app.get("/legal/privacy", response_class=HTMLResponse)
+async def legal_privacy(request: Request):
+    return templates.TemplateResponse("legal/privacy_policy.html", {"request": request})
+
+@app.get("/legal/cookies", response_class=HTMLResponse)
+async def legal_cookies(request: Request):
+    return templates.TemplateResponse("legal/cookies_policy.html", {"request": request})
+
+@app.get("/legal/responsible-gambling", response_class=HTMLResponse)
+async def legal_rg(request: Request):
+    return templates.TemplateResponse("legal/responsible_gambling.html", {"request": request})
+
+
+# ---------------- HEALTH CHECK ----------------
 
 @app.get("/health")
-def health():
-    return {
-        "ok": True,
-        "service": "AI MATCHLAB",
-        "version": "v1.0.0",
-        "worker_configured": WORKER_URL is not None
-    }
+async def health():
+    return {"status": "ok", "timestamp": dt.datetime.utcnow().isoformat()}
 
 
 # ============================================================
-# WORKER STATUS ENDPOINT
+# PROXY: WORKER ENDPOINTS
 # ============================================================
 
-@app.get("/api/worker/status")
-async def worker_status():
-    url = f"{WORKER_URL}/status"
+async def fetch_worker(path: str):
+    url = f"{WORKER_URL}{path}"
     try:
         async with httpx.AsyncClient(timeout=8) as client:
             r = await client.get(url)
             r.raise_for_status()
-
-            try:
-                data = r.json()
-                return {
-                    "ok": True,
-                    "raw": data,
-                    "target_url": url
-                }
-            except Exception:
-                return {
-                    "ok": False,
-                    "error": "invalid_json",
-                    "raw": r.text,
-                    "target_url": url
-                }
-
+            return r.json()
     except Exception as e:
-        return {"ok": False, "error": str(e), "target_url": url}
+        return {"ok": False, "error": str(e), "path": path}
+
+
+@app.get("/ai/status")
+async def worker_status():
+    return await fetch_worker("/status")
+
+
+@app.get("/ai/source-a/live")
+async def worker_live():
+    return await fetch_worker("/live")
+
+
+@app.get("/ai/source-a/recent")
+async def worker_recent():
+    return await fetch_worker("/recent")
+
+
+@app.get("/ai/source-a/upcoming")
+async def worker_upcoming():
+    return await fetch_worker("/upcoming")
 
 
 # ============================================================
-# LIVE FEED FOR UI (/api/source-a/live)
+# SERVICE WORKER
 # ============================================================
 
-@app.get("/api/source-a/live")
-async def worker_live_feed():
-    url = f"{WORKER_URL}/ai/source-a/live"
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(url)
-            r.raise_for_status()
-
-            try:
-                parsed = r.json()
-                return parsed
-
-            except Exception:
-                return {
-                    "ok": False,
-                    "error": "invalid_json",
-                    "raw": r.text,
-                    "target_url": url
-                }
-
-    except Exception as e:
-        return {"ok": False, "error": str(e), "target_url": url}
-
-
-# ============================================================
-# START MESSAGE
-# ============================================================
-
-print("============================================================")
-print(" AI MATCHLAB — FASTAPI BACKEND LOADED (v1.0.0)")
-print(f" Environment: development")
-print(f" Worker URL: {WORKER_URL}")
-print("============================================================")
+@app.get("/service-worker.js")
+async def service_worker():
+    filepath = os.path.join(BASE_DIR, "service-worker.js")
+    with open(filepath, "r", encoding="utf-8") as sw:
+        return HTMLResponse(sw.read(), media_type="application/javascript")

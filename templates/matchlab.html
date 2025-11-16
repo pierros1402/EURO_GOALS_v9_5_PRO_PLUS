@@ -4,162 +4,135 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>AI MatchLab v0.9.2 HYBRID PRO</title>
+    <title>AI MatchLab v0.9.3 PREMIUM</title>
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#050815" />
 
     <!-- Icons -->
     <link rel="apple-touch-icon" href="/static/icons/aimatchlab_192.png" />
     <link rel="apple-touch-icon" href="/static/icons/aimatchlab_512.png" />
+    <link rel="icon" href="/static/icons/aimatchlab_192.png" />
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #0a0a0a;
-            color: #fff;
-            overflow-x: hidden;
-        }
-
-        header {
-            padding: 14px 18px;
-            background: #101010;
-            border-bottom: 1px solid #222;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        header h1 {
-            margin: 0;
-            font-size: 20px;
-        }
-        #refreshBtn {
-            background: #222;
-            color: white;
-            border: 1px solid #333;
-            border-radius: 6px;
-            padding: 6px 12px;
-            cursor: pointer;
-            font-size: 15px;
-        }
-
-        /* STATUS BAR */
-        #statusBar {
-            padding: 10px 15px;
-            background: #111;
-            border-bottom: 1px solid #222;
-            font-size: 14px;
-            opacity: 0.85;
-        }
-
-        /* LIVE CONTAINER */
-        #liveContainer {
-            padding: 12px 16px;
-        }
-        .matchCard {
-            background: #151515;
-            padding: 14px;
-            border-radius: 8px;
-            border: 1px solid #262626;
-            margin-bottom: 14px;
-        }
-        .matchHeader {
-            font-size: 17px;
-            font-weight: bold;
-            margin-bottom: 6px;
-        }
-        .subInfo {
-            font-size: 13px;
-            opacity: 0.75;
-        }
-
-        .placeholderArea {
-            margin-top: 8px;
-            padding: 8px;
-            background: #1a1a1a;
-            border-radius: 6px;
-            border: 1px solid #222;
-            opacity: 0.75;
-            font-size: 13px;
-        }
-
-        /* Inspector */
-        .inspectBtn {
-            margin-top: 8px;
-            padding: 6px 10px;
-            font-size: 13px;
-            background: #444;
-            border: none;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .inspectorBox {
-            margin-top: 8px;
-            background: #0f0f0f;
-            border: 1px solid #222;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 12px;
-            white-space: pre-wrap;
-            display: none;
-        }
-
-        /* DEBUG PANEL */
-        .debug-panel {
-            margin-top: 30px;
-            background: #050505;
-            border-top: 1px solid #222;
-            padding: 12px;
-            font-size: 12px;
-            opacity: 0.8;
-            white-space: pre-wrap;
-        }
-
-        /* FOOTER LEGAL */
-        footer {
-            margin-top: 30px;
-            padding: 15px;
-            background: #0f0f0f;
-            border-top: 1px solid #222;
-            font-size: 12px;
-            text-align: center;
-            opacity: 0.7;
-        }
-        footer a {
-            color: #8ab4ff;
-            margin: 0 10px;
-            text-decoration: none;
-            font-size: 12px;
-        }
-        footer a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <!-- Main UI CSS -->
+    <link rel="stylesheet" href="/static/css/aimatchlab.css" />
 </head>
+<body class="aiml-body">
 
-<body>
+    <!-- TOP BAR -->
+    <header class="aiml-header">
+        <div class="aiml-logo-title">
+            <div class="aiml-logo-circle">AI</div>
+            <div class="aiml-title-block">
+                <div class="aiml-title">AI MATCHLAB</div>
+                <div class="aiml-subtitle">Advanced Live Intelligence Engine</div>
+            </div>
+        </div>
 
-<header>
-    <h1>AI MatchLab v0.9.2 HYBRID PRO</h1>
-    <button id="refreshBtn">⟳</button>
-</header>
+        <div class="aiml-header-badges">
+            <span class="aiml-badge env">ENV: DEVELOPMENT</span>
+            <span class="aiml-badge version">v0.9.3 PREMIUM</span>
+            <button id="refreshBtn" class="aiml-refresh-btn">⟳ Refresh now</button>
+        </div>
+    </header>
 
-<div id="statusBar">Loading worker status…</div>
+    <!-- STATUS SUMMARY BAR -->
+    <section class="aiml-summary-bar">
+        <div class="aiml-summary-card" id="backendSummary">
+            <div class="aiml-summary-label">BACKEND</div>
+            <div class="aiml-summary-value aiml-summary-ok">Online</div>
+            <div class="aiml-summary-caption">FastAPI core status</div>
+        </div>
 
-<div id="liveContainer"></div>
+        <div class="aiml-summary-card" id="workerSummary">
+            <div class="aiml-summary-label">WORKER</div>
+            <div class="aiml-summary-value aiml-summary-issue" id="workerStatusChip">Checking…</div>
+            <div class="aiml-summary-caption" id="workerSummaryCaption">Matching engine</div>
+        </div>
 
-<div class="debug-panel" id="debugPanel">Waiting for data…</div>
+        <div class="aiml-summary-card" id="feedSummary">
+            <div class="aiml-summary-label">LIVE FEED</div>
+            <div class="aiml-summary-value aiml-summary-issue" id="feedStatusChip">No data</div>
+            <div class="aiml-summary-caption">Source A (SofaScore)</div>
+        </div>
+    </section>
 
-<footer>
-    <a href="/legal/terms.html" target="_blank">Terms</a>
-    <a href="/legal/privacy.html" target="_blank">Privacy</a>
-    <a href="/legal/cookies.html" target="_blank">Cookies</a>
-</footer>
+    <!-- MAIN GRID -->
+    <main class="aiml-main-grid">
+        <!-- LIVE MATRIX -->
+        <section class="aiml-panel aiml-live-panel">
+            <div class="aiml-panel-header">
+                <div>
+                    <div class="aiml-panel-title">AI MatchLab – Live Matrix</div>
+                    <div class="aiml-panel-subtitle">Unified view of LIVE / RECENT / UPCOMING matches.</div>
+                </div>
+                <div class="aiml-tabs">
+                    <button class="aiml-tab aiml-tab-active" data-filter="all">All</button>
+                    <button class="aiml-tab" data-filter="live">Live</button>
+                    <button class="aiml-tab" data-filter="recent">Recent</button>
+                    <button class="aiml-tab" data-filter="upcoming">Upcoming</button>
+                </div>
+            </div>
 
-<script src="/static/js/aimatchlab.js?v=0.9.2"></script>
+            <div id="liveContainer" class="aiml-live-container">
+                <div class="aiml-placeholder">
+                    Waiting for live data…
+                </div>
+            </div>
+        </section>
 
+        <!-- SYSTEM MONITOR -->
+        <aside class="aiml-panel aiml-monitor-panel">
+            <div class="aiml-panel-header">
+                <div>
+                    <div class="aiml-panel-title">AI System Monitor</div>
+                    <div class="aiml-panel-subtitle">Worker & feed diagnostics.</div>
+                </div>
+            </div>
+
+            <div class="aiml-monitor-block">
+                <div class="aiml-monitor-title">Worker Status (/status)</div>
+                <pre id="statusBox" class="aiml-monitor-pre">
+Loading…
+                </pre>
+            </div>
+
+            <div class="aiml-monitor-block">
+                <div class="aiml-monitor-title">Last Live Payload (/live)</div>
+                <pre id="liveDebugBox" class="aiml-monitor-pre">
+Waiting for first payload…
+                </pre>
+            </div>
+        </aside>
+    </main>
+
+    <!-- DEBUG PANEL (FULL JSON) -->
+    <section class="aiml-debug-section">
+        <div class="aiml-debug-title">Debug Panel</div>
+        <pre id="debugPanel" class="aiml-debug-pre">Waiting for combined debug data…</pre>
+    </section>
+
+    <!-- LEGAL FOOTER -->
+    <footer class="aiml-footer">
+        <a href="/legal/terms">Terms</a>
+        <a href="/legal/privacy">Privacy</a>
+        <a href="/legal/cookies">Cookies</a>
+        <a href="/legal/responsible-gambling">Responsible Gambling</a>
+    </footer>
+
+    <!-- MAIN FRONTEND ENGINE -->
+    <script src="/static/js/aimatchlab.js?v=0.9.3"></script>
+
+    <!-- SERVICE WORKER REG -->
+    <script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("/service-worker.js")
+                .then(reg => console.log("[SW] Registered:", reg.scope))
+                .catch(err => console.error("[SW] Registration failed:", err));
+        });
+    }
+    </script>
 </body>
 </html>
