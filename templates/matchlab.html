@@ -1,139 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>AI MatchLab</title>
+    <title>AI MatchLab v0.9.0 BETA</title>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/static/icons/icon-192.png">
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#000000" />
 
-    <!-- PWA manifest -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/static/icons/aimatchlab_192.png" />
+    <link rel="apple-touch-icon" href="/static/icons/aimatchlab_512.png" />
 
-    <!-- Theme color -->
-    <meta name="theme-color" content="#0b0f19">
+    <!-- iPhone fullscreen -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="MatchLab" />
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="/static/css/aimatchlab.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0c0c0c;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        header {
+            padding: 14px;
+            background: #101010;
+            border-bottom: 1px solid #222;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        #installBanner {
+            background: #111;
+            padding: 12px;
+            border-bottom: 1px solid #222;
+            display: none;
+        }
+
+        #installBanner button {
+            background: #0077ff;
+            border: none;
+            color: #fff;
+            padding: 10px 16px;
+            font-size: 15px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .sectionTitle {
+            padding: 10px 14px;
+            margin-top: 15px;
+            font-size: 15px;
+            opacity: 0.8;
+        }
+
+        #liveContainer {
+            padding: 10px 14px;
+        }
+
+        .matchCard {
+            background: #151515;
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid #222;
+            border-radius: 6px;
+        }
+
+        .debug-panel {
+            background: #090909;
+            border-top: 1px solid #222;
+            padding: 12px;
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 40px;
+            white-space: pre-wrap;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="app-root">
 
-        <!-- ================= TOP BAR ================= -->
-        <header class="aml-topbar">
-            <div class="aml-topbar-left">
-                <div class="aml-logo-block">
-                    <div class="aml-logo">
-                        <span class="aml-logo-main">AI</span>
-                        <span class="aml-logo-sub">MatchLab</span>
-                    </div>
-                    <div class="aml-logo-subtitle">
-                        Advanced Live Intelligence Engine · v1.0.0
-                    </div>
-                </div>
+<header>
+    <h1>AI MatchLab v0.9.0 BETA</h1>
+    <button id="refreshBtn">⟳</button>
+</header>
 
-                <div class="aml-topbar-meta">
-                    <span class="aml-badge env-development">ENV: DEVELOPMENT</span>
-                    <span class="aml-badge version">v1.0.0</span>
-                </div>
-            </div>
+<div id="installBanner">
+    <p>Add AI MatchLab to your home screen for a fullscreen experience.</p>
+    <button id="installBtn">Install</button>
+</div>
 
-            <div class="aml-topbar-right">
-                <button id="aml-install-btn" class="aml-btn install hidden">
-                    ➕ Install App
-                </button>
+<div class="sectionTitle">LIVE MATRIX</div>
+<div id="liveContainer">
+    <!-- Filled dynamically by aimatchlab.js -->
+</div>
 
-                <button id="aml-refresh-btn" class="aml-btn primary">
-                    ⟳ Refresh now
-                </button>
-            </div>
-        </header>
+<div class="sectionTitle">DEBUG PANEL</div>
+<div id="debugPanel" class="debug-panel">
+    Waiting for data...
+</div>
 
-        <!-- ================= STATUS STRIP ================= -->
-        <div class="aml-status-strip">
-            <div class="aml-status-item">
-                <div class="aml-status-label">BACKEND</div>
-                <div id="aml-backend-status" class="aml-status-pill">…</div>
-            </div>
+<!-- MAIN FRONTEND ENGINE -->
+<script src="/aimatchlab.js?v=0.9.0"></script>
 
-            <div class="aml-status-item">
-                <div class="aml-status-label">WORKER</div>
-                <div id="aml-worker-status" class="aml-status-pill">…</div>
-            </div>
-
-            <div class="aml-status-item">
-                <div class="aml-status-label">LIVE FEED</div>
-                <div id="aml-feed-status" class="aml-status-pill">…</div>
-            </div>
-
-            <div class="aml-status-item aml-status-small">
-                <div class="aml-status-label">LAST UPDATE</div>
-                <div id="aml-last-update" class="aml-status-pill">--:--:--</div>
-            </div>
-        </div>
-
-        <!-- ================= MAIN GRID ================= -->
-        <div class="aml-main-grid">
-
-            <!-- LEFT PANEL -->
-            <div class="aml-panel">
-                <div class="aml-panel-header">
-                    <div>
-                        <h2>AI MatchLab – Live Matrix</h2>
-                        <p class="aml-panel-subtitle">
-                            Unified view of LIVE / RECENT / UPCOMING matches.
-                        </p>
-                    </div>
-
-                    <div>
-                        <span class="aml-chip aml-chip-active" data-view="all">All</span>
-                        <span class="aml-chip" data-view="live">Live</span>
-                        <span class="aml-chip" data-view="recent">Recent</span>
-                        <span class="aml-chip" data-view="upcoming">Upcoming</span>
-                    </div>
-                </div>
-
-                <div id="aml-live-container" class="aml-cards-container">
-                    <!-- Live cards appear here -->
-                </div>
-            </div>
-
-            <!-- RIGHT PANEL -->
-            <div class="aml-panel aml-panel-side">
-                <div class="aml-panel-header">
-                    <h2>AI System Monitor</h2>
-                </div>
-
-                <div class="aml-monitor-section">
-                    <h3>Worker Status (/status)</h3>
-                    <pre id="aml-worker-status-raw" class="aml-pre">Waiting…</pre>
-                </div>
-
-                <div class="aml-monitor-section">
-                    <h3>Last Live Payload (/ai/source-a/live)</h3>
-                    <pre id="aml-live-raw" class="aml-pre">Waiting…</pre>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================= SERVICE WORKER REGISTER ================= -->
-    <script>
-        if ("serviceWorker" in navigator) {
-            window.addEventListener("load", () => {
-                navigator.serviceWorker.register("/service-worker.js").catch((err) => {
-                    console.warn("Service worker registration failed:", err);
-                });
-            });
-        }
-    </script>
-
-    <!-- ================= MAIN SCRIPT ================= -->
-    <script src="/static/js/aimatchlab.js"></script>
+<!-- PWA SERVICE WORKER REGISTRATION -->
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js")
+            .then(() => console.log("Service Worker registered"))
+            .catch(err => console.error("SW registration failed:", err));
+    });
+}
+</script>
 
 </body>
 </html>

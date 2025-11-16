@@ -1,57 +1,113 @@
-// ============================================================
-// AI MatchLab – PWA Service Worker (v1.0.0)
-// ============================================================
+// ======================================================================
+// AI MatchLab v0.9.0 BETA — SERVICE WORKER (FINAL for "/" route)
+// ======================================================================
 
-const CACHE_NAME = "aimatchlab-v1";
-const APP_ASSETS = [
-    "/", 
-    "/static/css/aimatchlab.css",
-    "/static/js/aimatchlab.js",
-    "/manifest.json"
+const CACHE_NAME = "matchlab-v0.9.0";
+
+const CORE_ASSETS = [
+  "/",                // main UI
+  "/aimatchlab.js",  // frontend logic
+  "/manifest.json",
+
+  // icons
+  "/static/icons/aimatchlab_192.png",
+  "/static/icons/aimatchlab_512.png",
+  "/static/icons/aimatchlab_maskable_512.png",
+  "/static/icons/aimatchlab_1024.png"
 ];
 
-// Install SW → pre-cache
+// ----------------------------------------------------------------------
+// INSTALL
+// ----------------------------------------------------------------------
 self.addEventListener("install", (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(APP_ASSETS);
-        })
-    );
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(CORE_ASSETS))
+      .then(() => self.skipWaiting())
+  );
 });
 
-// Activate SW → cleanup old caches
+// ----------------------------------------------------------------------
+// ACTIVATE
+// ----------------------------------------------------------------------
 self.addEventListener("activate", (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys
-                    .filter((key) => key !== CACHE_NAME)
-                    .map((key) => caches.delete(key))
-            );
-        })
-    );
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.map((key) => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+      }))
+    ).then(() => self.clients.claim())
+  );
 });
 
-// Fetch handler (cache-first for assets)
+// ----------------------------------------------------------------------
+// FETCH
+// ----------------------------------------------------------------------
 self.addEventListener("fetch", (event) => {
-    const req = event.request;
+  const req = event.request;
 
-    // Only GET requests
-    if (req.method !== "GET") {
-        return;
-    }
+  if (req.method !== "GET") return;
 
-    event.respondWith(
-        caches.match(req).then((cached) => {
-            return (
-                cached ||
-                fetch(req).catch(() =>
-                    new Response(
-                        "Offline — Unable to reach server.",
-                        { status: 503 }
-                    )
-                )
-            );
-        })
-    );
+  const url = new URL(req.url);
+
+  // API = network-first
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(networkFirst(req));
+    return;
+  }
+
+  // navigation fallback
+  if (req.mode === "navigate") {
+    event.respondWith(htmlNetworkFirst(req));
+    return;
+  }
+
+  event.respondWith(cacheFirst(req));
 });
+
+// ======================================================================
+// STRATEGIES
+// ======================================================================
+async function cacheFirst(req) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(req);
+
+  if (cached) return cached;
+
+  try {
+    const fresh = await fetch(req);
+    cache.put(req, fresh.clone());
+    return fresh;
+  } catch {
+    return cached || Response.error();
+  }
+}
+
+async function networkFirst(req) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const fresh = await fetch(req);
+    cache.put(req, fresh.clone());
+    return fresh;
+  } catch {
+    return cache.match(req) || Response.error();
+  }
+}
+
+async function htmlNetworkFirst(req) {
+  const cache = await caches.open(CACHE_NAME);
+
+  try {
+    const fresh = await fetch(req);
+    cache.put(req, fresh.clone());
+    return fresh;
+
+  } catch (err) {
+    // Fallback to homepage cached version
+    const cached = await cache.match("/");
+    return cached || new Response(
+      "<h1>Offline</h1><p>No cached homepage available.</p>",
+      { headers: { "Content-Type": "text/html" } }
+    );
+  }
+}
