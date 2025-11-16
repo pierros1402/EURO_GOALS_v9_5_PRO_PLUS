@@ -59,9 +59,9 @@ def serve_sw():
 # ============================================================
 
 @app.get("/", response_class=HTMLResponse)
+@app.head("/", include_in_schema=False)
 def serve_ui(request: Request):
     return templates.TemplateResponse("matchlab.html", {"request": request})
-
 
 # ============================================================
 # HEALTH CHECK
