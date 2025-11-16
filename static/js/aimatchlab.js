@@ -1,541 +1,444 @@
-/* ============================================================
-   AI MATCHLAB — MAIN JAVASCRIPT CONTROLLER
-   Handles:
-   - Worker communication
-   - Panel switching
-   - DOM updates
-   - Loading UI
-   - Overview Panel
-   - Bookmakers Compare Panel (Stoiximan/OPAP/Pame mock odds)
-   ============================================================ */
+// ============================================================
+// AI MATCHLAB – FRONTEND ENGINE (v1.0.0)
+// - Backend health
+// - Worker /status
+// - Live feed (/ai/source-a/live via backend proxy)
+// - Rendering: LIVE / RECENT / UPCOMING
+// - Raw debug panels
+// - PWA Install logic (Android + iOS support)
+// ============================================================
 
-console.log("AI MATCHLAB JS Loaded.");
+// =============== API ENDPOINTS ===============
 
-let BOOKMAKERS_STATE = {
-    matches: []
-};
+// FastAPI backend (μένει ίδιο)
+const API_BACKEND_HEALTH = "/health";
 
+// Worker endpoints (ΝΕΑ B-μορφή paths)
+const WORKER_BASE = "https://ai-matchlab-live-proxy.pierros1402.workers.dev";
 
-// ------------------------------------------------------------
-// SHOW/HIDE LOADING
-// ------------------------------------------------------------
-function showLoading() {
-    const box = document.getElementById("loading");
-    if (box) box.classList.remove("hidden");
+const API_WORKER_STATUS = `${WORKER_BASE}/status`;
+const API_LIVE_FEED     = `${WORKER_BASE}/ai/source-a/live`;
+
+// =============== INSTALL PROMPT HANDLER ===============
+let deferredPrompt = null;
+
+// DOM helper
+function $(id) {
+    return document.getElementById(id);
 }
 
-function hideLoading() {
-    const box = document.getElementById("loading");
-    if (box) box.classList.add("hidden");
+// Apply pill visual state
+function setStatusPill(el, state, text) {
+    if (!el) return;
+    el.classList.remove("status-ok", "status-error", "status-warn", "status-unknown");
+
+    switch (state) {
+        case "ok": el.classList.add("status-ok"); break;
+        case "error": el.classList.add("status-error"); break;
+        case "warn": el.classList.add("status-warn"); break;
+        default: break;
+    }
+
+    if (text) el.textContent = text;
 }
 
+function formatTime(date) {
+    return date.toLocaleTimeString("en-GB", { hour12: false });
+}
+// ============================================================
+// BACKEND HEALTH CHECK
+// ============================================================
 
-// ------------------------------------------------------------
-/* GENERIC WORKER CALL (GET) */
-// ------------------------------------------------------------
-async function callWorker(path, params = {}) {
+async function checkBackendHealth() {
+    const pill = $("aml-backend-status");
+
     try {
-        showLoading();
+        const res = await fetch(API_BACKEND_HEALTH, { cache: "no-store" });
+        const data = await res.json();
 
-        const usp = new URLSearchParams(params);
-        const qs = usp.toString();
-        const url = qs ? `/api/worker/${path}?${qs}` : `/api/worker/${path}`;
+        if (data.ok) {
+            setStatusPill(pill, "ok", "Online");
+        } else {
+            setStatusPill(pill, "warn", "Degraded");
+        }
+    } catch (error) {
+        setStatusPill(pill, "error", "Offline");
+    }
+}
 
-        const response = await fetch(url);
 
-        if (!response.ok) {
-            console.error("Worker error:", response.status);
-            throw new Error("Worker returned error");
+// ============================================================
+// WORKER STATUS (/status)
+// ============================================================
+
+async function checkWorkerStatus() {
+    const pill = $("aml-worker-status");
+    const rawPre = $("aml-worker-status-raw");
+
+    try {
+        const res = await fetch(API_WORKER_STATUS, { cache: "no-store" });
+        const data = await res.json();
+
+        rawPre.textContent = JSON.stringify(data, null, 2);
+
+        if (data.ok) {
+            setStatusPill(pill, "ok", "OK");
+        } else {
+            setStatusPill(pill, "warn", "Issue");
         }
 
-        return await response.json();
-
-    } catch (err) {
-        console.error("Worker call failed:", err);
-        return { error: "Worker connection failed" };
-    } finally {
-        hideLoading();
+    } catch (error) {
+        setStatusPill(pill, "error", "Error");
+        rawPre.textContent = "Worker status failed: " + String(error);
     }
 }
+// ============================================================
+// NORMALIZE LIVE FEED PAYLOAD
+// ============================================================
 
+function normalizeMatchesFromPayload(payload) {
+    // Ιδανικό σχήμα:
+    // { matches: [...], meta: {...} }
+    if (!payload) return [];
 
-// ------------------------------------------------------------
-// PANEL LOADER (MAIN ENTRY)
-// ------------------------------------------------------------
-async function loadPanel(panel) {
-    const title = document.getElementById("panel-title");
-    const container = document.getElementById("panel-content");
-
-    title.innerText = panel.charAt(0).toUpperCase() + panel.slice(1);
-
-    container.innerHTML = `
-        <div class="placeholder">
-            Loading ${panel}...
-        </div>
-    `;
-
-    // Worker path mapping
-    const workerPath = {
-        "overview": "live/overview",
-        "live": "live/overview",
-        "predictions": "aimatchlab/predictions",
-        "smartmoney": "aimatchlab/smartmoney",
-        "heatmaps": "aimatchlab/heatmaps",
-        "stats": "aimatchlab/stats",
-        "bookmakers": "live/overview"
-    }[panel] || `aimatchlab/${panel}`;
-
-    const data = await callWorker(workerPath);
-
-    if (panel === "overview") {
-        renderOverviewPanel(data);
-        return;
+    if (Array.isArray(payload.matches)) {
+        return payload.matches;
     }
 
-    if (panel === "bookmakers") {
-        renderBookmakersPanel(data);
-        return;
+    // Αν είναι ήδη array, το παίρνουμε όπως είναι
+    if (Array.isArray(payload)) {
+        return payload;
     }
 
-    // Generic render for other panels
-    renderPanelData(panel, data);
-}
-
-
-
-// ------------------------------------------------------------
-// OVERVIEW PANEL (Featured Matches + Quick Summary)
-// ------------------------------------------------------------
-function renderOverviewPanel(data) {
-    const container = document.getElementById("panel-content");
-
-    const matches = extractMatches(data);
-    const featured = matches.slice(0, 6);
-
-    if (!featured.length) {
-        container.innerHTML = `
-            <div class="placeholder">
-                No live matches available right now.<br>
-                Try again in a few minutes.
-            </div>
-        `;
-        return;
+    // Αν είναι απλό object (όπως jsonplaceholder demo),
+    // φτιάχνουμε ένα debug match
+    if (!payload.matches) {
+        return [
+            {
+                id: "debug_1",
+                home: String(payload.title || "Demo Home"),
+                away: "Demo Away",
+                league: "Debug Feed",
+                kickoff: "",
+                status: "debug",
+                minute: null,
+                score_home: 0,
+                score_away: 0,
+                kind: "debug"
+            }
+        ];
     }
 
-    const totalMatches = matches.length;
-    const leaguesSet = new Set(
-        matches.map(m => getField(m, ["league", "competition", "tournament"], "Unknown"))
-    );
-    const totalLeagues = leaguesSet.size;
-
-    let html = `
-        <div style="display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
-            <div class="panel" style="flex:1; min-width:200px;">
-                <div class="placeholder" style="padding:10px; text-align:left;">
-                    <div style="font-size:12px; text-transform:uppercase; color:#9ca3af;">Total Matches</div>
-                    <div style="font-size:24px; font-weight:700;">${totalMatches}</div>
-                </div>
-            </div>
-            <div class="panel" style="flex:1; min-width:200px;">
-                <div class="placeholder" style="padding:10px; text-align:left;">
-                    <div style="font-size:12px; text-transform:uppercase; color:#9ca3af;">Leagues</div>
-                    <div style="font-size:24px; font-weight:700;">${totalLeagues}</div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    html += `
-        <div class="panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div style="font-weight:600;">Featured Matches</div>
-                <div style="font-size:12px; color:#9ca3af;">(Top ${featured.length} from live hub)</div>
-            </div>
-    `;
-
-    html += `<table class="data-table"><thead><tr>
-        <th>League</th>
-        <th>Match</th>
-        <th>Kickoff</th>
-        <th>Status</th>
-    </tr></thead><tbody>`;
-
-    featured.forEach(m => {
-        const league = getField(m, ["league", "competition", "tournament"], "Unknown");
-        const home = getField(m, ["home", "home_team", "team_home", "homeName"], "Home");
-        const away = getField(m, ["away", "away_team", "team_away", "awayName"], "Away");
-        const status = getField(m, ["status", "live_status"], "-");
-        const kickoff = getField(m, ["kickoff", "start_time", "time"], "-");
-
-        html += `
-            <tr>
-                <td>${league}</td>
-                <td>${home} vs ${away}</td>
-                <td>${kickoff}</td>
-                <td>${status}</td>
-            </tr>
-        `;
-    });
-
-    html += `</tbody></table></div>`;
-
-    html += `
-        <div style="margin-top:16px; text-align:right; font-size:13px; color:#9ca3af;">
-            Full odds comparison available in <strong>Bookmakers Compare</strong> panel.
-        </div>
-    `;
-
-    container.innerHTML = html;
-}
-
-
-
-// ------------------------------------------------------------
-// BOOKMAKERS COMPARE PANEL
-// ------------------------------------------------------------
-function renderBookmakersPanel(data) {
-    const container = document.getElementById("panel-content");
-
-    const matches = extractMatches(data);
-
-    if (!matches.length) {
-        container.innerHTML = `
-            <div class="placeholder">
-                No live matches available from live hub.
-            </div>
-        `;
-        return;
-    }
-
-    // Enrich with mock odds for 3 Greek bookmakers
-    BOOKMAKERS_STATE.matches = matches.map(m => ({
-        ...m,
-        odds: {
-            stoiximan: generateMockOdds(m, "stoiximan"),
-            opap: generateMockOdds(m, "opap"),
-            pame: generateMockOdds(m, "pame")
-        }
-    }));
-
-    // Build league list
-    const leagueSet = new Set(
-        BOOKMAKERS_STATE.matches.map(m =>
-            getField(m, ["league", "competition", "tournament"], "Unknown")
-        )
-    );
-    const leagues = Array.from(leagueSet).sort();
-
-    let html = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-            <div style="font-weight:600;">Bookmakers Compare — Full Match List</div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <select id="bm-league-filter" style="padding:4px 8px; border-radius:8px; border:1px solid #1f2937; background:#111827; color:#e5e7eb;">
-                    <option value="">All Leagues</option>
-                    ${leagues.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join("")}
-                </select>
-                <input id="bm-search" type="text" placeholder="Search match..."
-                       style="padding:4px 8px; border-radius:8px; border:1px solid #1f2937; background:#111827; color:#e5e7eb; min-width:180px;" />
-            </div>
-        </div>
-
-        <div style="overflow-x:auto;">
-            <table class="data-table" id="bm-table">
-                <thead>
-                    <tr>
-                        <th>League</th>
-                        <th>Match</th>
-                        <th>Kickoff</th>
-                        <th>Market</th>
-                        <th>Stoiximan</th>
-                        <th>OPAP</th>
-                        <th>Pamestoixima</th>
-                        <th>Best</th>
-                    </tr>
-                </thead>
-                <tbody id="bm-tbody"></tbody>
-            </table>
-        </div>
-    `;
-
-    container.innerHTML = html;
-
-    const leagueSelect = document.getElementById("bm-league-filter");
-    const searchInput = document.getElementById("bm-search");
-
-    leagueSelect.addEventListener("change", updateBookmakersTableBody);
-    searchInput.addEventListener("input", updateBookmakersTableBody);
-
-    updateBookmakersTableBody();
-}
-
-
-function updateBookmakersTableBody() {
-    const tbody = document.getElementById("bm-tbody");
-    if (!tbody) return;
-
-    const leagueFilter = document.getElementById("bm-league-filter")?.value || "";
-    const search = (document.getElementById("bm-search")?.value || "").toLowerCase();
-
-    const rows = [];
-
-    BOOKMAKERS_STATE.matches.forEach(m => {
-        const league = getField(m, ["league", "competition", "tournament"], "Unknown");
-        const home = getField(m, ["home", "home_team", "team_home", "homeName"], "Home");
-        const away = getField(m, ["away", "away_team", "team_away", "awayName"], "Away");
-        const kickoff = getField(m, ["kickoff", "start_time", "time"], "-");
-
-        if (leagueFilter && league !== leagueFilter) return;
-
-        const matchLabel = `${home} vs ${away}`.toLowerCase();
-        if (search && !matchLabel.includes(search)) return;
-
-        const odds = m.odds || {};
-        const markets = ["1", "X", "2", "over_2_5", "under_2_5", "gg", "ng"];
-        const marketLabels = {
-            "1": "1",
-            "X": "X",
-            "2": "2",
-            "over_2_5": "Over 2.5",
-            "under_2_5": "Under 2.5",
-            "gg": "GG",
-            "ng": "NG"
-        };
-
-        markets.forEach(market => {
-            const s = odds.stoiximan?.[market]?.price ?? "-";
-            const o = odds.opap?.[market]?.price ?? "-";
-            const p = odds.pame?.[market]?.price ?? "-";
-
-            const prices = [
-                { name: "Stoiximan", val: typeof s === "number" ? s : null },
-                { name: "OPAP", val: typeof o === "number" ? o : null },
-                { name: "Pame", val: typeof p === "number" ? p : null }
-            ];
-
-            let bestName = null;
-            let bestVal = -1;
-            prices.forEach(item => {
-                if (item.val !== null && item.val > bestVal) {
-                    bestVal = item.val;
-                    bestName = item.name;
-                }
-            });
-
-            rows.push(`
-                <tr>
-                    <td>${escapeHtml(league)}</td>
-                    <td>${escapeHtml(home)} vs ${escapeHtml(away)}</td>
-                    <td>${escapeHtml(kickoff)}</td>
-                    <td>${marketLabels[market] || market}</td>
-                    <td>${formatPriceWithBest(s, bestName === "Stoiximan")}</td>
-                    <td>${formatPriceWithBest(o, bestName === "OPAP")}</td>
-                    <td>${formatPriceWithBest(p, bestName === "Pame")}</td>
-                    <td>${bestName ? `<span class="status-green">${bestName}</span>` : "-"}</td>
-                </tr>
-            `);
-        });
-    });
-
-    tbody.innerHTML = rows.join("") || `
-        <tr><td colspan="8" style="text-align:center; padding:20px;">No matches found for selected filters.</td></tr>
-    `;
-}
-
-
-function formatPriceWithBest(price, isBest) {
-    if (price === "-" || price === null || price === undefined) return "-";
-    const val = typeof price === "number" ? price.toFixed(2) : price;
-    if (!isBest) return val;
-    return `<span class="status-green" style="font-weight:600;">${val}</span>`;
-}
-
-
-
-// ------------------------------------------------------------
-// GENERIC PANEL RENDERING (for other panels)
-// ------------------------------------------------------------
-function renderPanelData(panel, data) {
-    const container = document.getElementById("panel-content");
-
-    // Error case
-    if (!data || data.error) {
-        container.innerHTML = `
-            <div class="panel-error">
-                <p style="color:#ff476f; font-size:16px;">
-                    ❌ Failed to load data from Worker
-                </p>
-            </div>`;
-        return;
-    }
-
-    if (typeof data === "string") {
-        container.innerHTML = `<pre>${data}</pre>`;
-        return;
-    }
-
-    if (Array.isArray(data)) {
-        container.innerHTML = generateTable(data);
-        return;
-    }
-
-    if (typeof data === "object") {
-        container.innerHTML = objectToTable(data);
-        return;
-    }
-
-    container.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-}
-
-
-
-// ------------------------------------------------------------
-// TABLE GENERATORS (generic)
-// ------------------------------------------------------------
-function generateTable(rows) {
-    if (!rows.length) {
-        return `<div class="placeholder">No data available.</div>`;
-    }
-
-    const columns = Object.keys(rows[0]);
-
-    let html = `<table class="data-table"><thead><tr>`;
-    columns.forEach(col => {
-        html += `<th>${col}</th>`;
-    });
-    html += `</tr></thead><tbody>`;
-
-    rows.forEach(row => {
-        html += `<tr>`;
-        columns.forEach(col => {
-            html += `<td>${formatCell(row[col])}</td>`;
-        });
-        html += `</tr>`;
-    });
-
-    html += `</tbody></table>`;
-    return html;
-}
-
-
-function objectToTable(obj) {
-    let html = `<table class="data-table"><tbody>`;
-
-    for (const key in obj) {
-        html += `
-            <tr>
-                <th>${key}</th>
-                <td>${formatCell(obj[key])}</td>
-            </tr>
-        `;
-    }
-
-    html += `</tbody></table>`;
-    return html;
-}
-
-
-function formatCell(v) {
-    if (v === null || v === undefined) return "-";
-    if (typeof v === "boolean") return v ? "Yes" : "No";
-    if (typeof v === "number") {
-        return Number(v.toFixed(3));
-    }
-    if (typeof v === "object") {
-        return JSON.stringify(v);
-    }
-    return v;
-}
-
-
-
-// ------------------------------------------------------------
-// HELPERS
-// ------------------------------------------------------------
-function extractMatches(data) {
-    if (!data) return [];
-    if (Array.isArray(data.matches)) return data.matches;
-    if (data.data && Array.isArray(data.data.matches)) return data.data.matches;
-    if (Array.isArray(data.data)) return data.data;
     return [];
 }
 
-function getField(obj, keys, fallback = "") {
-    if (!obj) return fallback;
-    for (const k of keys) {
-        if (obj[k] !== undefined && obj[k] !== null) {
-            return obj[k];
+
+// ============================================================
+// FILTER MATCHES BY VIEW (all / live / recent / upcoming)
+// ============================================================
+
+function filterMatches(matches, view) {
+    if (view === "all") return matches;
+
+    return matches.filter((m) => {
+        const kind = (m.kind || "").toLowerCase();
+
+        if (view === "live") {
+            return kind === "live" || kind === "live_sim";
+        }
+        if (view === "recent") {
+            return kind === "recent";
+        }
+        if (view === "upcoming") {
+            return kind === "upcoming";
+        }
+        return true;
+    });
+}
+
+
+// ============================================================
+// RENDER MATCH CARDS  (FULL FUNCTION)
+// ============================================================
+
+function renderMatches(matches) {
+    const container = $("aml-live-container");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (!matches || !matches.length) {
+        const div = document.createElement("div");
+        div.className = "aml-placeholder";
+        div.textContent = "No matches available (yet).";
+        container.appendChild(div);
+        return;
+    }
+
+    matches.forEach((m) => {
+        const card = document.createElement("div");
+        card.className = "aml-card";
+
+        const league = m.league || "Unknown League";
+        const home = m.home || "Home";
+        const away = m.away || "Away";
+        const kickoff = m.kickoff || "";
+        const status = (m.status || "unknown").toLowerCase();
+        const minute = m.minute;
+        const kind = (m.kind || "").toLowerCase();
+
+        const scoreHome = m.score_home ?? m.home_score ?? "-";
+        const scoreAway = m.score_away ?? m.away_score ?? "-";
+
+        // Header
+        const header = document.createElement("div");
+        header.className = "aml-card-header";
+        header.innerHTML = `
+            <div class="aml-card-league">${league}</div>
+            <div class="aml-card-teams">${home} vs ${away}</div>
+            <div class="aml-card-meta">
+                ${kickoff ? kickoff : "No kickoff data"} · ${status}
+            </div>
+        `;
+
+        // Score
+        const score = document.createElement("div");
+        score.className = "aml-card-score";
+        score.innerHTML = `
+            <div class="aml-score-main">${scoreHome} : ${scoreAway}</div>
+            <div class="aml-score-minute">${minute != null ? minute + "'" : ""}</div>
+        `;
+
+        // Tags
+        const tags = document.createElement("div");
+        tags.className = "aml-card-tags";
+
+        const tag = document.createElement("span");
+        tag.className = "aml-tag";
+
+        if (kind === "live" || kind === "live_sim") {
+            tag.classList.add("aml-tag-live");
+            tag.textContent = "LIVE";
+        } else if (kind === "recent") {
+            tag.classList.add("aml-tag-recent");
+            tag.textContent = "RECENT";
+        } else if (kind === "upcoming") {
+            tag.classList.add("aml-tag-upcoming");
+            tag.textContent = "UPCOMING";
+        } else if (kind === "debug") {
+            tag.classList.add("aml-tag-debug");
+            tag.textContent = "DEBUG FEED";
+        } else {
+            tag.textContent = kind || "UNKNOWN";
+        }
+
+        tags.appendChild(tag);
+
+        // Attach parts
+        card.appendChild(header);
+        card.appendChild(score);
+        card.appendChild(tags);
+
+        // 🔥 GOAL FLASH EFFECT (προστέθηκε εδώ)
+        applyGoalFlashIfNeeded(m, card);
+
+        container.appendChild(card);
+    });
+}
+// ============================================================
+// FETCH LIVE FEED
+// ============================================================
+
+async function fetchLiveFeed(manual = false) {
+    const pill = $("aml-feed-status");
+    const rawPre = $("aml-live-raw");
+
+    try {
+        if (manual) {
+            setStatusPill(pill, "warn", "Refreshing…");
+        } else {
+            setStatusPill(pill, "warn", "Updating…");
+        }
+
+        const res = await fetch(API_LIVE_FEED, { cache: "no-store" });
+        const data = await res.json();
+
+        rawPre.textContent = JSON.stringify(data, null, 2);
+
+        // Normalize matches
+        const matches = normalizeMatchesFromPayload(data);
+        liveDataCache = matches;
+
+        const filtered = filterMatches(matches, currentViewFilter);
+        renderMatches(filtered);
+
+        setStatusPill(pill, "ok", `OK (${matches.length})`);
+
+        const now = new Date();
+        const lastUpdateEl = $("aml-last-update");
+        if (lastUpdateEl) {
+            lastUpdateEl.textContent = formatTime(now);
+        }
+
+    } catch (error) {
+        setStatusPill(pill, "error", "Feed error");
+        if (rawPre) {
+            rawPre.textContent = "Live feed error: " + String(error);
         }
     }
-    return fallback;
 }
+// ============================================================
+// VIEW FILTER CHIPS (ALL / LIVE / RECENT / UPCOMING)
+// ============================================================
 
-function escapeHtml(str) {
-    if (str === null || str === undefined) return "";
-    return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-}
+function initViewChips() {
+    const chips = document.querySelectorAll(".aml-chip");
 
+    chips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+            const view = chip.getAttribute("data-view") || "all";
+            currentViewFilter = view;
 
-// ------------------------------------------------------------
-// MOCK ODDS GENERATION (Stoiximan / OPAP / Pame)
-// ------------------------------------------------------------
-function generateMockOdds(match, bookmakerKey) {
-    // Μικρή διαφοροποίηση ανά bookmaker για να φαίνεται ρεαλιστικό
-    const baseSeed = (String(match.id || match.match_id || match.uid || match.home || "") + bookmakerKey)
-        .split("")
-        .reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+            // active chip styling
+            chips.forEach((c) => c.classList.remove("aml-chip-active"));
+            chip.classList.add("aml-chip-active");
 
-    function randOffset(mult = 0.15) {
-        const r = Math.sin(baseSeed + Math.random()) * 10000;
-        const frac = r - Math.floor(r);
-        return (frac - 0.5) * mult; // -mult/2 .. +mult/2
-    }
-
-    // Βασικές αποδόσεις
-    let home = 1.70 + randOffset(0.40);
-    let draw = 3.40 + randOffset(0.40);
-    let away = 4.20 + randOffset(0.40);
-
-    const over25 = 1.75 + randOffset(0.30);
-    const under25 = 2.05 + randOffset(0.30);
-    const gg = 1.65 + randOffset(0.25);
-    const ng = 2.20 + randOffset(0.25);
-
-    function clampOdd(x) {
-        return Math.max(1.10, Number(x.toFixed(2)));
-    }
-
-    return {
-        "1": { price: clampOdd(home) },
-        "X": { price: clampOdd(draw) },
-        "2": { price: clampOdd(away) },
-        "over_2_5": { price: clampOdd(over25) },
-        "under_2_5": { price: clampOdd(under25) },
-        "gg": { price: clampOdd(gg) },
-        "ng": { price: clampOdd(ng) }
-    };
+            // render filtered results
+            if (liveDataCache) {
+                const filtered = filterMatches(liveDataCache, currentViewFilter);
+                renderMatches(filtered);
+            }
+        });
+    });
 }
 
 
+// ============================================================
+// AUTO REFRESH LOOP
+// ============================================================
 
-// ------------------------------------------------------------
-// TOP BAR BUTTONS
-// ------------------------------------------------------------
-function refreshData() {
-    const title = document.getElementById("panel-title");
-    const panel = title.innerText.toLowerCase();
-    loadPanel(panel);
+function initRefreshLoop() {
+    if (refreshTimer) clearInterval(refreshTimer);
+
+    refreshTimer = setInterval(() => {
+        fetchLiveFeed(false);
+    }, REFRESH_INTERVAL_MS);
 }
 
-function openWorkspace() {
-    window.location.href = "/workspace";
+
+// ============================================================
+// MANUAL REFRESH BUTTON
+// ============================================================
+
+function initManualRefresh() {
+    const btn = $("aml-refresh-btn");
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+        fetchLiveFeed(true);
+    });
 }
+// ============================================================
+// PWA INSTALL HANDLING (ANDROID + IOS)
+// ============================================================
 
+// Save event for Android/desktop install
+window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
 
-// Auto-load overview at startup
-window.addEventListener("DOMContentLoaded", () => {
-    loadPanel("overview");
+    const btn = $("aml-install-btn");
+    if (btn) btn.classList.remove("hidden");
 });
+
+function initPwaInstallButton() {
+    const btn = $("aml-install-btn");
+    if (!btn) return;
+
+    // Detect iOS (iPhone/iPad)
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+
+    // =============== iOS MODE ===============
+    if (isIos && !isStandalone) {
+        btn.classList.remove("hidden");
+        btn.textContent = "📱 Add to Home Screen";
+        btn.addEventListener("click", () => {
+            alert(
+                "Για iPhone/iPad:\n\n" +
+                "1. Πάτα το κουμπί Share (τετράγωνο με το βελάκι)\n" +
+                "2. Επίλεξε 'Add to Home Screen'\n\n" +
+                "Αυτός είναι ο επίσημος τρόπος εγκατάστασης σε iOS."
+            );
+        });
+        return;
+    }
+
+    // =============== ANDROID / DESKTOP MODE ===============
+    btn.addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+
+        // whatever the user picks, hide the button
+        deferredPrompt = null;
+        btn.classList.add("hidden");
+    });
+}
+// ============================================================
+// DOMContentLoaded → STARTUP SEQUENCE
+// ============================================================
+
+document.addEventListener("DOMContentLoaded", () => {
+    // View chips (all / live / recent / upcoming)
+    initViewChips();
+
+    // Refresh now button
+    initManualRefresh();
+
+    // Backend health status
+    checkBackendHealth();
+
+    // Worker /status panel
+    checkWorkerStatus();
+
+    // First live load
+    fetchLiveFeed(false);
+
+    // Auto-refresh loop
+    initRefreshLoop();
+
+    // Install app logic (Android + iOS)
+    initPwaInstallButton();
+});
+// ============================================================
+// GOAL CHANGE DETECTION + FLASH ANIMATION
+// ============================================================
+
+// Αποθηκεύουμε παλιά σκορ για να εντοπίσουμε αλλαγές
+const previousScores = new Map();
+
+function applyGoalFlashIfNeeded(match, cardElement) {
+    const key = match.id;
+    if (!key) return;
+
+    const prev = previousScores.get(key);
+    const current = `${match.score_home}-${match.score_away}`;
+
+    // Αν υπάρχει παλιό score και το σκορ άλλαξε → flash
+    if (prev && prev !== current) {
+        const scoreBlock = cardElement.querySelector(".aml-card-score");
+        if (scoreBlock) {
+            scoreBlock.classList.add("aml-goal-flash");
+
+            // Αφαιρούμε το animation μετά από 1s
+            setTimeout(() => {
+                scoreBlock.classList.remove("aml-goal-flash");
+            }, 900);
+        }
+    }
+
+    // Αποθήκευση για επόμενο tick
+    previousScores.set(key, current);
+}

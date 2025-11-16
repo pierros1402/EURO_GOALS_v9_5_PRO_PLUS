@@ -1,81 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>AI MatchLab — Workspace</title>
+    <title>AI MatchLab</title>
 
-    <link rel="manifest" href="/static/manifest.json" />
-    <link rel="stylesheet" href="/static/css/aimatchlab.css" />
-    <link rel="icon" type="image/png" href="/static/icons/logo_64.png" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/icons/icon-192.png">
 
-    <script>
-        if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/static/service-worker.js");
-        }
-    </script>
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Theme color -->
+    <meta name="theme-color" content="#0b0f19">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/css/aimatchlab.css">
 </head>
+
 <body>
+    <div id="app-root">
 
-<header class="topbar">
-    <div class="topbar-left">
-        <img src="/static/icons/logo_64.png" class="top-logo" />
-        <span class="top-title">AI MATCHLAB — WORKSPACE</span>
-    </div>
+        <!-- ================= TOP BAR ================= -->
+        <header class="aml-topbar">
+            <div class="aml-topbar-left">
+                <div class="aml-logo-block">
+                    <div class="aml-logo">
+                        <span class="aml-logo-main">AI</span>
+                        <span class="aml-logo-sub">MatchLab</span>
+                    </div>
+                    <div class="aml-logo-subtitle">
+                        Advanced Live Intelligence Engine · v1.0.0
+                    </div>
+                </div>
 
-    <div class="topbar-right">
-        <button class="top-btn" onclick="backHome()">Back</button>
-        <button class="top-btn" onclick="refreshWorkspace()">Refresh</button>
-    </div>
-</header>
+                <div class="aml-topbar-meta">
+                    <span class="aml-badge env-development">ENV: DEVELOPMENT</span>
+                    <span class="aml-badge version">v1.0.0</span>
+                </div>
+            </div>
 
-<main class="workspace-area">
+            <div class="aml-topbar-right">
+                <button id="aml-install-btn" class="aml-btn install hidden">
+                    ➕ Install App
+                </button>
 
-    <div id="loading" class="loading hidden">
-        <div class="spinner"></div>
-        <p>Loading...</p>
-    </div>
+                <button id="aml-refresh-btn" class="aml-btn primary">
+                    ⟳ Refresh now
+                </button>
+            </div>
+        </header>
 
-    <h1 class="workspace-title">AI MatchLab Experimental Workspace</h1>
+        <!-- ================= STATUS STRIP ================= -->
+        <div class="aml-status-strip">
+            <div class="aml-status-item">
+                <div class="aml-status-label">BACKEND</div>
+                <div id="aml-backend-status" class="aml-status-pill">…</div>
+            </div>
 
-    <div id="workspace-content" class="workspace-panel">
-        <div class="placeholder">
-            This is the AI MatchLab experimental area.<br>
-            Load tools and modules directly from Worker.
+            <div class="aml-status-item">
+                <div class="aml-status-label">WORKER</div>
+                <div id="aml-worker-status" class="aml-status-pill">…</div>
+            </div>
+
+            <div class="aml-status-item">
+                <div class="aml-status-label">LIVE FEED</div>
+                <div id="aml-feed-status" class="aml-status-pill">…</div>
+            </div>
+
+            <div class="aml-status-item aml-status-small">
+                <div class="aml-status-label">LAST UPDATE</div>
+                <div id="aml-last-update" class="aml-status-pill">--:--:--</div>
+            </div>
+        </div>
+
+        <!-- ================= MAIN GRID ================= -->
+        <div class="aml-main-grid">
+
+            <!-- LEFT PANEL -->
+            <div class="aml-panel">
+                <div class="aml-panel-header">
+                    <div>
+                        <h2>AI MatchLab – Live Matrix</h2>
+                        <p class="aml-panel-subtitle">
+                            Unified view of LIVE / RECENT / UPCOMING matches.
+                        </p>
+                    </div>
+
+                    <div>
+                        <span class="aml-chip aml-chip-active" data-view="all">All</span>
+                        <span class="aml-chip" data-view="live">Live</span>
+                        <span class="aml-chip" data-view="recent">Recent</span>
+                        <span class="aml-chip" data-view="upcoming">Upcoming</span>
+                    </div>
+                </div>
+
+                <div id="aml-live-container" class="aml-cards-container">
+                    <!-- Live cards appear here -->
+                </div>
+            </div>
+
+            <!-- RIGHT PANEL -->
+            <div class="aml-panel aml-panel-side">
+                <div class="aml-panel-header">
+                    <h2>AI System Monitor</h2>
+                </div>
+
+                <div class="aml-monitor-section">
+                    <h3>Worker Status (/status)</h3>
+                    <pre id="aml-worker-status-raw" class="aml-pre">Waiting…</pre>
+                </div>
+
+                <div class="aml-monitor-section">
+                    <h3>Last Live Payload (/ai/source-a/live)</h3>
+                    <pre id="aml-live-raw" class="aml-pre">Waiting…</pre>
+                </div>
+            </div>
         </div>
     </div>
 
-</main>
+    <!-- ================= SERVICE WORKER REGISTER ================= -->
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("/service-worker.js").catch((err) => {
+                    console.warn("Service worker registration failed:", err);
+                });
+            });
+        }
+    </script>
 
-<script src="/static/js/aimatchlab.js"></script>
-
-<script>
-function backHome() { window.location.href = "/"; }
-
-async function refreshWorkspace() {
-    loadWorkspaceModule("default");
-}
-
-async function loadWorkspaceModule(moduleName) {
-    const container = document.getElementById("workspace-content");
-    container.innerHTML = `<div class="placeholder">Loading ${moduleName}...</div>`;
-
-    const result = await callWorker(`aimatchlab/workspace/${moduleName}`);
-
-    if (typeof result === "object") {
-        if (Array.isArray(result)) container.innerHTML = generateTable(result);
-        else container.innerHTML = objectToTable(result);
-        return;
-    }
-
-    container.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    loadWorkspaceModule("default");
-});
-</script>
+    <!-- ================= MAIN SCRIPT ================= -->
+    <script src="/static/js/aimatchlab.js"></script>
 
 </body>
 </html>
