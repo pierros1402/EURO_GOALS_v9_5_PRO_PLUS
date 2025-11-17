@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="el">
-<head>
   <meta charset="UTF-8" />
   <title>AI MATCHLAB v3 — AiScore Edition</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
