@@ -3,7 +3,7 @@
 # ============================================================
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os, json, datetime as dt, httpx
@@ -70,7 +70,7 @@ async def health():
 
 
 # ============================================================
-# PROXY: WORKER ENDPOINTS
+# PROXY → WORKER ENDPOINTS
 # ============================================================
 
 async def fetch_worker(path: str):
@@ -105,7 +105,7 @@ async def worker_upcoming():
 
 
 # ============================================================
-# SERVICE WORKER / MANIFEST
+# SERVICE WORKER / MANIFEST (PWA SUPPORT)
 # ============================================================
 
 @app.get("/service-worker.js")
@@ -118,5 +118,3 @@ async def service_worker():
 async def manifest():
     filepath = os.path.join(BASE_DIR, "manifest.json")
     return FileResponse(filepath, media_type="application/json")
-
-
