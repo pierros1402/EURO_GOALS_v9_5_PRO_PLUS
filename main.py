@@ -105,11 +105,18 @@ async def worker_upcoming():
 
 
 # ============================================================
-# SERVICE WORKER
+# SERVICE WORKER / MANIFEST
 # ============================================================
 
 @app.get("/service-worker.js")
 async def service_worker():
     filepath = os.path.join(BASE_DIR, "service-worker.js")
-    with open(filepath, "r", encoding="utf-8") as sw:
-        return HTMLResponse(sw.read(), media_type="application/javascript")
+    return FileResponse(filepath, media_type="application/javascript")
+
+
+@app.get("/manifest.json")
+async def manifest():
+    filepath = os.path.join(BASE_DIR, "manifest.json")
+    return FileResponse(filepath, media_type="application/json")
+
+

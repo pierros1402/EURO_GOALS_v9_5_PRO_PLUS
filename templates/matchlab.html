@@ -1,28 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>AI MatchLab v9.9.3 PREMIUM</title>
+    <title>AI MatchLab PREMIUM</title>
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#050815" />
+    <meta name="theme-color" content="#0b0f1a" />
 
-    <!-- iOS fullscreen -->
+    <!-- iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="AI MatchLab" />
 
-    <!-- Icons -->
-    <link rel="apple-touch-icon" href="/static/icons/aimatchlab_192.png" />
-    <link rel="apple-touch-icon" href="/static/icons/aimatchlab_512.png" />
-    <link rel="icon" href="/static/icons/aimatchlab_192.png" />
+    <!-- Correct Icons -->
+    <link rel="apple-touch-icon" sizes="192x192" href="/static/icons/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/static/icons/icon-512.png" />
+    <link rel="icon" sizes="192x192" href="/static/icons/icon-192.png" />
+    <link rel="icon" sizes="512x512" href="/static/icons/icon-512.png" />
 
-    <!-- Main UI CSS -->
+    <!-- CSS -->
     <link rel="stylesheet" href="/static/css/aimatchlab.css" />
 </head>
+
 <body class="aiml-body">
 
     <!-- HEADER -->
@@ -36,24 +39,14 @@
 
             <div class="aiml-header-badges">
                 <span class="aiml-badge env">ENV: DEVELOPMENT</span>
-                <span class="aiml-badge version">v9
-
-
-.9.3 PREMIUM</span>
+                <span class="aiml-badge version">v0.9.3 PREMIUM</span>
             </div>
         </div>
 
         <div class="aiml-header-right">
-            <button id="themeToggleBtn" class="aiml-header-btn aiml-theme-btn" title="Change theme">
-                🎨 Theme
-            </button>
-            <!-- ΠΑΝΤΑ ΟΡΑΤΟ INSTALL BUTTON -->
-            <button id="installBtn" class="aiml-header-btn aiml-install-btn">
-                ⬇ Install
-            </button>
-            <button id="refreshBtn" class="aiml-header-btn aiml-refresh-btn">
-                ⟳ Refresh now
-            </button>
+            <button id="themeToggleBtn" class="aiml-header-btn aiml-theme-btn">🎨 Theme</button>
+            <button id="installBtn" class="aiml-header-btn aiml-install-btn">⬇ Install</button>
+            <button id="refreshBtn" class="aiml-header-btn aiml-refresh-btn">⟳ Refresh</button>
         </div>
     </header>
 
@@ -62,84 +55,71 @@
         <div class="aiml-summary-card">
             <div class="aiml-summary-label">BACKEND</div>
             <div id="backendStatusValue" class="aiml-summary-value aiml-summary-ok">Online</div>
-            <div class="aiml-summary-caption">FastAPI core status</div>
+            <div class="aiml-summary-caption">FastAPI Health</div>
         </div>
 
         <div class="aiml-summary-card">
             <div class="aiml-summary-label">WORKER</div>
             <div id="workerStatusValue" class="aiml-summary-value aiml-summary-issue">Checking…</div>
-            <div id="workerSummaryCaption" class="aiml-summary-caption">
-                Matching engine
-            </div>
+            <div id="workerSummaryCaption" class="aiml-summary-caption">No data</div>
         </div>
 
         <div class="aiml-summary-card">
             <div class="aiml-summary-label">LIVE FEED</div>
-            <div id="feedStatusValue" class="aiml-summary-value aiml-summary-issue">
-                No data
-            </div>
-            <div id="feedSummaryCaption" class="aiml-summary-caption">
-                Source A (SofaScore)
-            </div>
+            <div id="feedStatusValue" class="aiml-summary-value aiml-summary-issue">No data</div>
+            <div id="feedSummaryCaption" class="aiml-summary-caption">Awaiting feed</div>
         </div>
     </section>
 
     <!-- MAIN GRID -->
     <main class="aiml-main-grid">
-        <!-- LIVE MATRIX -->
+
+        <!-- LIVE PANEL -->
         <section class="aiml-panel aiml-live-panel">
             <div class="aiml-panel-header">
                 <div>
                     <div class="aiml-panel-title">AI MatchLab – Live Matrix</div>
-                    <div class="aiml-panel-subtitle">
-                        Unified view of LIVE / RECENT / UPCOMING matches.
-                    </div>
+                    <div class="aiml-panel-subtitle">Unified Live / Recent / Upcoming feed</div>
                 </div>
+
                 <div class="aiml-tabs">
-                    <button id="btnAll" class="aiml-tab aiml-tab-active" data-filter="all">All</button>
-                    <button id="btnLive" class="aiml-tab" data-filter="live">Live</button>
-                    <button id="btnRecent" class="aiml-tab" data-filter="recent">Recent</button>
-                    <button id="btnUpcoming" class="aiml-tab" data-filter="upcoming">Upcoming</button>
+                    <button id="btnAll" class="aiml-tab aiml-tab-active">All</button>
+                    <button id="btnLive" class="aiml-tab">Live</button>
+                    <button id="btnRecent" class="aiml-tab">Recent</button>
+                    <button id="btnUpcoming" class="aiml-tab">Upcoming</button>
                 </div>
             </div>
 
             <div id="liveContainer" class="aiml-live-container">
-                <!-- Skeleton loader on first load -->
-                <div class="aiml-skeleton-list" id="liveSkeleton">
-                    <div class="aiml-skeleton-card"></div>
+                <div id="liveSkeleton" class="aiml-skeleton-list">
                     <div class="aiml-skeleton-card"></div>
                     <div class="aiml-skeleton-card"></div>
                     <div class="aiml-skeleton-card"></div>
                 </div>
-                <div class="aiml-placeholder" id="livePlaceholder" style="display:none;">
-                    Waiting for live data…
-                </div>
+                <div id="livePlaceholder" class="aiml-placeholder" style="display:none;">Waiting for live data…</div>
             </div>
         </section>
 
-        <!-- SYSTEM MONITOR -->
+        <!-- MONITOR PANEL -->
         <aside class="aiml-panel aiml-monitor-panel">
             <div class="aiml-panel-header">
                 <div>
                     <div class="aiml-panel-title">AI System Monitor</div>
-                    <div class="aiml-panel-subtitle">Worker &amp; feed diagnostics.</div>
+                    <div class="aiml-panel-subtitle">Worker Diagnostics</div>
                 </div>
             </div>
 
             <div class="aiml-monitor-block">
                 <div class="aiml-monitor-title">Worker Status (/ai/status)</div>
-                <pre id="statusBox" class="aiml-monitor-pre">
-Loading…
-                </pre>
+                <pre id="statusBox" class="aiml-monitor-pre">Loading…</pre>
             </div>
 
             <div class="aiml-monitor-block">
-                <div class="aiml-monitor-title">Last Live Payload (/ai/source-a/live)</div>
-                <pre id="liveDebugBox" class="aiml-monitor-pre">
-Waiting for first payload…
-                </pre>
+                <div class="aiml-monitor-title">Live Payload (/ai/source-a/live)</div>
+                <pre id="liveDebugBox" class="aiml-monitor-pre">Waiting…</pre>
             </div>
         </aside>
+
     </main>
 
     <!-- DEBUG PANEL -->
@@ -148,17 +128,10 @@ Waiting for first payload…
             <span class="aiml-debug-title">Debug Panel</span>
             <button id="toggleDebugBtn" class="aiml-debug-toggle-btn">Collapse</button>
         </div>
-        <pre id="debugPanel" class="aiml-debug-pre">
-Waiting for combined debug data…
-        </pre>
+        <pre id="debugPanel" class="aiml-debug-pre">Waiting for debug data…</pre>
     </section>
 
-    <!-- GOAL FLASH OVERLAY -->
-    <div id="goalFlashOverlay" class="aiml-goal-overlay" style="display:none;">
-        GOAL!
-    </div>
-
-    <!-- LEGAL FOOTER -->
+    <!-- FOOTER -->
     <footer class="aiml-footer">
         <a href="/legal/terms">Terms</a>
         <a href="/legal/privacy">Privacy</a>
@@ -166,18 +139,33 @@ Waiting for combined debug data…
         <a href="/legal/responsible-gambling">Responsible Gambling</a>
     </footer>
 
-    <!-- MAIN FRONTEND ENGINE -->
-    <script src="/static/js/aimatchlab.js?v=0.9.3"></script>
+    <!-- ENGINE -->
+    <script src="/static/js/aimatchlab.js"></script>
 
-    <!-- SERVICE WORKER REG -->
+    <!-- INSTALL HANDLER -->
     <script>
-    if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-            navigator.serviceWorker.register("/service-worker.js")
-                .then(reg => console.log("[SW] Registered:", reg.scope))
-                .catch(err => console.error("[SW] Registration failed:", err));
+        let deferredPrompt = null;
+        window.addEventListener("beforeinstallprompt", e => {
+            e.preventDefault();
+            deferredPrompt = e;
         });
-    }
+
+        document.getElementById("installBtn").addEventListener("click", async () => {
+            if (!deferredPrompt) {
+                alert("To install:\n\n• iOS: Share → Add to Home Screen\n• Android: Menu → Install App");
+                return;
+            }
+            deferredPrompt.prompt();
+            deferredPrompt = null;
+        });
+
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
+            });
+        }
     </script>
+
 </body>
+
 </html>
