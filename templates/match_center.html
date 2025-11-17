@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI MatchLab – Match Center</title>
+
+    <link rel="manifest" href="/manifest.json?v=0.9.3" />
+    <meta name="theme-color" content="#0b0e1c" />
+
+    <!-- Versioned CSS -->
+    <link rel="stylesheet" href="/static/css/aimatchlab.css?v=0.9.3" />
+
+    <!-- Icons Versioned -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png?v=0.9.3">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icons/icon-512.png?v=0.9.3">
+    <link rel="apple-touch-icon" href="/static/icons/icon-512.png?v=0.9.3">
+    <link rel="icon" type="image/png" sizes="512x512" href="/static/icons/icon-maskable-512.png?v=0.9.3" purpose="maskable">
+</head>
+
+<body class="aiml-body aiml-match-center-body">
+
+<header class="aiml-header">
+    <div class="aiml-header-left">
+        <button onclick="window.history.back()" class="aiml-header-btn aiml-back-btn">← Back</button>
+        <div class="aiml-title-block">
+            <div class="aiml-title">AI MATCHLAB</div>
+            <div class="aiml-subtitle">Advanced Match Center</div>
+        </div>
+    </div>
+
+    <div class="aiml-header-right">
+        <span id="mcEnvBadge" class="aiml-badge env">ENV: DEVELOPMENT</span>
+        <span id="mcVersionBadge" class="aiml-badge version">Match Center v0.9.3</span>
+    </div>
+</header>
+
+<main class="aiml-main-grid aiml-match-center-grid">
+
+    <section class="aiml-panel aiml-match-main-card">
+
+        <div class="aiml-panel-header">
+            <div>
+                <div id="mcLeague" class="aiml-panel-title">Loading league…</div>
+                <div id="mcStatus" class="aiml-panel-subtitle">Loading status…</div>
+            </div>
+
+            <div class="aiml-match-meta">
+                <span id="mcMinute" class="aiml-chip">–'</span>
+                <span id="mcBucket" class="aiml-chip">bucket: ?</span>
+            </div>
+        </div>
+
+        <div class="aiml-match-center-scoreboard">
+            <div class="aiml-team-box aiml-team-home">
+                <div id="mcHomeName" class="aiml-team-name">Home</div>
+                <div id="mcHomeExtra" class="aiml-team-extra">–</div>
+            </div>
+
+            <div class="aiml-score-box">
+                <div id="mcScore" class="aiml-score-main">0 - 0</div>
+                <div id="mcKickoff" class="aiml-score-kickoff">Kickoff: –</div>
+            </div>
+
+            <div class="aiml-team-box aiml-team-away">
+                <div id="mcAwayName" class="aiml-team-name">Away</div>
+                <div id="mcAwayExtra" class="aiml-team-extra">–</div>
+            </div>
+        </div>
+
+        <div class="aiml-match-center-tabs">
+            <button id="mcTabOverview" class="aiml-tab aiml-tab-active">Overview</button>
+            <button id="mcTabEvents" class="aiml-tab">Events</button>
+            <button id="mcTabLineups" class="aiml-tab">Lineups</button>
+            <button id="mcTabStats" class="aiml-tab">Stats</button>
+        </div>
+
+        <div id="mcOverviewPanel" class="aiml-match-center-panel">
+            <p id="mcOverviewText" class="aiml-match-center-text">Loading match overview…</p>
+        </div>
+
+        <div id="mcEventsPanel" class="aiml-match-center-panel" style="display:none;">
+            <ul id="mcEventsList" class="aiml-events-list"></ul>
+        </div>
+
+        <div id="mcLineupsPanel" class="aiml-match-center-panel" style="display:none;">
+            <p class="aiml-match-center-text">Lineups not available in this demo build.</p>
+        </div>
+
+        <div id="mcStatsPanel" class="aiml-match-center-panel" style="display:none;">
+            <p class="aiml-match-center-text">Advanced stats (xG, momentum) coming in Phase 2.</p>
+        </div>
+
+    </section>
+
+    <aside class="aiml-panel aiml-monitor-panel aiml-match-center-side">
+        <div class="aiml-panel-header">
+            <div>
+                <div class="aiml-panel-title">Raw Match Payload</div>
+                <div class="aiml-panel-subtitle">For debugging & integrations</div>
+            </div>
+        </div>
+
+        <pre id="mcDebugBox" class="aiml-monitor-pre">Waiting for data…</pre>
+        <div class="aiml-monitor-block">
+            <div class="aiml-monitor-title">API Endpoint</div>
+            <div id="mcEndpointLabel" class="aiml-monitor-caption">–</div>
+        </div>
+    </aside>
+
+</main>
+
+<footer class="aiml-footer">
+    <a href="/legal/terms">Terms</a>
+    <a href="/legal/privacy">Privacy</a>
+    <a href="/legal/cookies">Cookies</a>
+    <a href="/legal/responsible-gambling">Responsible Gambling</a>
+</footer>
+
+<!-- NEW: Versioned JS -->
+<script src="/static/js/match_center.js?v=0.9.3"></script>
+
+<!-- Service Worker -->
+<script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/service-worker.js?v=0.9.3");
+}
+</script>
+
+</body>
+</html>

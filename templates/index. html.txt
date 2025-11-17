@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI MATCHLAB v3 — AiScore Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg-main: #050712;
+      --bg-header: #0c0f1f;
+      --bg-header-elevated: #141729;
+      --accent: #4f8cff;
+      --accent-soft: rgba(79, 140, 255, 0.12);
+      --text-main: #f5f7ff;
+      --text-muted: #9ca3c7;
+      --danger: #ff4b6b;
+      --success: #36d399;
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --radius-lg: 16px;
+      --radius-pill: 999px;
+      --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #11152b 0, #050712 52%, #020309 100%);
+      color: var(--text-main);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+
+    header {
+      flex-shrink: 0;
+      padding: 10px 18px;
+      background: linear-gradient(90deg, #050712, #0b1022);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(16px);
+    }
+
+    .header-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-right: 16px;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 30%;
+      background: radial-gradient(circle at 30% 20%, #ffffff 0, #4f8cff 28%, #050712 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 1px rgba(79, 140, 255, 0.4), 0 15px 35px rgba(0,0,0,0.7);
+      font-weight: 900;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    }
+
+    .brand-text-main {
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.16em;
+    }
+
+    .brand-text-sub {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-muted);
+    }
+
+    /* NAV */
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 18px;
+      flex-wrap: wrap;
+    }
+
+    .nav-pill {
+      border-radius: var(--radius-pill);
+      background: rgba(11, 16, 38, 0.9);
+      padding: 3px;
+      display: flex;
+      gap: 4px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02);
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: all 0.16s ease;
+      white-space: nowrap;
+    }
+
+    .nav-btn:hover {
+      color: #ffffff;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(135deg, var(--accent), #9c6bff);
+      color: #ffffff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 8px 20px rgba(79,140,255,0.5);
+    }
+
+    .nav-btn.secondary {
+      font-size: 11px;
+      padding-inline: 10px;
+      background: transparent;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .nav-btn.secondary.active {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    /* THEME SWITCHER */
+
+    .spacer {
+      flex: 1;
+    }
+
+    .theme-switcher {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 6px;
+      border-radius: var(--radius-pill);
+      background: rgba(4,6,18,0.9);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.5);
+    }
+
+    .theme-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+    }
+
+    .theme-buttons {
+      display: flex;
+      gap: 4px;
+    }
+
+    .theme-btn {
+      border-radius: var(--radius-pill);
+      border: none;
+      padding: 3px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-muted);
+      transition: all 0.16s ease;
+    }
+
+    .theme-btn:hover {
+      color: #ffffff;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .theme-btn.active {
+      background: var(--accent-soft);
+      color: #ffffff;
+      box-shadow: inset 0 0 0 1px rgba(79,140,255,0.7);
+    }
+
+    /* MAIN LAYOUT */
+
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 14px 10px 14px;
+    }
+
+    .main-inner {
+      width: 100%;
+      max-width: 1440px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .top-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding-inline: 2px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 20%, #ffffff 0, #36d399 35%, #050712 80%);
+      box-shadow: 0 0 12px rgba(54,211,153,0.9);
+    }
+
+    .status-text-strong {
+      color: var(--success);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .pill-soft {
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .pill-soft strong {
+      color: var(--text-main);
+    }
+
+    .widget-shell {
+      flex: 1;
+      border-radius: 20px;
+      background: radial-gradient(circle at top, #14182c 0, #050712 60%, #020309 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: min(80vh, 720px);
+    }
+
+    .widget-header {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(90deg, rgba(12,16,40,0.96), rgba(7,10,22,0.96));
+    }
+
+    .widget-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .widget-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .widget-badge {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(4,6,20,0.8);
+      color: var(--text-muted);
+    }
+
+    .widget-body {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at top, #121629 0, #050712 60%);
+    }
+
+    .iframe-wrapper {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #aiscore-iframe {
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .placeholder-pane {
+      flex: 1;
+      padding: 20px;
+      display: none;
+      gap: 14px;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .placeholder-pane.active {
+      display: flex;
+    }
+
+    .placeholder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: radial-gradient(circle at top left, rgba(79,140,255,0.16), rgba(2,3,10,0.96));
+      padding: 14px;
+      box-shadow: 0 14px 32px rgba(0,0,0,0.6);
+    }
+
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      padding: 3px 7px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text-muted);
+    }
+
+    .tag.highlight {
+      border-color: rgba(79,140,255,0.9);
+      color: #cfe1ff;
+      background: rgba(79,140,255,0.12);
+    }
+
+    .about-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .about-highlight {
+      color: #ffffff;
+      font-weight: 500;
+    }
+
+    .footer-note {
+      padding: 6px 12px 10px;
+      font-size: 10px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: radial-gradient(circle at bottom, #131629 0, #050712 60%);
+    }
+
+    .footer-note a {
+      color: #9fb8ff;
+      text-decoration: none;
+    }
+
+    .footer-note a:hover {
+      text-decoration: underline;
+    }
+
+    /* RESPONSIVE */
+
+    @media (max-width: 900px) {
+      .header-inner {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .brand {
+        border-right: none;
+        padding-right: 0;
+      }
+      nav {
+        margin-left: 0;
+      }
+      .nav-pill {
+        flex-wrap: wrap;
+      }
+      .theme-switcher {
+        margin-left: auto;
+      }
+      .widget-shell {
+        border-radius: 14px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding-inline: 10px;
+      }
+      .brand-text-main {
+        font-size: 16px;
+      }
+      .brand-text-sub {
+        display: none;
+      }
+      .nav-btn {
+        font-size: 11px;
+        padding-inline: 10px;
+      }
+      .widget-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .footer-note {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <!-- BRAND -->
+      <div class="brand">
+        <div class="brand-logo">AI</div>
+        <div>
+          <div class="brand-text-main">MATCHLAB</div>
+          <div class="brand-text-sub">LIVE FOOTBALL LAB</div>
+        </div>
+      </div>
+
+      <!-- MAIN NAV -->
+      <nav>
+        <div class="nav-pill" id="primary-nav">
+          <button class="nav-btn active" data-view="live">LIVE</button>
+          <button class="nav-btn" data-view="scores">SCORES</button>
+          <button class="nav-btn" data-view="standings">STANDINGS</button>
+          <button class="nav-btn" data-view="leagues">LEAGUES</button>
+          <button class="nav-btn" data-view="teams">TEAMS</button>
+        </div>
+
+        <div class="nav-pill" id="ai-nav">
+          <button class="nav-btn secondary" data-view="ai">AI PREDICTIONS</button>
+          <button class="nav-btn secondary" data-view="goalmatrix">GOALMATRIX</button>
+          <button class="nav-btn secondary" data-view="smartmoney">SMARTMONEY</button>
+          <button class="nav-btn secondary" data-view="about">ABOUT</button>
+        </div>
+      </nav>
+
+      <div class="spacer"></div>
+
+      <!-- THEME SWITCHER -->
+      <div class="theme-switcher">
+        <span class="theme-label">Theme</span>
+        <div class="theme-buttons">
+          <button class="theme-btn active" data-theme="dark">Dark</button>
+          <button class="theme-btn" data-theme="blue">Blue</button>
+          <button class="theme-btn" data-theme="white">Light</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="main-inner">
+      <div class="top-strip">
+        <span class="status-dot"></span>
+        <span class="status-text-strong">AI MATCHLAB LIVE ENGINE</span>
+        <span>•</span>
+        <span>Powered via AiScore widget overlay</span>
+        <span class="pill-soft">Mode: <strong id="mode-label">LIVE</strong></span>
+        <span class="pill-soft">Theme: <strong id="mode-theme-label">Dark</strong></span>
+      </div>
+
+      <section class="widget-shell">
+        <div class="widget-header">
+          <div>
+            <div class="widget-title">
+              <span id="widget-title-label">Live Matches</span>
+            </div>
+            <div class="widget-subtitle" id="widget-subtitle-label">
+              Global live scores, cards and minute-by-minute updates powered by AiScore.
+            </div>
+          </div>
+          <div class="widget-badge">
+            WIDGET MODE • READ-ONLY DATA LAYER
+          </div>
+        </div>
+
+        <div class="widget-body">
+          <!-- AISCORE IFRAME CONTAINER -->
+          <div class="iframe-wrapper" id="iframe-wrapper">
+            <iframe
+              id="aiscore-iframe"
+              title="AiScore Football Widget"
+              src=""
+              scrolling="auto"
+              frameborder="0"
+            ></iframe>
+          </div>
+
+          <!-- PLACEHOLDER PANES (AI / GOALMATRIX / SMARTMONEY / ABOUT) -->
+
+          <div class="placeholder-pane" id="pane-ai">
+            <div class="placeholder-grid">
+              <div class="card">
+                <h3>AI Predictions Hub</h3>
+                <p>
+                  Εδώ θα συνδέσουμε στο μέλλον τα prediction models του AI MATCHLAB
+                  (xGoals, πιθανότητες 1X2, Over/Under, BTTS, momentum κλπ) πάνω από τα live δεδομένα.
+                </p>
+                <div class="tag-row">
+                  <span class="tag highlight">coming soon</span>
+                  <span class="tag">xGoals engine</span>
+                  <span class="tag">probability curves</span>
+                  <span class="tag">model monitor</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Scenario Builder</h3>
+                <p>
+                  Προσομοίωση σεναρίων αγώνα, αλλαγές score, κόκκινες, VAR και πώς αλλάζουν οι πιθανότητες.
+                  Το panel αυτό μπορεί να συνδεθεί με SmartMoney & GoalMatrix.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="placeholder-pane" id="pane-goalmatrix">
+            <div class="placeholder-grid">
+              <div class="card">
+                <h3>GoalMatrix Overlay</h3>
+                <p>
+                  Θερμικοί χάρτες πιθανοτήτων γκολ ανά χρονικό παράθυρο (0–15, 16–30 κτλ),
+                  με βάση live ρυθμό, xG και patterns.
+                </p>
+                <div class="tag-row">
+                  <span class="tag highlight">live overlays</span>
+                  <span class="tag">time buckets</span>
+                  <span class="tag">danger zones</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Pressure & Momentum</h3>
+                <p>
+                  Δείκτες πίεσης ομάδων (shots, attacks, dangerous attacks, possession swings),
+                  έτοιμοι για οπτικοποίηση πάνω από τα live matches.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="placeholder-pane" id="pane-smartmoney">
+            <div class="placeholder-grid">
+              <div class="card">
+                <h3>SmartMoney Tracker</h3>
+                <p>
+                  Panel για παρακολούθηση κινήσεων αποδόσεων, πιθανών “sharp” signals
+                  και ασυμμετριών αγοράς σε real time (αν συνδεθεί με odds provider).
+                </p>
+                <div class="tag-row">
+                  <span class="tag highlight">market moves</span>
+                  <span class="tag">sharp vs public</span>
+                  <span class="tag">risk radar</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Bankroll & Exposure</h3>
+                <p>
+                  Πίνακες για total exposure ανά αγορά, league ή ώρα αγώνα,
+                  ώστε να βλέπεις πού “κάθεται” το ρίσκο σου.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="placeholder-pane" id="pane-about">
+            <div class="card">
+              <h3>About AI MATCHLAB</h3>
+              <p class="about-text">
+                Το <span class="about-highlight">AI MATCHLAB</span> είναι ένα experimental
+                live football lab που χτίζεται πάνω από εξωτερικά widgets (εδώ AiScore)
+                και δικά μας AI overlays (GoalMatrix, SmartMoney, xG engine).
+              </p>
+              <p class="about-text">
+                Στόχος: μια clean, ελαφριά, data-driven πλατφόρμα που μπορεί να σταθεί μπροστά
+                σε bookmakers, affiliates και επενδυτές, χωρίς να αποκαλύπτει upstream πηγές
+                και χωρίς περίπλοκα integrations.
+              </p>
+              <p class="about-text">
+                Στο τρέχον στάδιο, το data layer είναι read-only μέσω AiScore widget,
+                ενώ το overlay (UI + AI components) είναι full custom και επεκτάσιμο.
+              </p>
+              <div class="tag-row">
+                <span class="tag highlight">phase 1: widgets</span>
+                <span class="tag">phase 2: ai layers</span>
+                <span class="tag">phase 3: bookmaker integrations</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-note">
+          <span>
+            Data layer currently rendered via embedded AiScore widget.
+            AI MATCHLAB does not expose or resell raw provider data.
+          </span>
+          <span>
+            External source: <a href="https://www.aiscore.com" target="_blank" rel="noopener noreferrer">AiScore.com</a>
+          </span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      const AISCORE_BASE = "https://www.aiscore.com/";
+
+      const state = {
+        view: "live",      // live | scores | standings | leagues | teams | ai | goalmatrix | smartmoney | about
+        theme: "dark",     // dark | blue | white
+      };
+
+      const modeLabel = document.getElementById("mode-label");
+      const modeThemeLabel = document.getElementById("mode-theme-label");
+      const iframe = document.getElementById("aiscore-iframe");
+      const iframeWrapper = document.getElementById("iframe-wrapper");
+
+      const widgetTitleLabel = document.getElementById("widget-title-label");
+      const widgetSubtitleLabel = document.getElementById("widget-subtitle-label");
+
+      const primaryNav = document.getElementById("primary-nav");
+      const aiNav = document.getElementById("ai-nav");
+      const themeButtons = document.querySelectorAll(".theme-btn");
+
+      const paneAi = document.getElementById("pane-ai");
+      const paneGoal = document.getElementById("pane-goalmatrix");
+      const paneSmart = document.getElementById("pane-smartmoney");
+      const paneAbout = document.getElementById("pane-about");
+      const panes = [paneAi, paneGoal, paneSmart, paneAbout];
+
+      function loadPersistedTheme() {
+        try {
+          const saved = localStorage.getItem("aimatchlab_theme");
+          if (saved === "dark" || saved === "blue" || saved === "white") {
+            state.theme = saved;
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      function persistTheme() {
+        try {
+          localStorage.setItem("aimatchlab_theme", state.theme);
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      function themeLabelName(theme) {
+        if (theme === "blue") return "Blue";
+        if (theme === "white") return "Light";
+        return "Dark";
+      }
+
+      function buildAiscoreUrl(view, theme) {
+        // AiScore δεν έχει public documented deep-links για tabs,
+        // οπότε χρησιμοποιούμε τη βασική σελίδα με theme & responsive width.
+        const params = new URLSearchParams();
+        params.set("width", "100%");
+        params.set("theme", theme);
+        // Αν κάποια στιγμή προστεθεί anchor για live/results κτλ,
+        // μπορούμε να το προσθέσουμε εδώ.
+        return AISCORE_BASE + "?" + params.toString();
+      }
+
+      function setActiveNavButtons() {
+        const allNavBtns = document.querySelectorAll(".nav-btn");
+        allNavBtns.forEach((btn) => {
+          const view = btn.getAttribute("data-view");
+          btn.classList.toggle("active", view === state.view);
+        });
+      }
+
+      function setActiveThemeButtons() {
+        themeButtons.forEach((btn) => {
+          const theme = btn.getAttribute("data-theme");
+          btn.classList.toggle("active", theme === state.theme);
+        });
+        modeThemeLabel.textContent = themeLabelName(state.theme);
+      }
+
+      function setViewMetadata() {
+        modeLabel.textContent = state.view.toUpperCase();
+
+        if (state.view === "live") {
+          widgetTitleLabel.textContent = "Live Matches";
+          widgetSubtitleLabel.textContent =
+            "Global live scores, goals, cards and minute-by-minute data via AiScore.";
+        } else if (state.view === "scores") {
+          widgetTitleLabel.textContent = "Scores & Schedule";
+          widgetSubtitleLabel.textContent =
+            "Results, upcoming fixtures and full competition tree inside the AiScore widget.";
+        } else if (state.view === "standings") {
+          widgetTitleLabel.textContent = "Standings & Tables";
+          widgetSubtitleLabel.textContent =
+            "League rankings, points, form and placement across all major competitions.";
+        } else if (state.view === "leagues") {
+          widgetTitleLabel.textContent = "Leagues Overview";
+          widgetSubtitleLabel.textContent =
+            "Browse global leagues and cups from within the AiScore widget.";
+        } else if (state.view === "teams") {
+          widgetTitleLabel.textContent = "Teams & Clubs";
+          widgetSubtitleLabel.textContent =
+            "Team pages, squads and historical performance from AiScore data.";
+        } else if (state.view === "ai") {
+          widgetTitleLabel.textContent = "AI Predictions Lab";
+          widgetSubtitleLabel.textContent =
+            "Planned module for xG, probability curves and automated edge detection.";
+        } else if (state.view === "goalmatrix") {
+          widgetTitleLabel.textContent = "GoalMatrix Engine";
+          widgetSubtitleLabel.textContent =
+            "Live goal probability overlays across time buckets and game states.";
+        } else if (state.view === "smartmoney") {
+          widgetTitleLabel.textContent = "SmartMoney Monitor";
+          widgetSubtitleLabel.textContent =
+            "Market movement tracking and bankroll exposure analytics (future).";
+        } else if (state.view === "about") {
+          widgetTitleLabel.textContent = "About AI MATCHLAB";
+          widgetSubtitleLabel.textContent =
+            "Context, roadmap and positioning of the AI-powered football lab.";
+        }
+      }
+
+      function showIframe(show) {
+        iframeWrapper.style.display = show ? "block" : "none";
+      }
+
+      function showPane(paneId) {
+        panes.forEach((p) => p.classList.remove("active"));
+        if (!paneId) return;
+        const pane = document.getElementById(paneId);
+        if (pane) pane.classList.add("active");
+      }
+
+      function updateIframeSrc() {
+        // Για όλες τις “data” views (live/scores/standings/leagues/teams)
+        // χρησιμοποιούμε το ίδιο AiScore URL.
+        const isDataView = ["live", "scores", "standings", "leagues", "teams"].includes(
+          state.view
+        );
+        if (isDataView) {
+          const url = buildAiscoreUrl(state.view, state.theme);
+          if (iframe.src !== url) {
+            iframe.src = url;
+          }
+        }
+      }
+
+      function updateView(nextView) {
+        state.view = nextView;
+        setActiveNavButtons();
+        setViewMetadata();
+
+        const isDataView = ["live", "scores", "standings", "leagues", "teams"].includes(
+          state.view
+        );
+
+        if (isDataView) {
+          showIframe(true);
+          showPane(null);
+          updateIframeSrc();
+        } else {
+          showIframe(false);
+          if (state.view === "ai") showPane("pane-ai");
+          else if (state.view === "goalmatrix") showPane("pane-goalmatrix");
+          else if (state.view === "smartmoney") showPane("pane-smartmoney");
+          else if (state.view === "about") showPane("pane-about");
+        }
+      }
+
+      function updateTheme(nextTheme) {
+        state.theme = nextTheme;
+        setActiveThemeButtons();
+        updateIframeSrc();
+        persistTheme();
+      }
+
+      function initNav() {
+        primaryNav.addEventListener("click", (e) => {
+          const btn = e.target.closest("button[data-view]");
+          if (!btn) return;
+          const view = btn.getAttribute("data-view");
+          updateView(view);
+        });
+
+        aiNav.addEventListener("click", (e) => {
+          const btn = e.target.closest("button[data-view]");
+          if (!btn) return;
+          const view = btn.getAttribute("data-view");
+          updateView(view);
+        });
+
+        themeButtons.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const theme = btn.getAttribute("data-theme");
+            updateTheme(theme);
+          });
+        });
+      }
+
+      function bootstrap() {
+        loadPersistedTheme();
+        setActiveThemeButtons();
+        setActiveNavButtons();
+        setViewMetadata();
+        updateIframeSrc();
+        initNav();
+      }
+
+      bootstrap();
+    })();
+  </script>
+</body>
+</html>

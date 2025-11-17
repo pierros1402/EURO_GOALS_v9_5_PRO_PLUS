@@ -579,3 +579,47 @@
         justify-content: flex-end;
     }
 }
+/* ==========================================================
+   WIDGET TAB + SCOREAXIS PANEL FIX
+   ========================================================== */
+
+/* Make the Widgets tab visible */
+.aiml-tab-alt {
+    border-radius: 999px;
+    border: none;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    background: rgba(96, 165, 250, 0.12);
+    color: var(--aiml-text-main);
+    border: 1px solid rgba(96, 165, 250, 0.25);
+}
+
+.aiml-tab-alt.aiml-tab-active {
+    background: linear-gradient(135deg, #60a5fa, #38bdf8);
+    color: #020617;
+    font-weight: 600;
+}
+
+/* Widgets panel container */
+#widgetsContainer {
+    display: none;
+    padding: 14px;
+    min-height: 240px;
+}
+
+/* Style widget iframes */
+#widgetsContainer iframe {
+    border-radius: 14px;
+    border: 1px solid var(--aiml-border-soft);
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+/* Attribution */
+.aiml-widget-attrib {
+    margin-top: 10px;
+    font-size: 12px;
+    opacity: 0.65;
+    text-align: center;
+}

@@ -1,40 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" data-theme="blue">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>AI MatchLab PREMIUM</title>
-
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0b0f1a" />
-
-    <!-- iOS -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="AI MatchLab" />
-
-    <!-- Correct Icons -->
-    <link rel="apple-touch-icon" sizes="192x192" href="/static/icons/icon-192.png" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/static/icons/icon-512.png" />
-    <link rel="icon" sizes="192x192" href="/static/icons/icon-192.png" />
-    <link rel="icon" sizes="512x512" href="/static/icons/icon-512.png" />
+    <title>AI MatchLab – Live Dashboard</title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="/static/css/aimatchlab.css" />
+    <link rel="stylesheet" href="/static/css/aimatchlab.css?v=1.0.0">
+
+    <!-- Icons -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/static/icons/icon-192.png">
+
+    <!-- PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/service-worker.js');
+      }
+    </script>
 </head>
 
 <body class="aiml-body">
 
+    <!-- ===================================================== -->
     <!-- HEADER -->
+    <!-- ===================================================== -->
     <header class="aiml-header">
         <div class="aiml-header-left">
-            <div class="aiml-logo-circle">AI</div>
+            <img src="/static/icons/icon-192.png" style="width:42px;border-radius:10px;">
             <div class="aiml-title-block">
                 <div class="aiml-title">AI MATCHLAB</div>
-                <div class="aiml-subtitle">Advanced Live Intelligence Engine</div>
+                <div class="aiml-subtitle">Unified Football Intelligence Dashboard</div>
             </div>
 
             <div class="aiml-header-badges">
@@ -44,42 +41,50 @@
         </div>
 
         <div class="aiml-header-right">
-            <button id="themeToggleBtn" class="aiml-header-btn aiml-theme-btn">🎨 Theme</button>
-            <button id="installBtn" class="aiml-header-btn aiml-install-btn">⬇ Install</button>
             <button id="refreshBtn" class="aiml-header-btn aiml-refresh-btn">⟳ Refresh</button>
+            <button id="themeToggleBtn" class="aiml-header-btn aiml-theme-btn">🌓 Theme</button>
+            <button id="installBtn" class="aiml-header-btn aiml-install-btn">⇩ Install</button>
         </div>
     </header>
 
-    <!-- SUMMARY BAR -->
-    <section class="aiml-summary-bar">
+    <!-- ===================================================== -->
+    <!-- SUMMARY -->
+    <!-- ===================================================== -->
+    <div class="aiml-summary-bar">
+
         <div class="aiml-summary-card">
-            <div class="aiml-summary-label">BACKEND</div>
-            <div id="backendStatusValue" class="aiml-summary-value aiml-summary-ok">Online</div>
+            <div class="aiml-summary-label">Backend</div>
+            <div id="backendStatusValue" class="aiml-summary-value">—</div>
             <div class="aiml-summary-caption">FastAPI Health</div>
         </div>
 
         <div class="aiml-summary-card">
-            <div class="aiml-summary-label">WORKER</div>
-            <div id="workerStatusValue" class="aiml-summary-value aiml-summary-issue">Checking…</div>
-            <div id="workerSummaryCaption" class="aiml-summary-caption">No data</div>
+            <div class="aiml-summary-label">Worker</div>
+            <div id="workerStatusValue" class="aiml-summary-value">—</div>
+            <div id="workerSummaryCaption" class="aiml-summary-caption">Waiting…</div>
         </div>
 
         <div class="aiml-summary-card">
-            <div class="aiml-summary-label">LIVE FEED</div>
-            <div id="feedStatusValue" class="aiml-summary-value aiml-summary-issue">No data</div>
-            <div id="feedSummaryCaption" class="aiml-summary-caption">Awaiting feed</div>
+            <div class="aiml-summary-label">Live Feed</div>
+            <div id="feedStatusValue" class="aiml-summary-value">—</div>
+            <div id="feedSummaryCaption" class="aiml-summary-caption">Waiting…</div>
         </div>
-    </section>
 
+    </div>
+
+    <!-- ===================================================== -->
     <!-- MAIN GRID -->
-    <main class="aiml-main-grid">
+    <!-- ===================================================== -->
 
-        <!-- LIVE PANEL -->
-        <section class="aiml-panel aiml-live-panel">
+    <div class="aiml-main-grid">
+
+        <!-- =============== LEFT SIDE: MATCH MATRIX =============== -->
+        <div class="aiml-panel">
+
             <div class="aiml-panel-header">
                 <div>
-                    <div class="aiml-panel-title">AI MatchLab – Live Matrix</div>
-                    <div class="aiml-panel-subtitle">Unified Live / Recent / Upcoming feed</div>
+                    <div class="aiml-panel-title">Matches</div>
+                    <div class="aiml-panel-subtitle">Live / Recent / Upcoming feed</div>
                 </div>
 
                 <div class="aiml-tabs">
@@ -87,85 +92,78 @@
                     <button id="btnLive" class="aiml-tab">Live</button>
                     <button id="btnRecent" class="aiml-tab">Recent</button>
                     <button id="btnUpcoming" class="aiml-tab">Upcoming</button>
+                    <button id="btnWidgets" class="aiml-tab">Widgets</button>
                 </div>
             </div>
 
-            <div id="liveContainer" class="aiml-live-container">
-                <div id="liveSkeleton" class="aiml-skeleton-list">
+            <div class="aiml-live-container">
+
+                <!-- Skeleton -->
+                <div id="liveSkeleton" class="aiml-skeleton-list" style="display:none;">
+                    <div class="aiml-skeleton-card"></div>
                     <div class="aiml-skeleton-card"></div>
                     <div class="aiml-skeleton-card"></div>
                     <div class="aiml-skeleton-card"></div>
                 </div>
-                <div id="livePlaceholder" class="aiml-placeholder" style="display:none;">Waiting for live data…</div>
-            </div>
-        </section>
 
-        <!-- MONITOR PANEL -->
-        <aside class="aiml-panel aiml-monitor-panel">
+                <!-- Placeholder -->
+                <div id="livePlaceholder" class="aiml-placeholder" style="display:none;">
+                    Waiting for live data…
+                </div>
+
+                <!-- Live Matches -->
+                <div id="liveContainer" class="aiml-live-container"></div>
+
+                <!-- Widgets Tab -->
+                <div id="widgetsContainer"></div>
+
+            </div>
+        </div>
+
+        <!-- =============== RIGHT SIDE: SYSTEM MONITOR =============== -->
+        <div class="aiml-panel aiml-monitor-panel">
+
             <div class="aiml-panel-header">
-                <div>
-                    <div class="aiml-panel-title">AI System Monitor</div>
-                    <div class="aiml-panel-subtitle">Worker Diagnostics</div>
-                </div>
+                <div class="aiml-panel-title">System Monitor</div>
+                <div class="aiml-panel-subtitle">Worker / API / Feeds</div>
             </div>
 
             <div class="aiml-monitor-block">
-                <div class="aiml-monitor-title">Worker Status (/ai/status)</div>
-                <pre id="statusBox" class="aiml-monitor-pre">Loading…</pre>
+                <div class="aiml-monitor-title">Worker Status (/api/status)</div>
+                <pre id="statusBox" class="aiml-monitor-pre">{}</pre>
             </div>
 
             <div class="aiml-monitor-block">
-                <div class="aiml-monitor-title">Live Payload (/ai/source-a/live)</div>
-                <pre id="liveDebugBox" class="aiml-monitor-pre">Waiting…</pre>
+                <div class="aiml-monitor-title">Live Feed Debug (/api/live)</div>
+                <pre id="liveDebugBox" class="aiml-monitor-pre">{}</pre>
             </div>
-        </aside>
+        </div>
 
-    </main>
+    </div>
 
-    <!-- DEBUG PANEL -->
-    <section class="aiml-debug-section">
+    <!-- ========================= DEBUG PANEL ======================= -->
+    <div class="aiml-debug-section">
         <div class="aiml-debug-header">
-            <span class="aiml-debug-title">Debug Panel</span>
+            <div class="aiml-debug-title">Debug Panel</div>
             <button id="toggleDebugBtn" class="aiml-debug-toggle-btn">Collapse</button>
         </div>
-        <pre id="debugPanel" class="aiml-debug-pre">Waiting for debug data…</pre>
-    </section>
 
-    <!-- FOOTER -->
-    <footer class="aiml-footer">
+        <pre id="debugPanel" class="aiml-debug-pre">{}</pre>
+    </div>
+
+    <!-- GOAL OVERLAY -->
+    <div id="goalFlashOverlay" class="aiml-goal-overlay" style="display:none;">GOAL!</div>
+
+    <!-- ============================ FOOTER ========================= -->
+    <div class="aiml-footer">
         <a href="/legal/terms">Terms</a>
         <a href="/legal/privacy">Privacy</a>
         <a href="/legal/cookies">Cookies</a>
-        <a href="/legal/responsible-gambling">Responsible Gambling</a>
-    </footer>
+        <a href="/legal/responsible">Responsible Gambling</a>
+    </div>
 
-    <!-- ENGINE -->
-    <script src="/static/js/aimatchlab.js"></script>
-
-    <!-- INSTALL HANDLER -->
-    <script>
-        let deferredPrompt = null;
-        window.addEventListener("beforeinstallprompt", e => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
-
-        document.getElementById("installBtn").addEventListener("click", async () => {
-            if (!deferredPrompt) {
-                alert("To install:\n\n• iOS: Share → Add to Home Screen\n• Android: Menu → Install App");
-                return;
-            }
-            deferredPrompt.prompt();
-            deferredPrompt = null;
-        });
-
-        if ("serviceWorker" in navigator) {
-            window.addEventListener("load", () => {
-                navigator.serviceWorker.register("/service-worker.js", { scope: "/" });
-            });
-        }
-    </script>
+    <!-- JS -->
+    <script src="/static/js/aimatchlab.js?v=1.0.0"></script>
 
 </body>
-
 </html>
